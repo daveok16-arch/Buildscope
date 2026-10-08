@@ -218,3 +218,30 @@ These are enforced by tests, not by convention. Breaking one fails the suite.
   `data/` runtime state are git-ignored — the host installs from `requirements.txt` and regenerates
   the database. The GitHub App token in this sandbox cannot create repositories; the owner must
   create the remote and push (see `docs/RENDER_DEPLOY.md`).
+
+## Local live run (sandbox)
+
+* Run: `PYTHONPATH="vendor/python:src" SECRET_KEY=dev OPPINTEL_DB=$PWD/data/oppintel.db python -m gunicorn --workers 2 --bind 0.0.0.0:12000 oppintel.app.wsgi:application`.
+  Port 12000 is the sandbox's exposed host (work-1). The shipped `data/oppintel.db` is already
+  populated (~3,000 projects), so the site serves real data without an ingestion pass.
+* `BASE_URL` must be set for a live run (canonical/OG tags). Do NOT export it when running pytest:
+  `tests/test_app_admin.py::test_admin_page_exposes_no_source_url_or_credential` scans the admin
+  HTML for `https?://`, so a `BASE_URL` in the shell makes that test fail for an environmental
+  reason, not a code one. Same for `OPPINTEL_DATA_DIR`/`OPPINTEL_DB`/`SECRET_KEY`/`PORT`.
+* `init_app_schema` runs on every request (`before_request` -> `open_db`), so a broken `APP_SCHEMA`
+  surfaces as a 500 on every page, including `/healthz`.
+
+## Schema-order invariant
+
+* `APP_SCHEMA` is executed before `_migrate_app_tables()`. A `CREATE INDEX` in `APP_SCHEMA` that
+  names a column added by the migration (e.g. `analytics_event.query_text`) aborts the whole
+  script on any pre-existing database. Indexes over migrated columns belong in a post-migration
+  step (`_ensure_analytics_indexes`), not in `APP_SCHEMA`.
+
+## Coverage honesty
+
+* `coverage._market_records` excludes permits dated after the observation date from
+  `latest_record_date`. A future-dated permit is a quality defect (`quality.py` flags it), and
+  taking `MAX(permit_date)` over it would report a future date as the newest record and keep a
+  stale market looking current. Tests: `test_future_permit_does_not_set_the_coverage_boundary`,
+  `test_future_only_market_has_no_latest_record_date`.
