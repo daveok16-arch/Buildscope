@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block hero %}
+<section class="hero hero-compact">
+  <div class="wrap">
+    <p class="crumb"><a href="{{ url_for('dashboard') }}">Dashboard</a> · Preferences</p>
+    <div class="hero-tagline-kicker">Workspace Settings</div>
+    <h1>Account Preferences</h1>
+    <p class="lede">
+      Customize your active market, trade vertical, and jurisdiction focus. Settings automatically tailor your dashboard and matching recommendations.
+    </p>
+  </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="section">
+  <form method="post" class="filters" style="max-width:720px; margin:0 auto">
+    {% include "partials/csrf.html" %}
+    <h2 style="font-size:1.25rem; margin-bottom:18px">Intelligence Focus</h2>
+    <div class="filter-grid">
+      <div class="field">
+        <label for="market_id">Primary Market</label>
+        <select id="market_id" name="market_id">
+          {% for m in all_markets %}
+          <option value="{{ m.id }}" {% if prefs.get('market_id') == m.id %}selected{% endif %}>
+            {{ m.name }}{% if not m.active %} (Planned){% endif %}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="trade_id">Primary Trade Vertical</label>
+        <select id="trade_id" name="trade_id">
+          {% for t in all_trades %}
+          <option value="{{ t.id }}" {% if prefs.get('trade_id') == t.id %}selected{% endif %}>
+            {{ t.label }}{% if not t.active %} (Planned){% endif %}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="field" style="margin-top:16px">
+      <label for="cities">Target Cities (hold Ctrl/Cmd to select multiple)</label>
+      <select id="cities" name="cities" multiple size="6">
+        {% for city in cities %}
+        <option value="{{ city }}" {% if city in prefs.get('cities', []) %}selected{% endif %}>{{ city }}</option>
+        {% endfor %}
+      </select>
+      <span class="form-help">Leave empty to monitor all cities in the active market.</span>
+    </div>
+
+    <div class="field" style="margin-top:16px">
+      <label for="project_types">Preferred Commercial Project Types</label>
+      <select id="project_types" name="project_types" multiple size="6">
+        {% for t in project_types %}
+        <option value="{{ t }}" {% if t in prefs.get('project_types', []) %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+      <span class="form-help">Select specific commercial sectors (e.g. Healthcare, Industrial, Office, Retail).</span>
+    </div>
+
+    <div class="field" style="margin-top:16px">
+      <label class="checkline">
+        <input type="checkbox" name="notify_in_app" value="1"
+               {% if prefs.get('notify_in_app', 1) %}checked{% endif %}>
+        In-app new opportunity notices
+      </label>
+      <label class="checkline" style="margin-top:8px">
+        <input type="checkbox" name="notify_email" value="1"
+               {% if prefs.get('notify_email', 0) %}checked{% endif %}>
+        Email digest notices
+      </label>
+      <span class="form-help" style="margin-top:6px">
+        Email notifications are queued for future delivery. Setting is safely saved for when email integration activates.
+      </span>
+    </div>
+
+    <div class="filter-actions" style="margin-top:20px">
+      <button class="btn btn-primary" type="submit">Save Preferences</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

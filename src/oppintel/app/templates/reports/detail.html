@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="section">
+  <p class="crumb"><a href="{{ url_for('reports_index') }}">Reports</a></p>
+  <div class="report-body">
+    {{ body }}
+  </div>
+  <p class="small muted" style="margin-top:26px">
+    Confirm all figures with the issuing jurisdiction before commercial reliance.
+  </p>
+</section>
+{% endblock %}

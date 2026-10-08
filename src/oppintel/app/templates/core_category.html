@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block hero %}
+<section class="hero">
+  <div class="wrap">
+    <p class="crumb"><a href="{{ url_for('home') }}">Home</a> · Commercial Construction Leads</p>
+    <div class="hero-tagline-kicker">Core Category Intelligence</div>
+    <h1>Commercial Construction Leads &amp; Project Intelligence</h1>
+    <p class="lede">
+      BuildScope turns public municipal construction and permit records into structured commercial project intelligence for {{ market.name }}. Every fact traces to an official public record you can inspect, and anything the sources do not state is presented as Not verified rather than guessed.
+    </p>
+    <div class="hero-cta">
+      <a class="btn btn-primary btn-lg" href="{{ url_for('opportunities') }}">Explore Live Opportunities</a>
+      <a class="btn btn-outline btn-lg" href="{{ url_for('signup') }}">Create Free Account</a>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block content %}
+
+<div class="stat-strip">
+  <div class="stat">
+    <span class="stat-value">{{ "{:,}".format(stats.projects_public) }}</span>
+    <span class="stat-label">Commercial projects</span>
+  </div>
+  <div class="stat">
+    <span class="stat-value">{{ "{:,}".format(stats.with_mechanical) }}</span>
+    <span class="stat-label">With {{ trade.short_label }} evidence</span>
+  </div>
+  <div class="stat">
+    <span class="stat-value">{{ "{:,}".format(stats.tier1) }}</span>
+    <span class="stat-label">Mechanical permit on file</span>
+  </div>
+  <div class="stat">
+    <span class="stat-value">{{ "{:,}".format(stats.cities) }}</span>
+    <span class="stat-label">Cities covered</span>
+  </div>
+</div>
+
+<section class="section detail-panel" style="margin:24px 0">
+  <h2>What This Platform Is</h2>
+  <p>
+    A commercial construction lead is an active project worth investigating. Traditional lead directories assemble lists from scraped directories, stale phone books, and speculative estimates. BuildScope assembles intelligence directly from the public municipal and county permit records local building departments publish, attaches immutable provenance to every field, and states plainly where official records are silent.
+  </p>
+  <p>
+    The result is significantly higher signal-to-noise: fewer bloated records, each of which your estimating and business development teams can audit against official city filings before spending hours pursuing the project.
+  </p>
+
+  <h2 style="margin-top:24px">Who It Is For</h2>
+  <p>
+    Commercial specialty subcontractors — mechanical, HVAC, electrical, plumbing, structural — and the teams around them: chief estimators, preconstruction managers, and business development leads. Discovery is filtered by verifiable trade evidence, ensuring a {{ trade.short_label }} contractor only evaluates projects with documented mechanical scope rather than hundreds of unrelated residential roofing permits.
+  </p>
+
+  <h2 style="margin-top:24px">How Opportunities Are Discovered</h2>
+  <p>
+    Public records are ingested across regional building departments, normalized into unified data structures, and clustered by physical street address and parcel identifiers into underlying commercial projects. An official mechanical trade permit or explicit equipment scope in the permit description establishes relevance to this trade.
+  </p>
+
+  <h2 style="margin-top:24px">How Verification &amp; Evidence Work</h2>
+  <p>
+    Every project is classified against documented criteria rather than algorithmic speculation. Fields an issuing city does not publish remain empty and render explicitly as <strong>Not verified</strong>. When two public agencies publish differing figures, both are recorded and flagged as a discrepancy rather than masked.
+  </p>
+
+  <h2 style="margin-top:24px">Monitoring, Alerts and Pursuit Pipeline</h2>
+  <p>
+    Watching an opportunity commands BuildScope to monitor the parcel across every subsequent collection cycle and trigger an alert when a material record change occurs — a new trade permit filing, an issued status, or plan revision. Teams can bookmark opportunities, maintain private estimator notes, and manage internal pursuit stages.
+  </p>
+</section>
+
+{% if examples %}
+<section class="section">
+  <div class="section-head">
+    <h2>Live Opportunities from the Directory</h2>
+    <p class="section-sub">
+      Live records from the active market, not illustrative mockups. Open any record to view its evidence trail and official filings.
+    </p>
+  </div>
+  <div class="card-grid">
+    {% for project in examples %}
+      {% include "partials/opportunity_card.html" %}
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="section">
+  <div class="notice notice-plain">
+    <h4>What this platform does not claim</h4>
+    <p>
+      A project appearing here is <strong>relevant</strong> to {{ trade.short_label | lower }} work
+      because a public record shows mechanical activity. It is <strong>not a confirmed open bid</strong>.
+      No source in this market publishes bid status, so the platform never states one. The pipeline stages
+      are your own filing decisions, not a statement about a project's actual procurement status.
+    </p>
+    <p class="small">
+      BuildScope does not claim that any project in this directory is currently accepting bids.
+      Confirm all details directly with the issuing body, owner or general contractor.
+    </p>
+  </div>
+</section>
+
+{% endblock %}

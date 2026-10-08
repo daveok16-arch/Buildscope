@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block hero %}
+<section class="hero hero-compact">
+  <div class="wrap">
+    <p class="crumb"><a href="{{ url_for('home') }}">Home</a> · Continuous Monitoring</p>
+    <div class="hero-tagline-kicker">Continuous Audit Log</div>
+    <h1>Detected Project Changes</h1>
+    <p class="lede">
+      Real differences detected between consecutive collection passes across {{ market.name }}.
+      Every entry represents a verified change in permit status, mechanical evidence, declared valuation, or project scope.
+    </p>
+  </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="wrap" style="padding-top:24px; padding-bottom:56px">
+<div class="feed-workspace-layout">
+  {# Filter Sidebar #}
+  <aside class="filter-sidebar">
+    <div class="filter-sidebar-head">
+      <h3>Audit Scope</h3>
+    </div>
+    <div class="filter-stack">
+      <div class="field">
+        <label>Time Window</label>
+        <div style="display:flex; flex-direction:column; gap:8px; margin-top:6px">
+          <a class="btn btn-small {{ 'btn-primary' if days == 7 else 'btn-outline' }}" href="{{ url_for('changes_feed', days=7) }}">Last 7 Days</a>
+          <a class="btn btn-small {{ 'btn-primary' if days == 30 else 'btn-outline' }}" href="{{ url_for('changes_feed', days=30) }}">Last 30 Days</a>
+          <a class="btn btn-small {{ 'btn-primary' if days == 60 else 'btn-outline' }}" href="{{ url_for('changes_feed', days=60) }}">Last 60 Days</a>
+          <a class="btn btn-small {{ 'btn-primary' if days == 90 else 'btn-outline' }}" href="{{ url_for('changes_feed', days=90) }}">Last 90 Days</a>
+        </div>
+      </div>
+      <div class="notice" style="margin-top:16px; font-size:0.85rem">
+        <strong>Zero-False-Positive Guarantee:</strong>
+        A pipeline re-run with unchanged data produces zero events. The timeline fills only when the municipal record itself moves.
+      </div>
+    </div>
+  </aside>
+
+  {# Main Results #}
+  <div class="feed-results-area">
+    <div class="results-header-bar">
+      <div>
+        <h2>{{ changes | length }} Differences Detected in Last {{ days }} Days</h2>
+        <p class="results-count-sub">Continuous change detection tracking status transitions, scope additions, and valuation updates.</p>
+      </div>
+    </div>
+
+    {% if changes %}
+      <div class="detail-panel" style="padding:20px 24px">
+        <ol class="timeline" style="margin:0">
+          {% for c in changes %}
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                {{ c.detected_at[:10] if c.detected_at else 'Recent' }} ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  {{ c.change_kind | replace('_', ' ') }}
+                </span>
+              </span>
+              {% if c.city %}
+                <span class="small muted">{{ c.city }}</span>
+              {% endif %}
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                {% if c.slug %}
+                  <a href="{{ url_for('opportunity_detail', slug=c.slug) }}">{{ c.project_name or c.address or 'Commercial Project' }}</a>
+                {% else %}
+                  {{ c.project_name or c.address or 'Commercial Project' }}
+                {% endif %}
+              </strong>:
+              {{ c.summary }}
+            </div>
+
+            {% if c.previous_value or c.current_value %}
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              {% if c.previous_value %}
+                <span style="color:var(--slate-500)">Previous: <del>{{ c.previous_value }}</del></span>
+              {% endif %}
+              {% if c.current_value %}
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: {{ c.current_value }}</span>
+              {% endif %}
+            </div>
+            {% endif %}
+
+            {% if c.slug %}
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="{{ url_for('opportunity_detail', slug=c.slug) }}">Open Project Dossier &rarr;</a>
+            </div>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ol>
+      </div>
+    {% else %}
+      {% with heading = "No changes detected in this window",
+              message = "No qualifying changes were recorded in the selected timeframe.",
+              suggestions = ["Widen your time window to 60 or 90 days."],
+              reset_url = url_for('changes_feed', days=90) %}
+        {% include "partials/empty_state.html" %}
+      {% endwith %}
+    {% endif %}
+  </div>
+</div>
+</div>
+{% endblock %}

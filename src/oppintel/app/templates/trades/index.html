@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block hero %}
+<section class="hero hero-compact">
+  <div class="wrap">
+    <p class="crumb"><a href="{{ url_for('home') }}">Home</a> · Trade Signals</p>
+    <div class="hero-tagline-kicker">Specialty Scope Intelligence</div>
+    <h1>Trade Signals</h1>
+    <p class="lede">
+      Specialty trade intelligence scoped by physical scope and public permit evidence.
+    </p>
+  </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="section-head">
+    <h2>Supported Trades</h2>
+    <p>
+      Each trade vertical operates under explicit classification and evidence rules. The platform expands to new trades via configuration rather than rewritten application code.
+    </p>
+  </div>
+  <div class="card-grid">
+    {% for t in trades %}
+    <article class="card">
+      <div class="badge-row">
+        {% if t.active %}
+          <span class="badge badge-high">Active Vertical</span>
+        {% else %}
+          <span class="badge badge-plain">Planned Trade</span>
+        {% endif %}
+      </div>
+      <h3 style="margin-top:14px">
+        {% if t.active %}
+          <a href="{{ url_for('trade_landing', trade_slug=t.slug or t.id) }}">{{ t.label }}</a>
+        {% else %}
+          {{ t.label }}
+        {% endif %}
+      </h3>
+      {% if t.active %}
+      <p class="card-meta">Evidence verified from municipal mechanical permits and work description scope keywords.</p>
+      <dl class="facts">
+        <div><dt>Primary Signal</dt><dd>Tier 1 Mechanical Permit</dd></div>
+        <div><dt>Secondary Signal</dt><dd>Tier 2 Scope in Text</dd></div>
+      </dl>
+      <p style="margin-top:14px">
+        <a class="btn btn-outline btn-small" href="{{ url_for('trade_landing', trade_slug=t.slug or t.id) }}">View Trade Criteria &rarr;</a>
+      </p>
+      {% else %}
+      <p class="muted small" style="margin-top:12px">Planned trade vertical. Ingestion rules are designed; live data will activate with source availability.</p>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

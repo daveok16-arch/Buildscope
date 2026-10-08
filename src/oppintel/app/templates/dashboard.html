@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block hero %}
+<section class="hero hero-compact">
+  <div class="wrap">
+    <p class="crumb"><a href="{{ url_for('home') }}">Home</a> · Dashboard</p>
+    <div class="hero-tagline-kicker">
+      <span class="bs-motif" aria-hidden="true"><span></span><span></span><span></span></span>
+      Intelligence Command Center
+    </div>
+    <h1>Commercial Intelligence Workspace</h1>
+    <p class="lede">
+      Real-time opportunity tracking, monitored projects, recorded permit changes, and your active pursuit pipeline across {{ market.name }}.
+    </p>
+  </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="wrap" style="padding-top:28px; padding-bottom:56px">
+{# 1. Executive KPI Command Bar #}
+<div class="stat-strip">
+  <a class="stat" href="{{ url_for('saved') }}">
+    <span class="stat-value">{{ summary.saved }}</span>
+    <span class="stat-label">Saved Projects</span>
+  </a>
+  <a class="stat" href="{{ url_for('watching') }}">
+    <span class="stat-value">{{ summary.watching }}</span>
+    <span class="stat-label">Watched Records</span>
+  </a>
+  <a class="stat" href="{{ url_for('my_pipeline') }}">
+    <span class="stat-value">{{ summary.pipeline }}</span>
+    <span class="stat-label">In Pipeline</span>
+  </a>
+  <div class="stat">
+    <span class="stat-value">{{ summary.notes }}</span>
+    <span class="stat-label">Private Notes</span>
+  </div>
+  <a class="stat" href="{{ url_for('alerts') }}">
+    <span class="stat-value">{{ unread_alerts }}</span>
+    <span class="stat-label">Unread Alerts</span>
+  </a>
+</div>
+
+{# Preference reminder notice if unconfigured #}
+{% if not prefs.cities and not prefs.project_types and not prefs.min_value and not prefs.max_value %}
+<div class="notice notice-action" style="margin-bottom:28px">
+  <h4 style="margin-top:0">Focus your intelligence feed</h4>
+  <p>
+    You are currently monitoring all market-wide opportunities. Configure target cities and preferred project types to personalize your new opportunity matching.
+  </p>
+  <a class="btn btn-small btn-primary" href="{{ url_for('preferences') }}" style="margin-top:4px">Configure Preferences &rarr;</a>
+</div>
+{% endif %}
+
+{# 2. Two-Column Command Center Workspace #}
+<div class="detail-grid">
+  {# Main Left Column: New Matches & Recent Changes #}
+  <div>
+    {# A. New Opportunities Matching Target Profile #}
+    <section class="section" style="padding-top:0">
+      <div class="section-head" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:12px">
+        <div>
+          <div class="section-kicker">Personalized Matching</div>
+          <h2>New Opportunities</h2>
+          <p class="section-sub">Recently filed commercial permits matching your target criteria in {{ market.short_name }}.</p>
+        </div>
+        <a class="btn btn-small btn-outline" href="{{ url_for('opportunities') }}">View Full Feed &rarr;</a>
+      </div>
+
+      {% if new_matches %}
+        <div class="card-grid" style="margin-top:0">
+          {% for project in new_matches %}
+            {% include "partials/opportunity_card.html" %}
+          {% endfor %}
+        </div>
+      {% else %}
+        {% with heading = "Nothing new matches yet",
+                message = "No recently dated project matches your current preferences.",
+                suggestions = ["Widen your preferences to include more cities or project types.",
+                               "Clear your value range if you set one."],
+                reset_url = url_for('preferences') %}
+          {% include "partials/empty_state.html" %}
+        {% endwith %}
+      {% endif %}
+    </section>
+
+    {# B. Recently Detected Changes #}
+    <section class="section">
+      <div class="section-head">
+        <div class="section-kicker">Continuous Audit</div>
+        <h2>Recently Detected Changes</h2>
+        <p class="section-sub">
+          Projects where permit status, valuation, or scope changed in the last 30 days during collection passes.
+        </p>
+      </div>
+
+      {% if recently_updated %}
+        <div class="card-grid" style="margin-top:0">
+          {% for project in recently_updated %}
+            {% include "partials/opportunity_card.html" %}
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="detail-panel" style="padding:20px; text-align:center">
+          <p class="muted" style="margin:0">
+            No permit revisions detected in the last 30 days. This audit log updates automatically as new municipal filings are collected.
+          </p>
+        </div>
+      {% endif %}
+    </section>
+  </div>
+
+  {# Right Operational Sidebar #}
+  <aside>
+    {# Monitored Watchlist Panel #}
+    <div class="detail-panel">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+        <h3 style="margin:0; font-size:1.05rem">Monitored Records</h3>
+        <a class="small" href="{{ url_for('watching') }}" style="font-weight:600">View all ({{ summary.watching }})</a>
+      </div>
+      <p class="small muted" style="margin-bottom:14px">Projects you asked BuildScope to monitor for permit revisions.</p>
+
+      {% if watching %}
+        <ul class="source-list" style="margin:0">
+          {% for project in watching[:5] %}
+          <li>
+            {% if project.slug %}
+              <a href="{{ url_for('opportunity_detail', slug=project.slug) }}" style="font-weight:700; color:var(--navy-950)">
+                {{ (project.project_name or project.address) | truncate(48) }}
+              </a>
+            {% else %}
+              <strong>{{ (project.project_name or project.address) | truncate(48) }}</strong>
+            {% endif %}
+            <span class="muted small">{{ project.city }} · {{ project.estimated_project_value | money }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="small muted" style="margin:0">You are not watching any opportunities yet. Click "Watch" on any opportunity card to monitor it for updates.</p>
+      {% endif %}
+    </div>
+
+    {# Pursuit Pipeline Panel #}
+    <div class="detail-panel" style="margin-top:20px">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+        <h3 style="margin:0; font-size:1.05rem">Pursuit Pipeline</h3>
+        <a class="small" href="{{ url_for('my_pipeline') }}" style="font-weight:600">Open Board &rarr;</a>
+      </div>
+      <p class="small muted">
+        Track opportunities through your internal sales stages.
+      </p>
+      <div style="margin-top:14px">
+        <a class="btn btn-outline btn-small" href="{{ url_for('my_pipeline') }}" style="width:100%; text-align:center">Open Pipeline Board &rarr;</a>
+      </div>
+    </div>
+
+    {# Coverage Information #}
+    <div class="detail-panel" style="margin-top:20px">
+      <h3 style="margin:0 0 8px; font-size:1.05rem">Active Market Coverage</h3>
+      <p class="small" style="margin-bottom:6px">
+        <strong>{{ market.name }}</strong> ({{ market.short_name }})
+      </p>
+      <p class="small muted" style="margin-bottom:12px">
+        Ingesting commercial building, mechanical, and remodeling permits across Fort Worth, Dallas, and Collin County jurisdictions.
+      </p>
+      <div class="badge-row">
+        <span class="badge badge-high">{{ market.short_name }} Active</span>
+        <span class="badge badge-plain">{{ trade.short_label }} Active</span>
+      </div>
+    </div>
+  </aside>
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block hero %}
+<section class="hero hero-compact">
+  <div class="wrap">
+    <p class="crumb"><a href="{{ url_for('dashboard') }}">Dashboard</a> · Alerts</p>
+    <div class="hero-tagline-kicker">Event-Driven Notifications</div>
+    <h1>System Alerts</h1>
+    <p class="lede">
+      Every alert below is triggered by a verified change detected in a watched public permit record. We never generate synthetic or promotional notifications.
+    </p>
+  </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="result-head" style="margin-top:20px">
+  <p class="result-count">
+    <strong>{{ unread_count }}</strong> unread alert{{ '' if unread_count == 1 else 's' }}
+    {% if unread_only %}
+      · showing unread only · <a href="{{ url_for('alerts') }}">show all</a>
+    {% else %}
+      · <a href="{{ url_for('alerts', unread='1') }}">show unread only</a>
+    {% endif %}
+  </p>
+  {% if items %}
+  <form method="post" action="{{ url_for('mark_all_alerts_read') }}" class="inline-form">
+    {% include "partials/csrf.html" %}
+    <button class="btn btn-small btn-outline" type="submit">Mark all read</button>
+  </form>
+  {% endif %}
+</div>
+
+{% if items %}
+<div class="alert-list">
+  {% for alert in items %}
+  <article class="alert-item {{ 'alert-unread' if not alert.read_at else '' }}">
+    <div class="alert-head">
+      <span class="badge badge-evidence">{{ alert.title }}</span>
+      {% if not alert.read_at %}<span class="badge badge-change">New Unread</span>{% endif %}
+      <span class="muted small" style="margin-left:auto">{{ alert.created_at[:10] }}</span>
+    </div>
+    <h3 style="margin:8px 0 6px">
+      {% if alert.slug %}
+        <a href="{{ url_for('opportunity_detail', slug=alert.slug) }}">
+          {{ (alert.project_name or alert.address or 'Project') | truncate(70) }}
+        </a>
+      {% else %}
+        {{ (alert.project_name or alert.address or 'Project') | truncate(70) }}
+      {% endif %}
+    </h3>
+    <p style="margin:0 0 10px">{{ alert.body | or_na }}</p>
+    {% if alert.previous_value or alert.current_value %}
+    <dl class="facts facts-inline" style="background:var(--slate-50); padding:10px 14px; border-radius:var(--radius-sm)">
+      <div><dt>Previous Value</dt><dd>{{ alert.previous_value | or_na }}</dd></div>
+      <div><dt>Updated Value</dt><dd style="color:var(--high)">{{ alert.current_value | or_na }}</dd></div>
+      {% if alert.source_name %}
+      <div>
+        <dt>Source Record</dt>
+        <dd>
+          {% if alert.source_url %}
+            <a href="{{ alert.source_url }}" target="_blank" rel="noopener noreferrer nofollow">
+              {{ alert.source_name }}
+            </a>
+          {% else %}
+            {{ alert.source_name }}
+          {% endif %}
+        </dd>
+      </div>
+      {% endif %}
+    </dl>
+    {% endif %}
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px">
+      {% if not alert.read_at %}
+      <form method="post" action="{{ url_for('mark_alert_read', alert_id=alert.id) }}" class="inline-form">
+        {% include "partials/csrf.html" %}
+        <button class="btn btn-small btn-ghost" type="submit">Mark as Read</button>
+      </form>
+      {% else %}
+        <span></span>
+      {% endif %}
+      {% if alert.slug %}
+        <a class="btn btn-small btn-outline" href="{{ url_for('opportunity_detail', slug=alert.slug) }}">
+          View Project &rarr;
+        </a>
+      {% endif %}
+    </div>
+  </article>
+  {% endfor %}
+</div>
+{% else %}
+  {% with heading = "No alerts",
+          message = "Alerts appear when a project you watch changes. Nothing has changed yet.",
+          suggestions = ["Watch opportunities you care about to receive alerts about them.",
+                         "Alerts are driven by recorded changes, so they are never invented."],
+          reset_url = url_for('watching') %}
+    {% include "partials/empty_state.html" %}
+  {% endwith %}
+{% endif %}
+{% endblock %}

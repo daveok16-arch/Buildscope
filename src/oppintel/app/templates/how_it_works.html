@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block hero %}
+<section class="hero hero-compact">
+  <div class="wrap">
+    <p class="crumb"><a href="{{ url_for('home') }}">Home</a> · Methodology</p>
+    <div class="hero-tagline-kicker">
+      <span class="bs-motif" aria-hidden="true"><span></span><span></span><span></span></span>
+      Transparent Methodology
+    </div>
+    <h1>How BuildScope Works</h1>
+    <p class="lede">
+      From public municipal permit records to verified commercial opportunities, with the evidence trail kept auditable at every step.
+    </p>
+  </div>
+</section>
+{% endblock %}
+
+{% block content %}
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-kicker">
+        <span class="bs-motif" aria-hidden="true"><span></span><span></span><span></span></span>
+        Architecture
+      </div>
+      <h2>The 6-Stage Intelligence Pipeline</h2>
+      <p class="section-sub">Each stage operates independently, preserving full provenance from official public records.</p>
+    </div>
+    <div class="card-grid">
+      <article class="card">
+        <div class="chain-step-num">Stage 01</div>
+        <h3>1. Collect</h3>
+        <p class="small muted">Public construction and permit records are ingested directly from verified municipal and county portals. Every response is archived verbatim before parsing so any change can be audited against official records.</p>
+      </article>
+      <article class="card">
+        <div class="chain-step-num">Stage 02</div>
+        <h3>2. Normalize</h3>
+        <p class="small muted">Source records are mapped onto standard schemas. Values a source does not publish stay empty. Nothing is inferred, manufactured, or estimated to artificially fill a gap.</p>
+      </article>
+      <article class="card">
+        <div class="chain-step-num">Stage 03</div>
+        <h3>3. Assemble</h3>
+        <p class="small muted">Individual trade permits and amendments at the same address are clustered into the underlying commercial project, preventing duplicate counting across structural, mechanical, electrical, and plumbing filings.</p>
+      </article>
+      <article class="card">
+        <div class="chain-step-num">Stage 04</div>
+        <h3>4. Attach Evidence</h3>
+        <p class="small muted">Every material fact is preserved alongside its publisher, record key, filing timestamp, and source text excerpt, creating an unbroken chain of custody.</p>
+      </article>
+      <article class="card">
+        <div class="chain-step-num">Stage 05</div>
+        <h3>5. Classify</h3>
+        <p class="small muted">Projects are scored against strict trade rules and assigned verified signals: HIGH, MEDIUM, or NEEDS_VERIFICATION. Every point awarded is documented with a clear, readable explanation.</p>
+      </article>
+      <article class="card">
+        <div class="chain-step-num">Stage 06</div>
+        <h3>6. Report &amp; Monitor</h3>
+        <p class="small muted">Verified projects populate the opportunity feed, dossiers, and customer reports. Automation diffs records between runs to detect changes and notify watched projects.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="background:#ffffff; border-top:1px solid var(--line); border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-kicker">
+        <span class="bs-motif" aria-hidden="true"><span></span><span></span><span></span></span>
+        Evidence Standards
+      </div>
+      <h2>Why Two Tiers of Evidence</h2>
+      <p class="section-sub">We distinguish between explicit municipal trade filings and documentary scope descriptions.</p>
+    </div>
+    <div class="detail-panel">
+      <dl class="facts">
+        <div>
+          <dt>Tier 1 — Mechanical Permit on File</dt>
+          <dd style="font-weight:normal; font-size:0.92rem; margin-top:4px">
+            The building department filed an official mechanical trade permit at the address. The City itself recorded mechanical scope, so no interpretation is needed. Strongest available signal.
+          </dd>
+        </div>
+        <div>
+          <dt>Tier 2 — Mechanical Scope in Permit Text</dt>
+          <dd style="font-weight:normal; font-size:0.92rem; margin-top:4px">
+            The recorded work description explicitly names mechanical equipment (chillers, RTUs, ductwork, boilers, VAVs). Documentary evidence from the permit text rather than a separate permit.
+          </dd>
+        </div>
+      </dl>
+      <p class="muted small" style="margin-top:16px; border-top:1px solid var(--slate-150); padding-top:10px">
+        <strong>Quality Gate:</strong> A project cannot be classified as HIGH on property class and declared dollar value alone. Mechanical trade scope must be substantiated by official documentation.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-kicker">
+        <span class="bs-motif" aria-hidden="true"><span></span><span></span><span></span></span>
+        Integrity
+      </div>
+      <h2>What BuildScope Does NOT Do</h2>
+    </div>
+    <div class="detail-panel">
+      <ul style="padding-left:20px; margin:0; line-height:1.8">
+        <li><strong>We do not claim a project is an open bid.</strong> No municipal permit source in this market publishes open bidding status, and we never manufacture bid claims.</li>
+        <li><strong>We do not fabricate stakeholders or valuations.</strong> If a source does not publish an owner, general contractor, or architect, we state <strong>Not verified</strong>.</li>
+        <li><strong>We do not present finished work as active opportunities.</strong> Completed work is systematically identified and filtered out of active discovery feeds.</li>
+        <li><strong>We do not confuse maintenance with commercial construction.</strong> Service calls, routine repairs, and like-for-like equipment swaps are excluded.</li>
+        <li><strong>We do not create vanity scores.</strong> Every score corresponds to verifiable physical scope and documented evidence.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0">
+  <div class="wrap">
+    <div class="notice notice-warn">
+      <h4 style="margin-top:0; color:var(--gold-600)">Important Procurement Notice</h4>
+      <p class="small" style="margin:0">
+        Permit evidence does not confirm that a project is currently accepting bids for any trade. Confirm procurement status directly with the project owner or general contractor, and verify all plans and requirements with the issuing jurisdiction prior to commercial commitment.
+      </p>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

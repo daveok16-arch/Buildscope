@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block hero %}
+<section class="hero hero-compact">
+  <div class="wrap">
+    <p class="crumb"><a href="{{ url_for('dashboard') }}">Dashboard</a> · Watching</p>
+    <div class="hero-tagline-kicker">Change Monitoring</div>
+    <h1>Monitored Opportunities</h1>
+    <p class="lede">
+      Projects you asked BuildScope to monitor. Each project is diffed against new permit filings on every collection pass, and you are alerted only when material changes occur.
+    </p>
+  </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="section">
+  {% if items %}
+  <div class="card-grid">
+    {% for project in items %}
+      <article class="card">
+        <div class="badge-row">
+          <span class="badge badge-{{ project.classification | lower | replace('_','-') }}">
+            Signal: {{ project.classification | replace('_',' ') }}
+          </span>
+          <span class="badge badge-evidence">{{ project.evidence_label }}</span>
+          {% if change_counts.get(project.id) %}
+            <span class="badge badge-change">
+              {{ change_counts.get(project.id) }} change{{ '' if change_counts.get(project.id) == 1 else 's' }}
+            </span>
+          {% else %}
+            <span class="badge badge-plain">No changes yet</span>
+          {% endif %}
+        </div>
+        <h3 style="margin-top:14px">
+          <a href="{{ url_for('opportunity_detail', slug=project.slug) }}">
+            {{ (project.project_name or project.address or 'Commercial project') | truncate(80) }}
+          </a>
+        </h3>
+        <p class="card-meta">
+          {{ project.address | or_na }}{% if project.city %}, {{ project.city }}{% endif %}{% if project.state %}, {{ project.state }}{% endif %}
+        </p>
+        {% if project.estimated_project_value %}
+          <p class="small" style="font-weight:600">{{ project.estimated_project_value | money }}</p>
+        {% endif %}
+        <div class="card-actions" style="margin-top:auto">
+          <form method="post" action="{{ url_for('watch_opportunity', project_id=project.id) }}" class="inline-form">
+            {% include "partials/csrf.html" %}
+            <input type="hidden" name="action" value="remove">
+            <button class="btn btn-small btn-outline" type="submit">Stop watching</button>
+          </form>
+          <a class="btn btn-small btn-primary" href="{{ url_for('opportunity_detail', slug=project.slug) }}" style="margin-left:auto">
+            View Dossier &rarr;
+          </a>
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+  {% else %}
+    {% with heading = "You are not watching any opportunities yet",
+            message = "Watching asks the system to notify you when a project's record changes. It is separate from saving, which only bookmarks a project.",
+            suggestions = ["Open an opportunity from the feed and choose Watch.",
+                           "Your watched projects appear here and drive your real-time alerts."],
+            reset_url = url_for('opportunities') %}
+      {% include "partials/empty_state.html" %}
+    {% endwith %}
+  {% endif %}
+</section>
+{% endblock %}

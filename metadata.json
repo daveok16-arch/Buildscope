@@ -1,0 +1,6 @@
+{
+  "name": "BuildScope",
+  "description": "Construction Opportunity Intelligence. See the work before the work begins.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

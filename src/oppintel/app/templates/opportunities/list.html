@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block hero %}
+<section class="hero hero-compact">
+  <div class="wrap">
+    <p class="crumb"><a href="{{ url_for('home') }}">Home</a> · Opportunity Feed</p>
+    <div class="hero-tagline-kicker">
+      <span class="bs-motif" aria-hidden="true"><span></span><span></span><span></span></span>
+      Commercial Intelligence Feed
+    </div>
+    <h1>Opportunity Feed</h1>
+    <p class="lede">
+      Verified commercial construction opportunities across {{ market.name }} with documentary public record evidence.
+      Every project links to its official source records.
+    </p>
+  </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="wrap">
+  {# Mobile Filter Expand Button #}
+  <div style="display:none; margin:16px 0 8px;" class="mobile-filter-bar">
+    <button type="button" class="btn btn-outline" id="mobile-filter-btn" style="width:100%; justify-content:space-between">
+      <span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px">
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+        </svg>
+        Filter Opportunities
+      </span>
+      <span class="small muted">Adjust criteria &darr;</span>
+    </button>
+  </div>
+
+  <div class="feed-workspace-layout">
+    {# --- 1. Filter Sidebar --- #}
+    <aside class="filter-sidebar" id="filter-sidebar-panel">
+      <form method="get" action="{{ url_for('opportunities') }}">
+        <div class="filter-sidebar-head">
+          <h3>Filter Opportunities</h3>
+          <a class="btn btn-small btn-ghost" href="{{ url_for('opportunities') }}">Reset</a>
+        </div>
+
+        <div class="filter-stack">
+          <div class="field">
+            <label for="q">Search Keyword</label>
+            <input type="search" id="q" name="q" value="{{ filters.q or '' }}"
+                   placeholder="Project name, address, permit #…">
+          </div>
+
+          <div class="field">
+            <label for="classification">Signal Strength</label>
+            <select id="classification" name="classification">
+              <option value="">All signals</option>
+              <option value="HIGH" {% if filters.classification == 'HIGH' %}selected{% endif %}>HIGH (Tier 1 Permit)</option>
+              <option value="MEDIUM" {% if filters.classification == 'MEDIUM' %}selected{% endif %}>MEDIUM (Tier 2 Scope)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="city">City Jurisdiction</label>
+            <select id="city" name="city">
+              <option value="">All cities ({{ cities | length }})</option>
+              {% for c in cities %}
+              <option value="{{ c }}" {% if filters.city == c %}selected{% endif %}>{{ c }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="project_type">Project Type</label>
+            <select id="project_type" name="project_type">
+              <option value="">All types</option>
+              {% for t in project_types %}
+              <option value="{{ t }}" {% if filters.project_type == t %}selected{% endif %}>{{ t }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="procurement_status">Procurement Status</label>
+            <select id="procurement_status" name="procurement_status">
+              <option value="">All statuses</option>
+              {% for s in procurement_options %}
+              <option value="{{ s }}" {% if filters.procurement_status == s %}selected{% endif %}>{{ s }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="date_from">Permit Date From</label>
+            <input type="date" id="date_from" name="date_from" value="{{ filters.date_from or '' }}">
+          </div>
+
+          <div class="field">
+            <label for="date_to">Permit Date To</label>
+            <input type="date" id="date_to" name="date_to" value="{{ filters.date_to or '' }}">
+          </div>
+
+          <div class="field">
+            <label for="sort">Sort Order</label>
+            <select id="sort" name="sort">
+              {% for key, meta in sort_options.items() %}
+              <option value="{{ key }}" {% if filters.sort == key %}selected{% endif %}>{{ meta[0] }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="field" style="margin-top:4px">
+            <label class="checkline">
+              <input type="checkbox" name="include_unverified" value="1"
+                     {% if filters.include_unverified %}checked{% endif %}>
+              <span>Include records without mechanical evidence</span>
+            </label>
+          </div>
+
+          <button class="btn btn-primary" type="submit" style="width:100%; margin-top:8px">Apply Filters</button>
+          <a class="btn btn-outline" href="{{ url_for('opportunities') }}" style="width:100%; text-align:center">Clear Filters</a>
+        </div>
+      </form>
+    </aside>
+
+    {# --- 2. Feed Results Workspace --- #}
+    <div class="feed-main-content">
+      {% if interpreted and interpreted.has_structured_intent %}
+        <div class="interpreted-filters-panel" style="background:#ffffff; border:1px solid #cbd5e1; border-left:4px solid var(--gold-500); border-radius:var(--radius-sm); padding:14px 18px; margin-bottom:18px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
+            <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; font-weight:750; color:var(--gold-600)">
+              <span class="bs-motif" aria-hidden="true"><span></span><span></span><span></span></span>
+              Interpreted Intelligence Filters
+            </div>
+            <span class="small muted">Query: "{{ interpreted.original_query }}"</span>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap">
+            {% for label, val in interpreted.filters.items() %}
+              <span class="badge badge-plain" style="font-size:0.78rem"><strong>{{ label }}:</strong> {{ val }}</span>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="feed-toolbar">
+        {% set tier1_n = namespace(count=0) %}
+        {% set tier2_n = namespace(count=0) %}
+        {% set unverified_n = namespace(count=0) %}
+        {% for item in result.items %}
+          {% if item.mechanical_evidence_tier == 1 %}
+            {% set tier1_n.count = tier1_n.count + 1 %}
+          {% elif item.mechanical_evidence_tier == 2 %}
+            {% set tier2_n.count = tier2_n.count + 1 %}
+          {% else %}
+            {% set unverified_n.count = unverified_n.count + 1 %}
+          {% endif %}
+        {% endfor %}
+        <p class="result-count">
+          {% if result.total %}
+            Showing <strong>{{ result.first_index }}–{{ result.last_index }}</strong> of <strong>{{ result.total }}</strong> opportunities
+            <span class="small muted" style="display:block; margin-top:3px">
+              {{ tier1_n.count }} Tier-1 mechanical permits · {{ tier2_n.count }} Tier-2 scope text · {{ unverified_n.count }} commercial base
+            </span>
+          {% else %}
+            <strong>0</strong> opportunities found
+          {% endif %}
+        </p>
+
+        <div class="feed-sort-block">
+          <label for="sort-inline">Sort:</label>
+          <select id="sort-inline" class="feed-sort-select" onchange="window.location.href=this.value">
+            {% for key, meta in sort_options.items() %}
+              {% set query_args = request.args.copy() %}
+              {% set _ = query_args.setlist('sort', [key]) %}
+              <option value="{{ url_for('opportunities') }}?{{ query_args.to_dict() | urlencode }}"
+                      {% if filters.sort == key %}selected{% endif %}>
+                {{ meta[0] }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      {% if result.items %}
+        <div class="card-grid" style="margin-top:0">
+          {% for project in result.items %}
+            {% include "partials/opportunity_card.html" %}
+          {% endfor %}
+        </div>
+
+        {% if result.total_pages > 1 %}
+          <div style="margin-top:28px">
+            {% include "partials/pagination.html" %}
+          </div>
+        {% endif %}
+      {% else %}
+        {% with heading = "No matching opportunities",
+                message = "No projects currently meet all selected constraints in this market.",
+                suggestions = ["Try expanding your date range.",
+                               "Try clearing the city or project type filter.",
+                               "Uncheck 'Mechanical evidence only' to view the wider commercial base."],
+                reset_url = url_for('opportunities') %}
+          {% include "partials/empty_state.html" %}
+        {% endwith %}
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var btn = document.getElementById('mobile-filter-btn');
+  var sidebar = document.getElementById('filter-sidebar-panel');
+  if (btn && sidebar) {
+    btn.addEventListener('click', function() {
+      var isHidden = window.getComputedStyle(sidebar).display === 'none';
+      sidebar.style.display = isHidden ? 'block' : 'none';
+    });
+  }
+})();
+</script>
+{% endblock %}

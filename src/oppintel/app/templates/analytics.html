@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block hero %}
+<section class="hero hero-compact">
+  <div class="wrap">
+    <p class="crumb"><a href="{{ url_for('home') }}">Home</a> · Analytics</p>
+    <div class="hero-tagline-kicker">
+      <span class="bs-motif" aria-hidden="true"><span></span><span></span><span></span></span>
+      Navigational Market Intelligence
+    </div>
+    <h1>Market Analytics &amp; Intelligence Drill-Down</h1>
+    <p class="lede">
+      Analyze commercial construction volume, property type distributions, and verified trade evidence across {{ market.name }}.
+      Every chart and metric connects directly to the underlying project dossiers.
+    </p>
+  </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="wrap" style="padding-top:28px; padding-bottom:56px">
+{# 1. Executive Metrics Strip #}
+<div class="stat-strip">
+  <div class="stat">
+    <span class="stat-value">{{ "{:,}".format(stats.projects_public) }}</span>
+    <span class="stat-label">Commercial Projects</span>
+  </div>
+  <div class="stat">
+    <span class="stat-value">{{ "{:,}".format(stats.with_mechanical) }}</span>
+    <span class="stat-label">With Mechanical Evidence</span>
+  </div>
+  <div class="stat">
+    <span class="stat-value">{{ "{:,}".format(stats.tier1) }}</span>
+    <span class="stat-label">Tier 1 Mechanical Permits</span>
+  </div>
+  <div class="stat">
+    <span class="stat-value">{{ "{:,}".format(stats.cities) }}</span>
+    <span class="stat-label">Active Municipalities</span>
+  </div>
+  <div class="stat">
+    <span class="stat-value">{{ "{:,}".format(stats.permit_records) }}</span>
+    <span class="stat-label">Permits Processed</span>
+  </div>
+</div>
+
+<div class="detail-grid" style="margin-top:28px">
+  {# Left Column: City Activity & Project Type Distribution #}
+  <div>
+    {# A. City Volume Drill-Down #}
+    <div class="detail-panel">
+      <div class="section-kicker">Geographic Activity</div>
+      <h2>Top Municipalities by Project Volume</h2>
+      <p class="small muted">Click any city to view its filtered opportunity directory.</p>
+      
+      <div style="margin-top:16px; display:flex; flex-direction:column; gap:12px">
+        {% for c in cities %}
+        {% set c_name = c.name or c.city %}
+        {% set c_cnt = c.count or c.n or 0 %}
+        {% set c_mech = c.mechanical_count or c.mech or 0 %}
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <span>
+              <a href="{{ url_for('opportunities', city=c_name) }}" style="font-weight:600">{{ c_name }}</a>
+              {% if c_mech %}
+                <span class="small muted">({{ c_mech }} with mechanical)</span>
+              {% endif %}
+            </span>
+            <span class="font-semibold">{{ c_cnt }} projects</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--navy-700); height:100%; width:{{ (c_cnt / (stats.projects_public or 1) * 100) | round }}%"></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {# B. Project Type Specialization #}
+    <div class="detail-panel" style="margin-top:24px">
+      <div class="section-kicker">Sector Breakdown</div>
+      <h2>Commercial Project Types</h2>
+      <p class="small muted">Commercial construction projects categorized by primary occupancy use.</p>
+
+      <div style="margin-top:16px; display:flex; flex-direction:column; gap:12px">
+        {% for t in types %}
+        {% set t_name = t.name or t.project_type %}
+        {% set t_cnt = t.count or t.n or 0 %}
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <a href="{{ url_for('opportunities', project_type=t_name) }}" style="font-weight:600">{{ t_name }}</a>
+            <span class="font-semibold">{{ t_cnt }}</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--gold-500); height:100%; width:{{ (t_cnt / (stats.projects_public or 1) * 100) | round }}%"></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  {# Right Column: Evidence Standards & Recent Movement #}
+  <div>
+    {# Evidence Tier Breakdown #}
+    <div class="detail-panel">
+      <div class="section-kicker">Evidence Methodology</div>
+      <h2>Evidence Hierarchy Distribution</h2>
+      <p class="small muted">How BuildScope substantiates commercial opportunities from raw municipal records.</p>
+      
+      <div style="margin-top:16px; display:flex; flex-direction:column; gap:16px">
+        <div style="background:var(--signal-high-bg); border:1px solid var(--signal-high-border); padding:14px 16px; border-radius:var(--radius-sm)">
+          <div style="display:flex; justify-content:space-between; align-items:center">
+            <span class="badge badge-high">Tier 1: Direct Mechanical Permit</span>
+            <strong style="color:var(--signal-high-text); font-size:1.1rem">{{ stats.tier1 }}</strong>
+          </div>
+          <p class="small" style="margin:8px 0 0 0; color:var(--signal-high-text)">
+            The building department recorded an explicit mechanical permit. Confirms mechanical contractor procurement.
+          </p>
+        </div>
+
+        <div style="background:var(--signal-med-bg); border:1px solid var(--signal-med-border); padding:14px 16px; border-radius:var(--radius-sm)">
+          <div style="display:flex; justify-content:space-between; align-items:center">
+            <span class="badge badge-med">Tier 2: Mechanical Scope Named</span>
+            <strong style="color:var(--signal-med-text); font-size:1.1rem">{{ (stats.with_mechanical - stats.tier1) if stats.with_mechanical >= stats.tier1 else 0 }}</strong>
+          </div>
+          <p class="small" style="margin:8px 0 0 0; color:var(--signal-med-text)">
+            Commercial building permit whose official work description names HVAC, chillers, boilers, or ductwork.
+          </p>
+        </div>
+
+        <div style="background:var(--slate-100); border:1px solid var(--slate-300); padding:14px 16px; border-radius:var(--radius-sm)">
+          <div style="display:flex; justify-content:space-between; align-items:center">
+            <span class="badge badge-plain">Commercial Base</span>
+            <strong style="color:var(--slate-800); font-size:1.1rem">{{ (stats.projects_public - stats.with_mechanical) if stats.projects_public >= stats.with_mechanical else 0 }}</strong>
+          </div>
+          <p class="small" style="margin:8px 0 0 0; color:var(--slate-600)">
+            Verified commercial construction projects with structural/architectural permits on file before mechanical filings appear.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    {# Recent Audit Highlights #}
+    <div class="detail-panel" style="margin-top:24px">
+      <div class="section-kicker">Continuous Audit</div>
+      <h2>Recent Market Movement</h2>
+      <p class="small muted">Latest detected differences across the market.</p>
+
+      {% if recent_changes %}
+        <ul class="why-list" style="margin-top:12px">
+          {% for c in recent_changes %}
+          <li>
+            <span class="tick" aria-hidden="true">&#9679;</span>
+            <span>
+              <strong>{{ c.project_name or c.address }}</strong> ({{ c.city }}): {{ c.summary }}
+              {% if c.slug %}
+                <a href="{{ url_for('opportunity_detail', slug=c.slug) }}" style="margin-left:4px; font-weight:600">Dossier &rarr;</a>
+              {% endif %}
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
+        <div style="margin-top:14px">
+          <a class="btn btn-small btn-outline" href="{{ url_for('changes_feed') }}">View Full Audit Log &rarr;</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+</div>
+{% endblock %}

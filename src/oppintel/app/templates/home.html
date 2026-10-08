@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+
+{% block hero %}
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-tagline-kicker">
+      <span class="bs-motif" aria-hidden="true"><span></span><span></span><span></span></span>
+      Commercial Construction Opportunity Intelligence
+    </div>
+
+    <h1>See the work before the work begins.</h1>
+
+    <p class="lede">
+      BuildScope turns public municipal construction filings and permit records into structured commercial intelligence.
+      Discover active projects, verify mechanical scope from official documents, and track continuous permit revisions before jobs reach public bidding.
+    </p>
+
+    <form class="hero-search-box" method="get" action="{{ url_for('opportunities') }}" role="search">
+      <input type="search" name="q" placeholder="Search by project name, address, city, or permit number…" aria-label="Search commercial opportunities">
+      <button type="submit">Search Opportunities</button>
+    </form>
+
+    <div class="hero-cta">
+      <a class="btn btn-primary btn-lg" href="{{ url_for('opportunities') }}">Explore Opportunities</a>
+      <a class="btn btn-outline btn-lg" href="{{ url_for('how_it_works') }}">See How It Works</a>
+      {% if not current_user %}
+        <a class="btn btn-ghost btn-lg" href="{{ url_for('signup') }}">Get Access &rarr;</a>
+      {% endif %}
+    </div>
+
+    <div class="hero-note">
+      <span class="bs-motif" aria-hidden="true"><span></span><span></span><span></span></span>
+      <span><strong>Evidence Guarantee:</strong> Every fact links directly to its official municipal record. No manufactured scores or unverified bidding claims.</span>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block content %}
+
+{# 1. Restrained Evidence Strip (Quiet Trust Baseline — NOT giant dashboard cards) #}
+<div class="evidence-strip-container">
+  <div class="wrap">
+    <div class="evidence-strip">
+      <div class="evidence-stat-item">
+        <span class="evidence-stat-num">{{ "{:,}".format(stats.projects_public) }}</span>
+        <span class="evidence-stat-label">Commercial projects</span>
+      </div>
+      <div class="evidence-stat-item">
+        <span class="evidence-stat-num">{{ "{:,}".format(stats.with_mechanical) }}</span>
+        <span class="evidence-stat-label">Projects with mechanical evidence</span>
+      </div>
+      <div class="evidence-stat-item">
+        <span class="evidence-stat-num">{{ "{:,}".format(stats.cities) }}</span>
+        <span class="evidence-stat-label">Active jurisdictions</span>
+      </div>
+      <div class="evidence-stat-item">
+        <span class="evidence-stat-num">{{ "{:,}".format(stats.permit_records) }}</span>
+        <span class="evidence-stat-label">Permit records processed</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# 2. Evidence Architecture: Why BuildScope Is Different #}
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-kicker">
+        <span class="bs-motif" aria-hidden="true"><span></span><span></span><span></span></span>
+        Evidence-First Architecture
+      </div>
+      <h2>Every Conclusion Has an Evidence Path</h2>
+      <p class="section-sub">
+        BuildScope never collapses complex commercial project facts into an unexplained score.
+        We expose the complete custody chain from official municipal records to actionable contractor intelligence.
+      </p>
+    </div>
+
+    <div class="evidence-chain-grid">
+      <div class="evidence-chain-card">
+        <div class="chain-step-num">Step 01</div>
+        <div class="chain-step-title">Recorded Fact</div>
+        <div class="chain-step-body">Official building permit filed at a verified commercial municipal jurisdiction.</div>
+      </div>
+
+      <div class="evidence-chain-card">
+        <div class="chain-step-num">Step 02</div>
+        <div class="chain-step-title">Source Record</div>
+        <div class="chain-step-body">Unedited raw payload archived verbatim with persistent key and filing timestamp.</div>
+      </div>
+
+      <div class="evidence-chain-card">
+        <div class="chain-step-num">Step 03</div>
+        <div class="chain-step-title">Scope Evidence</div>
+        <div class="chain-step-body">Documentary evidence extracted: explicit trade permits or verbatim equipment scope text.</div>
+      </div>
+
+      <div class="evidence-chain-card">
+        <div class="chain-step-num">Step 04</div>
+        <div class="chain-step-title">Classification</div>
+        <div class="chain-step-body">Deterministic rules assign Tier 1 (Official Trade Permit) or Tier 2 (Documented Scope).</div>
+      </div>
+
+      <div class="evidence-chain-card">
+        <div class="chain-step-num">Step 05</div>
+        <div class="chain-step-title">Contractor Action</div>
+        <div class="chain-step-body">Watch the record, receive continuous revision alerts, and pursue before the project bids.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# 3. The 4-Stage Intelligence Workflow #}
+<section class="section" style="background:#ffffff; border-top:1px solid var(--line); border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-kicker">
+        <span class="bs-motif" aria-hidden="true"><span></span><span></span><span></span></span>
+        Intelligence Lifecycle
+      </div>
+      <h2>Built for Commercial Subcontractors &amp; Estimators</h2>
+      <p class="section-sub">
+        Move beyond fragmented municipal portals and generic bidboards with an auditable intelligence workflow.
+      </p>
+    </div>
+
+    <div class="split-4">
+      <div class="detail-panel" style="padding:22px 20px">
+        <h4 style="color:var(--gold-600)">01. Discover</h4>
+        <h3>Early Project Visibility</h3>
+        <p class="small muted">
+          Identify major commercial capital developments, tenant additions, and facility expansions months before general contractors issue subcontract invitations.
+        </p>
+      </div>
+
+      <div class="detail-panel" style="padding:22px 20px">
+        <h4 style="color:var(--gold-600)">02. Verify</h4>
+        <h3>Documentary Scope Audits</h3>
+        <p class="small muted">
+          Inspect verbatim equipment descriptions, mechanical permits on file, square footage, and declared valuations with direct links to issuing departments.
+        </p>
+      </div>
+
+      <div class="detail-panel" style="padding:22px 20px">
+        <h4 style="color:var(--gold-600)">03. Watch</h4>
+        <h3>Continuous Revision Tracking</h3>
+        <p class="small muted">
+          Automated collection runs detect real differences in scope, valuation amendments, and status transitions without false alerts.
+        </p>
+      </div>
+
+      <div class="detail-panel" style="padding:22px 20px">
+        <h4 style="color:var(--gold-600)">04. Pursue</h4>
+        <h3>Pursuit Pipeline Management</h3>
+        <p class="small muted">
+          Organize opportunities into qualification stages, attach private notes, and coordinate team business development from a unified workspace.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# 4. Featured Project Intelligence Dossier Preview #}
+{% if latest %}
+<section class="section">
+  <div class="wrap">
+    <div class="section-head" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px">
+      <div>
+        <div class="section-kicker">
+          <span class="bs-motif" aria-hidden="true"><span></span><span></span><span></span></span>
+          Verified Project Dossier
+        </div>
+        <h2>Selected Commercial Opportunities</h2>
+        <p class="section-sub">Recently indexed commercial projects with verified documentary evidence across {{ market.short_name }}.</p>
+      </div>
+      <a class="btn btn-outline" href="{{ url_for('opportunities') }}">View Full Opportunity Feed &rarr;</a>
+    </div>
+
+    <div class="card-grid">
+      {% for project in latest[:3] %}
+        {% include "partials/opportunity_card.html" %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{# 5. Market & Trade Coverage Architecture #}
+<section class="section" style="background:#ffffff; border-top:1px solid var(--line); border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-kicker">
+        <span class="bs-motif" aria-hidden="true"><span></span><span></span><span></span></span>
+        Configuration-Driven Coverage
+      </div>
+      <h2>Market &amp; Specialty Trade Architecture</h2>
+      <p class="section-sub">
+        BuildScope operates across modular geographic markets and specialty trade profiles without hardcoding.
+      </p>
+    </div>
+
+    <div class="split-2">
+      <div class="detail-panel">
+        <h3>Active Geographic Market: {{ market.name }}</h3>
+        <p class="muted">
+          Continuous coverage across Dallas, Fort Worth, and Collin County municipalities (Frisco, Plano, McKinney, Allen, Celina, Wylie).
+        </p>
+        <div class="badge-row" style="margin:14px 0">
+          <span class="badge badge-high">Active: {{ market.short_name }}</span>
+          <span class="badge badge-plain">Roadmap: Greater Houston</span>
+          <span class="badge badge-plain">Roadmap: Austin–San Antonio</span>
+        </div>
+        <p style="margin-top:16px">
+          <a class="btn btn-small btn-outline" href="{{ url_for('markets_index') }}">Explore Market Jurisdictions &rarr;</a>
+        </p>
+      </div>
+
+      <div class="detail-panel">
+        <h3>Active Specialty Trade: {{ trade.label }}</h3>
+        <p class="muted">
+          Deep documentary parsing for rooftop units, chillers, boilers, ventilation systems, VRF equipment, and confirmed mechanical permits.
+        </p>
+        <div class="badge-row" style="margin:14px 0">
+          <span class="badge badge-high">Active: {{ trade.short_label }}</span>
+          <span class="badge badge-plain">Roadmap: Electrical</span>
+          <span class="badge badge-plain">Roadmap: Plumbing</span>
+        </div>
+        <p style="margin-top:16px">
+          <a class="btn btn-small btn-outline" href="{{ url_for('trades_index') }}">Explore Trade Signals &rarr;</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# 6. High-Conversion Institutional Call to Action #}
+<section class="section">
+  <div class="wrap">
+    <div class="detail-panel" style="padding:48px clamp(20px, 4vw, 44px); text-align:center; background:linear-gradient(180deg, var(--navy-950) 0%, var(--navy-900) 100%); color:#ffffff; border-color:var(--line-dark)">
+      <div class="section-kicker" style="color:var(--gold-400)">
+        <span class="bs-motif" aria-hidden="true"><span></span><span></span><span></span></span>
+        Commercial Intelligence Terminal
+      </div>
+      <h2 style="color:#ffffff; font-size:clamp(1.5rem, 3.5vw, 2.1rem); max-width:640px; margin:0 auto 12px">
+        Start tracking commercial projects before the bid invitations circulate.
+      </h2>
+      <p style="max-width:580px; margin:0 auto 28px; color:var(--slate-300); font-size:1.02rem">
+        Access verified commercial filings across {{ market.short_name }}, inspect official municipal scope text, and manage your pursuit pipeline.
+      </p>
+      <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap">
+        <a class="btn btn-primary btn-lg" href="{{ url_for('opportunities') }}">Explore Opportunities Feed</a>
+        <a class="btn btn-outline btn-lg" href="{{ url_for('signup') }}" style="background:#ffffff; color:var(--navy-950) !important">Create Account &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

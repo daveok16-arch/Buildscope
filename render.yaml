@@ -1,0 +1,68 @@
+# Render blueprint for the BuildScope web service.
+#
+# Deploy with "New > Blueprint" and point Render at this repository; it reads this file.
+# The same container also runs the online-search refresh loop, so there is no separate worker,
+# cron job or external scheduler to configure.
+#
+# This defaults to the Free plan, which has no persistent disk. That is enough to get the service
+# up, but the database then lives in the checkout and is replaced on every deploy. To keep the
+# assembled dataset, switch to a paid plan and enable the disk block at the bottom of this file.
+
+services:
+  - type: web
+    name: buildscope
+    runtime: python
+    # Free has no disk and sleeps after inactivity. Change to `starter` (or higher) together with
+    # the disk block below to keep the database across deploys.
+    plan: free
+    region: oregon
+    branch: main
+    # Render injects RENDER=true; ops/start.sh detects it and runs in the foreground on $PORT.
+    # It is idempotent, so it is safe on every boot against an existing database.
+    buildCommand: pip install -r requirements.txt
+    # Invoked through bash explicitly: the script uses bash syntax and this does not depend on
+    # the executable bit surviving the deploy.
+    startCommand: bash ops/start.sh
+    healthCheckPath: /healthz
+    # One instance, because the disk cannot be shared and two refresh loops must not race.
+    numInstances: 1
+    autoDeploy: true
+    envVars:
+      # The build only installs requirements.txt; the package itself is not pip-installed. src/ is
+      # the import root, so setting it here makes the app and the Render Shell agree — the admin
+      # command in the docs runs there without a prefix.
+      - key: PYTHONPATH
+        value: src
+      # Signs sessions. Generated once by Render and kept, so logins survive a redeploy.
+      - key: SECRET_KEY
+        generateValue: true
+      # Absolute canonical links, Open Graph tags and the sitemap. Only needed to override the
+      # origin: without it the app uses RENDER_EXTERNAL_URL, and this takes precedence over that.
+      # Set it for a custom domain.
+      - key: BASE_URL
+        sync: false
+      - key: SESSION_COOKIE_SECURE
+        value: "true"
+      - key: CSRF_ENABLED
+        value: "true"
+      - key: LOG_LEVEL
+        value: INFO
+      # The refresh loop: fetch the newest pages of every source every six hours.
+      - key: REFRESH_SECONDS
+        value: "21600"
+      - key: MAX_PAGES
+        value: "3"
+      # When a disk is attached, point the app at it so the database outlives a deploy. Leave
+      # these unset without a disk: the app then writes to the checkout's own data/ directory,
+      # which is writable, and a path like /var/data does not exist on a Free instance.
+      # - key: OPPINTEL_DATA_DIR
+      #   value: /var/data
+      # - key: OPPINTEL_DB
+      #   value: /var/data/oppintel.db
+    # Persistent disk. Requires a paid instance type — uncomment this block and the two
+    # OPPINTEL_* variables above, and change `plan` to `starter`. Without it the database is
+    # rebuilt from scratch after every deploy.
+    # disk:
+    #   name: oppintel-data
+    #   mountPath: /var/data
+    #   sizeGB: 1

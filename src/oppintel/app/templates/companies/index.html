@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block hero %}
+<section class="hero hero-compact">
+  <div class="wrap">
+    <p class="crumb"><a href="{{ url_for('home') }}">Home</a> · Stakeholders</p>
+    <div class="hero-tagline-kicker">Relationship Intelligence</div>
+    <h1>Companies &amp; Project Stakeholders</h1>
+    <p class="lede">
+      Verified commercial general contractors, owners, developers, and architects active across {{ market.name }}.
+      Track who is building, what project types they specialize in, and their recurring partner networks.
+    </p>
+  </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="wrap" style="padding-top:24px; padding-bottom:56px">
+<div class="feed-workspace-layout">
+  {# Filter Sidebar #}
+  <aside class="filter-sidebar">
+    <form method="get" action="{{ url_for('companies_index') }}">
+      <div class="filter-sidebar-head">
+        <h3>Filter Stakeholders</h3>
+        <a class="btn btn-small btn-ghost" href="{{ url_for('companies_index') }}">Reset</a>
+      </div>
+
+      <div class="filter-stack">
+        <div class="field">
+          <label for="q">Company Name</label>
+          <input type="search" id="q" name="q" value="{{ q or '' }}" placeholder="Search company name…">
+        </div>
+
+        <div class="field">
+          <label for="role">Stakeholder Role</label>
+          <select id="role" name="role">
+            <option value="">All Roles</option>
+            <option value="contractor" {% if selected_role == 'contractor' %}selected{% endif %}>General Contractor</option>
+            <option value="owner" {% if selected_role == 'owner' %}selected{% endif %}>Property Owner / Developer</option>
+            <option value="architect" {% if selected_role == 'architect' %}selected{% endif %}>Architect / Designer</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="city">Market City</label>
+          <select id="city" name="city">
+            <option value="">All Cities</option>
+            {% for c in cities %}
+            <option value="{{ c }}" {% if selected_city == c %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" style="margin-top:10px">Apply Filters</button>
+      </div>
+    </form>
+  </aside>
+
+  {# Main Directory Results #}
+  <div class="feed-results-area">
+    <div class="results-header-bar">
+      <div>
+        <h2>{{ companies | length }} Companies Recorded</h2>
+        <p class="results-count-sub">Active stakeholders substantiated by municipal permit filings and project records.</p>
+      </div>
+    </div>
+
+    {% if companies %}
+      <div class="card-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
+        {% for c in companies %}
+        <article class="card opportunity-card" style="display:flex; flex-direction:column; justify-content:space-between">
+          <div>
+            <div class="card-badges">
+              <span class="badge badge-plain">{{ c.primary_role }}</span>
+              {% if c.mechanical_project_count > 0 %}
+                <span class="badge badge-evidence">{{ c.mechanical_project_count }} with Mechanical</span>
+              {% endif %}
+            </div>
+            <h3 class="card-title" style="margin-top:8px">
+              <a href="{{ url_for('company_detail', slug=c.slug) }}">{{ c.name }}</a>
+            </h3>
+            
+            <div class="card-meta" style="margin:12px 0">
+              <div class="meta-item">
+                <span class="meta-label">Associated Projects:</span>
+                <span class="meta-val font-semibold">{{ c.project_count }}</span>
+              </div>
+              {% if c.total_declared_value %}
+              <div class="meta-item">
+                <span class="meta-label">Declared Valuation:</span>
+                <span class="meta-val font-semibold">${{ "{:,.0f}".format(c.total_declared_value) }}</span>
+              </div>
+              {% endif %}
+              {% if c.cities %}
+              <div class="meta-item">
+                <span class="meta-label">Active Footprint:</span>
+                <span class="meta-val">{{ c.cities | join(', ') }}</span>
+              </div>
+              {% endif %}
+              {% if c.project_types %}
+              <div class="meta-item">
+                <span class="meta-label">Specializations:</span>
+                <span class="meta-val">{{ c.project_types | join(', ') }}</span>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="card-footer" style="margin-top:16px; border-top:1px solid var(--slate-200); padding-top:12px; display:flex; justify-content:space-between; align-items:center">
+            <span class="small muted">Public Records Verified</span>
+            <a class="btn btn-small btn-outline" href="{{ url_for('company_detail', slug=c.slug) }}">View Profile &rarr;</a>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      {% with heading = "No companies matched your criteria",
+              message = "Try widening your search keyword or clearing the role and city filters.",
+              suggestions = ["Clear search query to see all top commercial stakeholders.",
+                             "Switch from a specific city to market-wide."],
+              reset_url = url_for('companies_index') %}
+        {% include "partials/empty_state.html" %}
+      {% endwith %}
+    {% endif %}
+  </div>
+</div>
+</div>
+{% endblock %}

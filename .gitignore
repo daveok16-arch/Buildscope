@@ -1,0 +1,31 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# Vendored dependencies: the host installs from requirements.txt, so these are not committed.
+vendor/python/
+
+# Runtime state. The database, logs, refresh state and landed source captures are produced by the
+# refresh loop on the host; committing them would ship one machine's data and bloat the repository.
+data/*.db
+data/*.db-shm
+data/*.db-wal
+data/*.log
+data/*.out
+data/*.pid
+data/*.json
+data/raw/
+!data/.gitkeep

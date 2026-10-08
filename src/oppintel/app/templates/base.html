@@ -1,0 +1,311 @@
+{# Base layout. All pages extend this. #}
+{% set seo = seo | default(none) %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{% block title %}{{ seo.title if seo else page_title | default('BuildScope — Construction Opportunity Intelligence') }}{% endblock %}</title>
+<meta name="description" content="{{ seo.description if seo else 'BuildScope turns public construction and permitting records into structured commercial construction intelligence. See the work before the work begins.' }}">
+{% if seo and seo.canonical %}<link rel="canonical" href="{{ seo.canonical }}">{% endif %}
+<meta name="robots" content="{{ seo.robots_directive if seo else 'noindex,nofollow' }}">
+<meta name="theme-color" content="#060b17">
+
+{# Open Graph / Twitter metadata #}
+{% if seo and seo.canonical %}
+<meta property="og:type" content="{{ seo.og_type }}">
+<meta property="og:title" content="{{ seo.title }}">
+<meta property="og:description" content="{{ seo.description }}">
+<meta property="og:url" content="{{ seo.canonical }}">
+<meta property="og:site_name" content="BuildScope — Construction Opportunity Intelligence">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ seo.title }}">
+<meta name="twitter:description" content="{{ seo.description }}">
+{% endif %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+{% if seo %}{% for block in seo.json_ld %}
+<script type="application/ld+json">{{ block | tojson }}</script>
+{% endfor %}{% endif %}
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+{# 1. Single Calm Professional Header #}
+<header class="site-header">
+  <div class="wrap header-inner">
+    {# Brand Lockup #}
+    <a class="brand" href="{{ url_for('home') }}" aria-label="BuildScope Home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg class="brand-logo-svg" viewBox="0 0 24 24">
+          <path d="M12 2L2 7l10 5 10-5-10-5z" />
+          <path d="M2 17l10 5 10-5" />
+          <path d="M2 12l10 5 10-5" />
+          <circle cx="12" cy="12" r="3" class="brand-logo-accent" />
+        </svg>
+      </span>
+      <span class="brand-text">
+        <strong>BUILD SCOPE<span class="brand-dot">.</span></strong>
+        <small>Construction Opportunity Intelligence</small>
+      </span>
+    </a>
+
+    {# Desktop Navigation #}
+    <nav class="site-nav" aria-label="Main navigation">
+      <ul>
+        <li><a href="{{ url_for('home') }}">Home</a></li>
+        <li><a href="{{ url_for('opportunities') }}">Opportunities</a></li>
+        <li><a href="{{ url_for('markets_index') }}">Markets</a></li>
+        <li><a href="{{ url_for('companies_index') }}">Companies</a></li>
+        <li><a href="{{ url_for('changes_feed') }}">Changes</a></li>
+        <li><a href="{{ url_for('analytics_view') }}">Analytics</a></li>
+        <li><a href="{{ url_for('reports_index') }}">Reports</a></li>
+        <li><a href="{{ url_for('how_it_works') }}">How It Works</a></li>
+      </ul>
+
+      <div class="nav-account">
+        <a class="nav-search-trigger" href="{{ url_for('opportunities') }}" aria-label="Search opportunities">
+          <svg class="nav-search-icon" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <span>Search projects...</span>
+        </a>
+
+        {% if current_user %}
+          <a class="btn btn-small btn-ghost" href="{{ url_for('dashboard') }}">Dashboard</a>
+          <a class="btn btn-small btn-ghost" href="{{ url_for('my_pipeline') }}">Pipeline</a>
+          <a class="btn btn-small btn-ghost" href="{{ url_for('watching') }}">Watching</a>
+          <a class="btn btn-small btn-ghost" href="{{ url_for('alerts') }}" title="Alerts">
+            Alerts{% if unread_alerts %}<span class="nav-count-badge">{{ unread_alerts }}</span>{% endif %}
+          </a>
+          <form method="post" action="{{ url_for('signout') }}" class="inline-form">
+            {% include "partials/csrf.html" %}
+            <button class="btn btn-small btn-outline" type="submit">Sign Out</button>
+          </form>
+        {% else %}
+          <a class="btn btn-small btn-ghost" href="{{ url_for('signin') }}">Sign In</a>
+          <a class="btn btn-small btn-primary" href="{{ url_for('signup') }}">Get Access</a>
+        {% endif %}
+      </div>
+    </nav>
+
+    {# Mobile Hamburger Trigger #}
+    <button type="button" class="mobile-menu-btn" id="mobile-menu-open-btn" aria-label="Open Navigation Menu" aria-expanded="false" aria-controls="mobile-nav-drawer">
+      <div class="mobile-menu-icon" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </button>
+  </div>
+</header>
+
+{# 2. Mobile Off-Canvas Drawer & Backdrop #}
+<div class="mobile-drawer-backdrop" id="mobile-drawer-backdrop" aria-hidden="true"></div>
+<aside class="mobile-drawer" id="mobile-nav-drawer" role="dialog" aria-modal="true" aria-label="Mobile Navigation" tabindex="-1">
+  <div class="drawer-header">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg class="brand-logo-svg" viewBox="0 0 24 24">
+          <path d="M12 2L2 7l10 5 10-5-10-5z" />
+          <path d="M2 17l10 5 10-5" />
+          <path d="M2 12l10 5 10-5" />
+          <circle cx="12" cy="12" r="3" class="brand-logo-accent" />
+        </svg>
+      </span>
+      <span class="brand-text">
+        <strong>BUILD SCOPE<span class="brand-dot">.</span></strong>
+        <small>Construction Opportunity Intelligence</small>
+      </span>
+    </div>
+    <button type="button" class="drawer-close-btn" id="mobile-menu-close-btn" aria-label="Close Navigation Menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+  </div>
+
+  <nav class="drawer-nav" aria-label="Mobile main navigation">
+    <a href="{{ url_for('home') }}">Home</a>
+    <a href="{{ url_for('opportunities') }}">Opportunities</a>
+    <a href="{{ url_for('markets_index') }}">Markets</a>
+    <a href="{{ url_for('companies_index') }}">Companies</a>
+    <a href="{{ url_for('changes_feed') }}">Changes</a>
+    <a href="{{ url_for('analytics_view') }}">Analytics</a>
+    <a href="{{ url_for('reports_index') }}">Reports</a>
+    <a href="{{ url_for('how_it_works') }}">How It Works</a>
+  </nav>
+
+  <div class="drawer-divider"></div>
+
+  <div class="drawer-account">
+    {% if current_user %}
+      <a class="btn btn-outline" href="{{ url_for('dashboard') }}">Dashboard</a>
+      <a class="btn btn-outline" href="{{ url_for('my_pipeline') }}">Pipeline</a>
+      <a class="btn btn-outline" href="{{ url_for('watching') }}">Watching</a>
+      <a class="btn btn-outline" href="{{ url_for('alerts') }}">Alerts{% if unread_alerts %} ({{ unread_alerts }}){% endif %}</a>
+      <form method="post" action="{{ url_for('signout') }}">
+        {% include "partials/csrf.html" %}
+        <button class="btn btn-ghost" type="submit" style="width:100%; border:1px solid rgba(255,255,255,0.15)">Sign Out</button>
+      </form>
+    {% else %}
+      <a class="btn btn-outline" href="{{ url_for('signin') }}">Sign In</a>
+      <a class="btn btn-primary" href="{{ url_for('signup') }}">Get Access</a>
+    {% endif %}
+  </div>
+
+  <div class="drawer-footer-status">
+    <div><strong>Active Market:</strong> {{ market.name }}</div>
+    <div class="muted">Data freshness: {{ freshness.display }}</div>
+  </div>
+</aside>
+
+{% block hero %}{% endblock %}
+
+<main id="main">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="wrap flash-stack">
+      {% for category, message in messages %}
+        <p class="flash flash-{{ category }}">{{ message }}</p>
+      {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</main>
+
+{# 3. Professional Institutional Footer #}
+{% if request.endpoint in ['signin', 'signup', 'auth_google', 'forgot_password', 'reset_password'] %}
+<footer class="site-footer site-footer-auth">
+  <div class="wrap auth-footer-inner">
+    <div class="auth-footer-brand">
+      <span class="bs-motif" aria-hidden="true"><span></span><span></span><span></span></span>
+      <strong>BUILD SCOPE</strong> &bull; Commercial Construction Intelligence
+    </div>
+    <div class="auth-footer-links">
+      <a href="{{ url_for('opportunities') }}">Opportunities</a>
+      <a href="{{ url_for('how_it_works') }}">Methodology</a>
+      <a href="{{ url_for('home') }}">Platform</a>
+      <span>&copy; 2026 BuildScope</span>
+    </div>
+  </div>
+</footer>
+{% else %}
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand-title">
+          <span class="bs-motif" aria-hidden="true"><span></span><span></span><span></span></span>
+          BUILD SCOPE
+        </div>
+        <p class="footer-brand-descriptor">
+          <strong>See the work before the work begins.</strong><br>
+          Commercial construction opportunity intelligence built directly from official public records.
+        </p>
+        <p class="small muted" style="margin-top:12px">
+          Live Market: {{ market.name }} ({{ market.short_name }})<br>
+          Continuous Ingestion: {{ freshness.display }}
+        </p>
+      </div>
+
+      <div>
+        <h4>Product</h4>
+        <ul>
+          <li><a href="{{ url_for('opportunities') }}">Opportunities</a></li>
+          <li><a href="{{ url_for('markets_index') }}">Markets</a></li>
+          <li><a href="{{ url_for('companies_index') }}">Companies</a></li>
+          <li><a href="{{ url_for('changes_feed') }}">Changes</a></li>
+          <li><a href="{{ url_for('analytics_view') }}">Analytics</a></li>
+          <li><a href="{{ url_for('reports_index') }}">Reports</a></li>
+          <li><a href="{{ url_for('core_category') }}">Commercial Construction Leads</a></li>
+          <li><a href="{{ url_for('guides_index') }}">Guides</a></li>
+          <li><a href="{{ url_for('how_it_works') }}">How It Works</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4>Coverage</h4>
+        <ul>
+          {% for m in all_markets %}
+          <li>
+            <a href="{{ url_for('market_landing', market_slug=m.slug) }}">
+              {{ m.name }}{% if not m.active %} (Planned){% endif %}
+            </a>
+          </li>
+          {% endfor %}
+          {% for t in all_trades %}
+          <li>
+            <a href="{{ url_for('trade_landing', trade_slug=t.slug or t.id) }}">
+              {{ t.label }}{% if not t.active %} (Planned){% endif %}
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div>
+        <h4>Workspace</h4>
+        <ul>
+          {% if current_user %}
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('watching') }}">Watching</a></li>
+            <li><a href="{{ url_for('my_pipeline') }}">Pipeline</a></li>
+            <li><a href="{{ url_for('alerts') }}">Alerts</a></li>
+            <li><a href="{{ url_for('saved') }}">Saved Projects</a></li>
+            <li><a href="{{ url_for('preferences') }}">Preferences</a></li>
+          {% else %}
+            <li><a href="{{ url_for('signin') }}">Sign In</a></li>
+            <li><a href="{{ url_for('signup') }}">Get Access</a></li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-legal">
+      <p>
+        <strong>Evidence &amp; Reliability Notice:</strong> BuildScope indexes and clusters public commercial construction records, municipal permit filings, and trade scope data.
+        Permit filings represent public documentary records and do not imply active subcontract bidding or owner solicitation unless verified in official procurement documents.
+        Confirm all valuations, specifications, and project statuses with issuing municipal jurisdictions and project authorities.
+      </p>
+      <p class="muted">&copy; 2026 BuildScope. All rights reserved. Commercial Opportunity Intelligence.</p>
+    </div>
+  </div>
+</footer>
+{% endif %}
+
+<script>
+(function() {
+  var openBtn = document.getElementById('mobile-menu-open-btn');
+  var closeBtn = document.getElementById('mobile-menu-close-btn');
+  var backdrop = document.getElementById('mobile-drawer-backdrop');
+  var drawer = document.getElementById('mobile-nav-drawer');
+
+  function openDrawer() {
+    document.body.classList.add('drawer-open');
+    if (openBtn) openBtn.setAttribute('aria-expanded', 'true');
+    if (drawer) drawer.focus();
+  }
+
+  function closeDrawer() {
+    document.body.classList.remove('drawer-open');
+    if (openBtn) openBtn.setAttribute('aria-expanded', 'false');
+  }
+
+  if (openBtn) openBtn.addEventListener('click', openDrawer);
+  if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+  if (backdrop) backdrop.addEventListener('click', closeDrawer);
+
+  window.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && document.body.classList.contains('drawer-open')) {
+      closeDrawer();
+      if (openBtn) openBtn.focus();
+    }
+  });
+})();
+</script>
+</body>
+</html>

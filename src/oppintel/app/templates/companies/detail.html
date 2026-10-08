@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dossier-head">
+  <p class="crumb">
+    <a href="{{ url_for('home') }}">Home</a> ·
+    <a href="{{ url_for('companies_index') }}">Companies</a> ·
+    {{ company.name }}
+  </p>
+
+  <div class="badge-row">
+    <span class="badge badge-plain">{{ company.primary_role }}</span>
+    <span class="badge badge-evidence">{{ company.project_count }} Commercial Projects</span>
+    {% if company.mechanical_project_count > 0 %}
+      <span class="badge badge-high">{{ company.mechanical_project_count }} with Mechanical Evidence</span>
+    {% endif %}
+  </div>
+
+  <h1>{{ company.name }}</h1>
+  <p class="muted" style="font-size:0.95rem; margin-bottom:0">
+    Commercial stakeholder active in {{ company.cities | join(', ') if company.cities else market.name }} · Verified public records
+  </p>
+</div>
+
+{# 1. Executive Intelligence Overview #}
+<div class="stat-strip" style="margin-top:20px">
+  <div class="stat">
+    <span class="stat-value">{{ company.project_count }}</span>
+    <span class="stat-label">Commercial Projects</span>
+  </div>
+  {% if company.total_declared_value %}
+  <div class="stat">
+    <span class="stat-value">${{ "{:,.0f}".format(company.total_declared_value) }}</span>
+    <span class="stat-label">Total Declared Value</span>
+  </div>
+  {% endif %}
+  <div class="stat">
+    <span class="stat-value">{{ company.mechanical_project_count }}</span>
+    <span class="stat-label">Mechanical Scope Filed</span>
+  </div>
+  <div class="stat">
+    <span class="stat-value">{{ company.cities | length }}</span>
+    <span class="stat-label">Cities Active</span>
+  </div>
+  <div class="stat">
+    <span class="stat-value">{{ company.recurring_partners | length }}</span>
+    <span class="stat-label">Observed Partners</span>
+  </div>
+</div>
+
+<div class="detail-grid">
+  {# Main Left Column: Associated Projects #}
+  <div>
+    <section class="section" style="padding-top:0">
+      <div class="section-head" style="display:flex; justify-content:space-between; align-items:flex-end">
+        <div>
+          <div class="section-kicker">Project Portfolio</div>
+          <h2>Associated Commercial Projects</h2>
+          <p class="section-sub">Projects where {{ company.name }} was recorded on municipal permit filings.</p>
+        </div>
+      </div>
+
+      {% if company.associated_projects %}
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Project</th>
+                <th>Location</th>
+                <th>Type</th>
+                <th>Signal</th>
+                <th>Permit Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in company.associated_projects %}
+              <tr>
+                <td>
+                  <strong><a href="{{ url_for('opportunity_detail', slug=p.slug) }}">{{ p.project_name }}</a></strong>
+                  {% if p.permit_number %}<div class="small muted">Permit #{{ p.permit_number }}</div>{% endif %}
+                </td>
+                <td>{{ p.address or 'Address on file' }}, {{ p.city }}</td>
+                <td>{{ p.project_type or 'Commercial' }}</td>
+                <td>
+                  {% if p.evidence_tier == 1 %}
+                    <span class="badge badge-high" style="font-size:0.75rem">Tier 1 Permit</span>
+                  {% elif p.evidence_tier == 2 %}
+                    <span class="badge badge-med" style="font-size:0.75rem">Tier 2 Scope</span>
+                  {% else %}
+                    <span class="badge badge-low" style="font-size:0.75rem">Commercial Base</span>
+                  {% endif %}
+                </td>
+                <td>{{ p.permit_date or 'On file' }}</td>
+                <td>{{ p.status or 'Issued' }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="muted">No public projects currently linked.</p>
+      {% endif %}
+    </section>
+  </div>
+
+  {# Right Column: Relationship Intelligence & Footprint #}
+  <div>
+    {# A. Recurring Partner Network #}
+    <div class="detail-panel">
+      <h2>Relationship Intelligence</h2>
+      <p class="small muted">Other stakeholders observed on the same commercial filings with {{ company.name }}.</p>
+      {% if company.recurring_partners %}
+        <ul class="why-list" style="margin-top:12px">
+          {% for partner in company.recurring_partners %}
+          <li style="display:flex; justify-content:space-between; align-items:center">
+            <div>
+              <a href="{{ url_for('company_detail', slug=partner.slug) }}" style="font-weight:600">{{ partner.name }}</a>
+              <div class="small muted">{{ partner.role }}</div>
+            </div>
+            <span class="badge badge-plain" style="font-size:0.75rem">{{ partner.shared_projects }} co-filing{% if partner.shared_projects > 1 %}s{% endif %}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="small muted">No co-filing relationships documented yet for this entity.</p>
+      {% endif %}
+    </div>
+
+    {# B. Market Footprint #}
+    <div class="detail-panel" style="margin-top:24px">
+      <h2>Municipal Footprint</h2>
+      <p class="small muted">Active jurisdictions and project types observed in the public record.</p>
+      <dl class="facts" style="margin-top:12px">
+        <div>
+          <dt>Jurisdictions</dt>
+          <dd>{{ company.cities | join(', ') if company.cities else 'Market-wide' }}</dd>
+        </div>
+        <div>
+          <dt>Specializations</dt>
+          <dd>{{ company.project_types | join(', ') if company.project_types else 'Commercial building' }}</dd>
+        </div>
+        <div>
+          <dt>Sources Observed</dt>
+          <dd>{{ company.sources_observed | join(', ') if company.sources_observed else 'Public municipal portals' }}</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+</div>
+{% endblock %}

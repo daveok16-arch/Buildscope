@@ -1,0 +1,121 @@
+{# Reusable opportunity card. Used by the directory, homepage, dashboard and landing pages. #}
+<article class="card">
+  {# 1. Zero-Pill Scannable Signal & Scope Metadata Line #}
+  <div class="card-meta-line">
+    <span class="signal-indicator signal-{{ project.classification | lower | replace('_','-') }}">
+      {{ project.classification | replace('_',' ') }}
+    </span>
+    <span class="meta-dot">·</span>
+    <span class="trade-signal-text">{{ project.trade_signal or project.evidence_label }}</span>
+    {% if project.procurement_status == 'Closed' %}
+      <span class="meta-dot">·</span>
+      <span class="muted">Closed</span>
+    {% elif project.procurement_status %}
+      <span class="meta-dot">·</span>
+      <span>{{ project.procurement_status }}</span>
+    {% endif %}
+    {% if not project.is_report_eligible and project.procurement_status != 'Closed' %}
+      <span class="meta-dot">·</span>
+      <span class="muted">Lead only</span>
+    {% endif %}
+    {% if project.shares_building %}
+      <span class="meta-dot">·</span>
+      <span class="muted">Shares building</span>
+    {% endif %}
+    {% if project.stage %}
+      <span class="meta-dot">·</span>
+      <span style="color:var(--accent-light)">Pipeline: {{ project.stage | replace('_',' ') | title }}</span>
+    {% endif %}
+  </div>
+
+  {# 2. Project Title & Location #}
+  <div class="card-header-block">
+    <h3>
+      {% if project.slug %}
+        <a href="{{ url_for('opportunity_detail', slug=project.slug) }}">
+          {{ (project.project_name or project.address or 'Commercial construction project') | truncate(88) }}
+        </a>
+      {% else %}
+        {{ (project.project_name or project.address or 'Commercial construction project') | truncate(88) }}
+      {% endif %}
+    </h3>
+
+    <p class="card-meta">
+      <svg class="card-location-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+      </svg>
+      <span>{{ project.address | or_na }}{% if project.city %}, {{ project.city }}{% endif %}{% if project.state %}, {{ project.state }}{% endif %}</span>
+    </p>
+  </div>
+
+  {# 3. Verified Project Facts #}
+  <dl class="facts">
+    <div>
+      <dt>Declared Value</dt>
+      <dd>{{ project.estimated_project_value | money }}</dd>
+    </div>
+    <div>
+      <dt>Project Type</dt>
+      <dd>{{ project.project_type | or_na }}</dd>
+    </div>
+    <div>
+      <dt>Building Scale</dt>
+      <dd>{{ project.square_footage | sqft if project.square_footage else 'Not verified' }}</dd>
+    </div>
+    <div>
+      <dt>Permit Date</dt>
+      <dd>{{ project.permit_date | nice_date }}</dd>
+    </div>
+  </dl>
+
+  {# 4. Intelligence & Evidence Highlight #}
+  {% if project.match_reasons %}
+    <div class="why-matches">
+      <p class="why-head">Evidence Triggers</p>
+      <ul>
+        {% for reason in project.match_reasons[:3] %}
+          <li><span class="tick" aria-hidden="true">&#10003;</span> {{ reason.label }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% elif project.mechanical_hvac_evidence %}
+    <div class="why-matches">
+      <p class="why-head">Documented Scope Excerpt</p>
+      <div class="evidence-quote">{{ project.mechanical_hvac_evidence | truncate(140) }}</div>
+    </div>
+  {% endif %}
+
+  {# 5. Card Foot & Actions #}
+  <div class="card-foot">
+    <div>
+      {% if project.shares_building %}
+        <span class="muted small" style="display:block; margin-bottom:2px">Other records share this street address; likely separate suites.</span>
+      {% endif %}
+      <span>Verified {{ project.last_verified | month_year }}</span>
+    </div>
+
+    <div class="card-actions">
+      {% if current_user and project.id %}
+        <form method="post" action="{{ url_for('save_opportunity', project_id=project.id) }}" class="inline-form">
+          {% include "partials/csrf.html" %}
+          <input type="hidden" name="action" value="{{ 'remove' if project.is_saved else 'save' }}">
+          <button class="btn btn-small {{ 'btn-outline' if project.is_saved else 'btn-primary' }}" type="submit">
+            {{ 'Saved' if project.is_saved else 'Save' }}
+          </button>
+        </form>
+        <form method="post" action="{{ url_for('watch_opportunity', project_id=project.id) }}" class="inline-form">
+          {% include "partials/csrf.html" %}
+          <input type="hidden" name="action" value="{{ 'remove' if project.is_watched else 'watch' }}">
+          <button class="btn btn-small {{ 'btn-outline' if project.is_watched else 'btn-ghost' }}" type="submit">
+            {{ 'Watching' if project.is_watched else 'Watch' }}
+          </button>
+        </form>
+      {% endif %}
+      {% if project.slug %}
+        <a class="btn btn-small btn-outline" href="{{ url_for('opportunity_detail', slug=project.slug) }}">
+          Dossier &rarr;
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</article>

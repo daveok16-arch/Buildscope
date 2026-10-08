@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block hero %}
+<section class="hero hero-compact">
+  <div class="wrap">
+    <p class="crumb"><a href="{{ url_for('home') }}">Home</a> · Market Intelligence</p>
+    <div class="hero-tagline-kicker">Geographic Intelligence</div>
+    <h1>Market Intelligence</h1>
+    <p class="lede">
+      BuildScope organizes public construction and permitting records into distinct commercial metropolitan markets.
+    </p>
+  </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-kicker">
+        <span class="bs-motif" aria-hidden="true"><span></span><span></span><span></span></span>
+        Metropolitan Jurisdictions
+      </div>
+      <h2>Configured Markets</h2>
+      <p class="section-sub">
+        Each market represents a geographic cluster of municipal and county permit sources. Coverage is strictly driven by verifiable data ingestion.
+      </p>
+    </div>
+
+    <div class="card-grid">
+      {% for card in cards %}
+      <article class="card">
+        <div class="card-meta-line">
+          {% if card.market.active %}
+            <span class="signal-indicator signal-high">Active Market</span>
+          {% else %}
+            <span class="muted">Planned Market</span>
+          {% endif %}
+          <span class="meta-dot">·</span>
+          <span>{{ card.market.cities | length }} jurisdictions</span>
+        </div>
+        <h3 style="margin-top:8px">
+          {% if card.market.active %}
+            <a href="{{ url_for('market_landing', market_slug=card.market.slug) }}">{{ card.market.name }}</a>
+          {% else %}
+            {{ card.market.name }}
+          {% endif %}
+        </h3>
+        <p class="card-meta">Configured jurisdictions across {{ card.market.state }}</p>
+        {% if card.stats %}
+          <dl class="facts">
+            <div><dt>Commercial projects</dt><dd>{{ "{:,}".format(card.stats.projects_public) }}</dd></div>
+            <div><dt>With mechanical evidence</dt><dd>{{ "{:,}".format(card.stats.with_mechanical) }}</dd></div>
+          </dl>
+          <p style="margin-top:14px">
+            <a class="btn btn-outline btn-small" href="{{ url_for('market_landing', market_slug=card.market.slug) }}">Explore Market Intelligence &rarr;</a>
+          </p>
+        {% else %}
+          <p class="muted small" style="margin-top:12px">
+            This market is planned on our expansion roadmap. Ingestion has not yet been initiated; no figures are displayed because none exist.
+          </p>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

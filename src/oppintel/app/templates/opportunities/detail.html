@@ -1,0 +1,524 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="wrap" style="padding-top:24px; padding-bottom:56px">
+<div class="dossier-head">
+  <p class="crumb">
+    <a href="{{ url_for('home') }}">Home</a> ·
+    <a href="{{ url_for('opportunities') }}">Opportunities</a>
+    {% if project.city %} · <a href="{{ url_for('opportunities', city=project.city) }}">{{ project.city }}</a>{% endif %}
+    · Project Dossier
+  </p>
+
+  <div class="badge-row">
+    <span class="badge badge-{{ project.classification | lower | replace('_','-') }}">
+      Signal: {{ project.classification | replace('_',' ') }}
+    </span>
+    <span class="badge badge-evidence">{{ project.evidence_label }}</span>
+    {% if project.procurement_status == 'Closed' %}
+      <span class="badge badge-closed">Closed</span>
+    {% elif project.procurement_status %}
+      <span class="badge badge-plain">{{ project.procurement_status }}</span>
+    {% endif %}
+    {% if project.shares_building %}
+      <span class="badge badge-plain">Shares building</span>
+    {% endif %}
+  </div>
+
+  <h1>{{ project.project_name or project.address or 'Commercial construction project' }}</h1>
+  <p class="muted" style="font-size:0.95rem; margin-bottom:0">
+    <svg class="card-location-icon" viewBox="0 0 24 24" style="vertical-align:middle; margin-right:4px">
+      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+    </svg>
+    {{ project.address | or_na }}{% if project.city %}, {{ project.city }}{% endif %}{% if project.state %}, {{ project.state }}{% endif %}
+    · Last verified {{ project.last_verified | month_year }}
+  </p>
+
+  {# Top Actions: Save, Watch, and Pipeline #}
+  <div class="action-row">
+    {% if current_user %}
+      <form method="post" action="{{ url_for('save_opportunity', project_id=project.id) }}" class="inline-form">
+        {% include "partials/csrf.html" %}
+        {% if project.is_saved %}
+          <input type="hidden" name="action" value="remove">
+          <button class="btn btn-outline" type="submit">Remove from saved</button>
+        {% else %}
+          <input type="hidden" name="action" value="save">
+          <button class="btn btn-primary" type="submit">Save opportunity</button>
+        {% endif %}
+      </form>
+      <form method="post" action="{{ url_for('watch_opportunity', project_id=project.id) }}" class="inline-form">
+        {% include "partials/csrf.html" %}
+        <input type="hidden" name="action" value="{{ 'remove' if project.is_watched else 'watch' }}">
+        <button class="btn {{ 'btn-outline' if project.is_watched else 'btn-ghost' }}" type="submit">
+          {{ 'Watching' if project.is_watched else 'Watch for changes' }}
+        </button>
+      </form>
+      <form method="post" action="{{ url_for('pipeline_update', project_id=project.id) }}" class="inline-form">
+        {% include "partials/csrf.html" %}
+        <label class="visually-hidden" for="stage-select">Pipeline stage</label>
+        <select id="stage-select" name="stage" class="select-inline" style="padding:8px 12px; border-radius:var(--radius-sm); border:1px solid var(--slate-300)">
+          <option value="">Add to pipeline…</option>
+          {% for key, label in stages %}
+            <option value="{{ key }}" {% if project.stage == key %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <button class="btn btn-outline" type="submit">Set stage</button>
+      </form>
+    {% else %}
+      <a class="btn btn-primary" href="{{ url_for('signin', next=request.path) }}">Sign in to save</a>
+      <a class="btn btn-outline" href="{{ url_for('signup') }}">Create free account &rarr;</a>
+    {% endif %}
+  </div>
+</div>
+
+{% if project.match_reasons %}
+<div class="detail-panel why-matches-panel" style="margin-bottom:24px">
+  <div class="section-kicker">Intelligence Summary</div>
+  <h2 style="margin-bottom:8px">Why this opportunity matters</h2>
+  <ul class="why-list">
+    {% for reason in project.match_reasons %}
+      <li>
+        <span class="tick" aria-hidden="true">&#10003;</span>
+        <span>
+          <strong>{{ reason.label }}</strong>
+          {% if reason.detail %}<span class="muted small"> — {{ reason.detail }}</span>{% endif %}
+        </span>
+      </li>
+    {% endfor %}
+  </ul>
+  <p class="small muted" style="margin-top:10px">
+    These are verified facts drawn from the public record. This indicates commercial relevance, not bid availability.
+  </p>
+</div>
+{% endif %}
+
+<div class="detail-grid">
+  {# Main Dossier Content #}
+  <div>
+    {# 1. Project Overview Dossier #}
+    <div class="detail-panel">
+      <h2>Project Intelligence Summary</h2>
+      <dl class="facts">
+        <div>
+          <dt>Project name</dt>
+          <dd>{{ project.project_name | or_na }}</dd>
+        </div>
+        <div>
+          <dt>Address</dt>
+          <dd>{{ project.address | or_na }}</dd>
+        </div>
+        <div>
+          <dt>City</dt>
+          <dd>{{ project.city | or_na }}</dd>
+        </div>
+        <div>
+          <dt>Project type</dt>
+          <dd>{{ project.project_type | or_na }}
+            {% if project.field_status.get('project_type') == 'PARTIALLY VERIFIED' %}
+              <span class="src">Supporting source is historical.</span>
+            {% endif %}
+          </dd>
+        </div>
+      </dl>
+    </div>
+
+    {# 2. Construction Record Evidence #}
+    <div class="detail-panel" style="margin-top:24px">
+      <h2>Recorded Construction Facts</h2>
+      <dl class="facts">
+        <div>
+          <dt>Permit number</dt>
+          <dd>{{ project.permit_number | or_na }}</dd>
+        </div>
+        <div>
+          <dt>Permit type</dt>
+          <dd>
+            {% if project.permits %}
+              {{ project.permits[0].permit_type | or_na }}
+            {% else %}
+              Not verified
+            {% endif %}
+          </dd>
+        </div>
+        <div>
+          <dt>Work description</dt>
+          <dd>
+            {% if project.permits and project.permits[0].work_description %}
+              {{ project.permits[0].work_description }}
+            {% else %}
+              {{ project.project_name | or_na }}
+            {% endif %}
+          </dd>
+        </div>
+        <div>
+          <dt>Filing date</dt>
+          <dd>{{ project.permit_date | nice_date }}</dd>
+        </div>
+        <div>
+          <dt>Current status</dt>
+          <dd>{{ project.project_status | or_na }}</dd>
+        </div>
+      </dl>
+    </div>
+
+    {# 3. HVAC / Mechanical Evidence Panel #}
+    <div class="detail-panel" style="margin-top:24px">
+      <h2>HVAC / Mechanical evidence</h2>
+      {% if project.mechanical_evidence_tier == 1 %}
+        <p>
+          <strong>Confirmed mechanical permit.</strong> The building department filed a
+          mechanical permit at this address. This is the strongest available evidence: the City
+          itself recorded mechanical scope.
+        </p>
+      {% elif project.mechanical_evidence_tier == 2 %}
+        <p>
+          <strong>Mechanical scope stated in the permit record.</strong> The recorded work
+          description names mechanical scope. This is documentary evidence from the permit text
+          rather than a separate trade permit.
+        </p>
+      {% else %}
+        <div style="background:var(--slate-50); border:1px solid var(--slate-200); padding:14px 16px; border-radius:var(--radius-sm); margin:12px 0">
+          <p class="unverified" style="margin:0; color:var(--slate-700)">
+            <strong>No mechanical evidence recorded.</strong> This project remains visible because it meets other discovery criteria, but the public records currently available to BuildScope do not document mechanical scope.
+          </p>
+        </div>
+      {% endif %}
+
+      {% if project.mechanical_hvac_evidence %}
+        <div class="evidence-quote">{{ project.mechanical_hvac_evidence }}</div>
+      {% endif %}
+      {% if project.mechanical_evidence_tier %}
+        <p class="small muted">
+          This is evidence that mechanical work was filed. It is not confirmation that the work
+          is still available, and it does not identify who will perform it.
+        </p>
+      {% endif %}
+    </div>
+
+    {# 4. Procurement Transparency #}
+    <div class="detail-panel" style="margin-top:24px">
+      <h2>Procurement status</h2>
+      <p style="font-size:1.05rem"><strong>{{ project.procurement_status | or_na }}</strong></p>
+      {% if project.procurement_status == 'Confirmed open' %}
+        <p>A source explicitly advertises this work for bid or award. Confirm deadlines with the
+          issuing body before relying on this.</p>
+      {% elif project.procurement_status == 'Evidence found, status unclear' %}
+        <p>
+          The permit record shows active work ({{ project.project_status | or_na }}), which
+          indicates the project is proceeding. No source states how the work will be procured,
+          so this is not a confirmed open bid.
+        </p>
+      {% elif project.procurement_status == 'Closed' %}
+        <p>
+          The permit record shows this work as finished or inactive. The mechanical scope on
+          record has already been let or completed, and this should not be treated as a live opportunity.
+        </p>
+      {% else %}
+        <p>
+          No source states a procurement status. Treat procurement as unverified. A permit
+          existing does not mean the mechanical scope is still available.
+        </p>
+      {% endif %}
+      <div class="notice notice-warn">
+        <p>Permit evidence does not confirm that the HVAC/mechanical package is currently available for bid. There is no open bid solicitation recorded on this permit.</p>
+      </div>
+    </div>
+
+    {# 5. Commercial Stakeholders & Additional Information #}
+    <div class="detail-panel" style="margin-top:24px">
+      <h2>Additional project information</h2>
+      <dl class="facts">
+        <div>
+          <dt>Value</dt>
+          <dd>
+            {% if project.estimated_project_value is not none and project.estimated_project_value != '' %}
+              {{ project.estimated_project_value | money }}
+              <span class="src" style="display:block; font-size:0.75rem; color:var(--slate-500); font-weight:normal">Supported by a public source record.</span>
+            {% else %}
+              <span class="unverified">Not verified</span>
+            {% endif %}
+          </dd>
+        </div>
+        <div>
+          <dt>Square footage</dt>
+          <dd>
+            {% if project.square_footage is not none and project.square_footage != '' %}
+              {{ project.square_footage | sqft }}
+              <span class="src" style="display:block; font-size:0.75rem; color:var(--slate-500); font-weight:normal">Supported by a public source record.</span>
+            {% else %}
+              <span class="unverified">Not verified</span>
+            {% endif %}
+          </dd>
+        </div>
+        <div>
+          <dt>Owner</dt>
+          <dd>
+            {% if project.owner %}
+              <a href="{{ url_for('companies_index', q=project.owner) }}" style="font-weight:600">{{ project.owner }}</a>
+              <span class="src" style="display:block; font-size:0.75rem; color:var(--slate-500); font-weight:normal">Supported by a public source record.</span>
+            {% else %}
+              <span class="unverified">Not verified</span>
+            {% endif %}
+          </dd>
+        </div>
+        <div>
+          <dt>Developer</dt>
+          <dd>
+            {% if project.developer %}
+              <a href="{{ url_for('companies_index', q=project.developer) }}" style="font-weight:600">{{ project.developer }}</a>
+              <span class="src" style="display:block; font-size:0.75rem; color:var(--slate-500); font-weight:normal">Supported by a public source record.</span>
+            {% else %}
+              <span class="unverified">Not verified</span>
+            {% endif %}
+          </dd>
+        </div>
+        <div>
+          <dt>General contractor</dt>
+          <dd>
+            {% if project.general_contractor %}
+              <a href="{{ url_for('companies_index', q=project.general_contractor) }}" style="font-weight:600">{{ project.general_contractor }}</a>
+              <span class="src" style="display:block; font-size:0.75rem; color:var(--slate-500); font-weight:normal">Supported by a public source record.</span>
+            {% else %}
+              <span class="unverified">Not verified</span>
+            {% endif %}
+          </dd>
+        </div>
+        <div>
+          <dt>Architect</dt>
+          <dd>
+            {% if project.architect %}
+              <a href="{{ url_for('companies_index', q=project.architect) }}" style="font-weight:600">{{ project.architect }}</a>
+              <span class="src" style="display:block; font-size:0.75rem; color:var(--slate-500); font-weight:normal">Supported by a public source record.</span>
+            {% else %}
+              <span class="unverified">Not verified</span>
+            {% endif %}
+          </dd>
+        </div>
+      </dl>
+      <p class="small muted" style="margin-top:14px">
+        Fields a source does not publish remain empty in our database and are shown as
+        Not verified. They are never estimated.
+      </p>
+    </div>
+
+    {% if project.sibling and project.sibling.is_grouped %}
+    <div class="detail-panel" style="margin-top:24px">
+      <h2>Related records</h2>
+      <p>{{ project.sibling.describe() }}</p>
+    </div>
+    {% endif %}
+
+    {% if project.discrepancies %}
+    <div class="detail-panel" style="margin-top:24px">
+      <h2>Source disagreement</h2>
+      {% for item in project.discrepancies %}
+        <p><strong>{{ item.field_name | replace('_', ' ') | capitalize }}</strong></p>
+        <ul>
+          {% for value in item.values %}
+          <li>{{ value.value }} — per {{ value.source_name }}</li>
+          {% endfor %}
+        </ul>
+      {% endfor %}
+      <p class="small muted">
+        These figures come from different publishers. Both are reported rather than reconciled.
+        Confirm with the issuing body before relying on either.
+      </p>
+    </div>
+    {% endif %}
+
+    {% if project.permits | length > 1 %}
+    <div class="detail-panel" style="margin-top:24px">
+      <h2>Contributing permits</h2>
+      <p class="small muted">
+        This project was assembled from {{ project.permits | length }} permit records at the same
+        address. Each is listed with the status the source recorded.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Permit</th><th>Type</th><th>Date</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            {% for p in project.permits %}
+            <tr>
+              <td>{{ p.permit_number }}</td>
+              <td>{{ p.permit_type | or_na }}</td>
+              <td>{{ p.permit_date | nice_date }}</td>
+              <td>{{ p.status | or_na }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    {# 6. Activity Timeline #}
+    <div class="detail-panel" style="margin-top:24px">
+      <h2>Activity</h2>
+      {% if project.timeline %}
+        <ol class="timeline">
+          {% for event in project.timeline %}
+          <li>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px">
+              {% set ev_date = (event.detected_at or event.date or 'Recent') | string %}
+              <span class="timeline-date">{{ ev_date[:10] }} · {{ event.event_kind or 'RECORDED EVENT' }}</span>
+              {% if event.source_name %}
+                <span class="small muted">{{ event.source_name }}</span>
+              {% endif %}
+            </div>
+            <span class="timeline-body">
+              {{ event.summary }}
+              {% if event.source_url %}
+                <a class="src-url" href="{{ event.source_url }}" target="_blank"
+                   rel="noopener noreferrer nofollow" style="margin-left:6px">source</a>
+              {% endif %}
+            </span>
+            <div class="timeline-interpretation" style="margin-top:6px; background:var(--slate-100); padding:6px 10px; border-radius:var(--radius-xs); font-size:0.8rem; color:var(--slate-700)">
+              <strong>BuildScope Interpretation:</strong>
+              {% if 'mechanical' in event.summary | lower or 'hvac' in event.summary | lower %}
+                Documentary mechanical scope modification on record, indicating trade package progression.
+              {% elif 'status' in event.summary | lower %}
+                Municipal permit lifecycle status update recorded from local jurisdiction.
+              {% elif 'value' in event.summary | lower %}
+                Declared construction valuation amended on public filing.
+              {% else %}
+                Factual attribute update detected between automated collection cycles.
+              {% endif %}
+            </div>
+          </li>
+          {% endfor %}
+        </ol>
+        <p class="small muted">
+          Each entry is a difference the system detected between two collection passes.
+        </p>
+      {% else %}
+        <p class="small muted">
+          No change has been recorded for this project yet. The timeline fills only when the
+          record actually changes.
+        </p>
+      {% endif %}
+    </div>
+
+    {# 7. User Notes & Tags #}
+    {% if current_user %}
+    <div class="detail-panel" style="margin-top:24px">
+      <h2>Your notes</h2>
+      <form method="post" action="{{ url_for('add_note', project_id=project.id) }}">
+        {% include "partials/csrf.html" %}
+        <label class="visually-hidden" for="note-body">Note</label>
+        <textarea id="note-body" name="body" rows="3"
+                  placeholder="Add a private note about this opportunity"></textarea>
+        <button class="btn btn-small btn-primary" type="submit" style="margin-top:8px">Add note</button>
+      </form>
+      {% if project.notes %}
+        <ul class="note-list" style="margin-top:16px; list-style:none; padding:0">
+          {% for note in project.notes %}
+          <li style="padding:10px 0; border-bottom:1px solid var(--slate-150)">
+            <p style="margin:0 0 4px">{{ note.body }}</p>
+            <div class="note-meta" style="display:flex; justify-content:space-between; align-items:center">
+              <span class="muted small">{{ note.created_at[:16] | replace('T', ' ') }}</span>
+              <form method="post" action="{{ url_for('delete_note', note_id=note.id) }}" class="inline-form">
+                {% include "partials/csrf.html" %}
+                <button class="btn btn-small btn-ghost" type="submit">Delete</button>
+              </form>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="small muted" style="margin-top:12px">No private notes on this opportunity.</p>
+      {% endif %}
+    </div>
+
+    <div class="detail-panel" style="margin-top:24px">
+      <h2>Your tags</h2>
+      <form method="post" action="{{ url_for('tag_opportunity', project_id=project.id) }}" class="inline-form" style="display:flex; gap:8px">
+        {% include "partials/csrf.html" %}
+        <label class="visually-hidden" for="tag-input">Tag</label>
+        <input id="tag-input" name="tag" placeholder="e.g. priority, estimating" maxlength="40" style="max-width:240px">
+        <button class="btn btn-small btn-outline" type="submit">Add Tag</button>
+      </form>
+      {% if project.tags %}
+        <ul class="tag-list" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; list-style:none; padding:0">
+          {% for tag in project.tags %}
+          <li style="display:inline-flex; align-items:center; background:var(--slate-100); padding:4px 8px; border-radius:4px; font-size:0.82rem">
+            <span>{{ tag }}</span>
+            <form method="post" action="{{ url_for('tag_opportunity', project_id=project.id) }}" class="inline-form" style="margin-left:6px">
+              {% include "partials/csrf.html" %}
+              <input type="hidden" name="action" value="remove">
+              <input type="hidden" name="tag" value="{{ tag }}">
+              <button class="tag-remove" type="submit" aria-label="Remove tag {{ tag }}" style="background:none; border:none; cursor:pointer; color:var(--slate-500)">&times;</button>
+            </form>
+          </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+    {% endif %}
+
+  </div>
+
+  {# Right Dossier Sidebar #}
+  <aside>
+    {# Official Municipal Sources #}
+    <div class="detail-panel">
+      <h2>Sources</h2>
+      <ul class="source-list">
+        {% for s in project.sources %}
+        <li>
+          <strong>{{ s.source_name }}</strong>
+          <span class="muted small">record {{ s.source_record_key }}</span>
+          {% if s.has_url %}
+            <a class="src-url" href="{{ s.source_url }}" target="_blank" rel="noopener noreferrer nofollow">
+              {{ s.source_url | truncate(72) }}
+            </a>
+          {% else %}
+            <span class="src-url muted">
+              No per-record link is published by this source. The record number identifies it.
+            </span>
+          {% endif %}
+          {% if s.source_date %}
+            <span class="muted small">source dated {{ s.source_date }}</span>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      <p class="small muted" style="margin-top:14px">
+        Last verified {{ project.last_verified | month_year }}.
+      </p>
+    </div>
+
+    {# Other Opportunities in Same City #}
+    {% if related %}
+    <div class="detail-panel" style="margin-top:24px">
+      <h2>Other {{ project.city }} opportunities</h2>
+      <ul class="related-list" style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px">
+        {% for r in related %}
+        <li style="padding-bottom:10px; border-bottom:1px solid var(--slate-150)">
+          <a href="{{ url_for('opportunity_detail', slug=r.slug) }}" style="font-weight:700; color:var(--navy-950)">
+            {{ (r.project_name or r.address or 'Commercial project') | truncate(60) }}
+          </a>
+          <div class="muted small" style="margin-top:2px">{{ r.project_type | or_na }} · {{ r.procurement_status }}</div>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    {# Data Quality Guarantee #}
+    <div class="detail-panel" style="margin-top:24px">
+      <h2>Data quality</h2>
+      <p class="small">
+        This record was compiled from public municipal and county permit data. Missing fields are shown as
+        Not verified rather than estimated.
+      </p>
+      <p class="small muted">
+        Coverage is bounded by the public records published by issuing jurisdictions in this market.
+      </p>
+    </div>
+  </aside>
+</div>
+</div>
+{% endblock %}
