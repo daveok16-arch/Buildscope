@@ -270,3 +270,41 @@ These are enforced by tests, not by convention. Breaking one fails the suite.
   become an enumeration oracle; the visitor-facing message is identical either way. Tests in
   `tests/test_auth_security.py` (section L) assert the token never reaches a page, response or
   log.
+
+## AI Studio export (self-contained bundle)
+
+* A Google AI Studio export of this project is a *flat* layout: `src/` holds both the Python
+  package (`src/oppintel/`) and the React stub (`App.tsx`, `main.tsx`), with vendored wheels in
+  `vendor/python/` and a pre-populated `data/oppintel.db`. It is Phase 1 plus the frontend stub,
+  not the Phase 2 work in this checkout.
+* Run it with `python run_server.py` (env `HOST`, `PORT`, `OPPINTEL_DATA_DIR`, `OPPINTEL_DB`,
+  `SECRET_KEY`). It prefers gunicorn, falls back to Flask's server, then `wsgiref`.
+* The frontend is a stub: `App.tsx` renders an empty `<div>` and `server.ts` (Express) only
+  supervises the Flask process. The served product is entirely server-rendered Jinja; the Vite
+  entry point contributes nothing. Do not read the React files as the app.
+
+## Intelligence graph (Phase 2)
+
+* The graph is derived data, not a second source of truth. `intelligence.derive_for_project` reads
+  the stored permits, projects, evidence and detected changes and writes relationships. It never
+  invents a value: no evidence -> no scope event, no resolvable name -> no entity, no street
+  number -> null building key, no geocoder -> null coordinates.
+* `identity.py` resolves entities deterministically — legal-form folding, `&`=`and`, last/first
+  reordering for people — with no fuzzy matching. A false merge is worse than a duplicate, so a
+  distinguishing word keeps entities apart (`test_identity.py`).
+* `evidence_history` is append-only. `upsert_project` rebuilds the current `evidence` set every
+  pass but archives each observation by fingerprint; a changed value appends a new row, a
+  re-observation only refreshes `last_seen_at`. `Pipeline._derive_intelligence` does this per
+  project; `run_backfill` (CLI `backfill-intelligence`) does it for existing projects.
+* Events are keyed by a stable `event_uid` and inserted with `INSERT OR IGNORE`, so re-deriving
+  unchanged facts adds nothing. `PROJECT_DISCOVERED`/`PERMIT_RECORDED`/`COMPANY_IDENTIFIED`/
+  `DOCUMENT_ADDED` are always evidence-backed; `SCOPE_IDENTIFIED` requires mechanical evidence;
+  `PROJECT_REVISED` comes only from a recorded `project_change`.
+* Trades come from `config/trade_taxonomy.yaml` via `config.classify_trade`. The permit *type*
+  is consulted before the description, so a plumbing permit is a plumbing record whatever the
+  description says. A record naming no trade gets an empty trade list, not a default.
+* Reached only through `OpportunityService` (`get_project`, `get_project_events`,
+  `get_project_companies`, `get_project_trades`, `search_companies`, `search_projects`, ...).
+  The `/admin/data` operations view surfaces `intelligence.integrity_report`; the CLI `integrity`
+  command runs the same audit. Tests: `tests/test_intelligence.py`,
+  `tests/test_intelligence_service.py`.

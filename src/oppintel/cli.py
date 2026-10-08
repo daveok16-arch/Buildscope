@@ -98,6 +98,37 @@ def cmd_stats(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_backfill_intelligence(args: argparse.Namespace) -> int:
+    """Build the intelligence graph for every project that already exists.
+
+    Deterministic: every relationship is derived from stored facts, so nothing is invented.
+    The report names what was considered, linked, skipped and left unresolved.
+    """
+    from .intelligence import run_backfill
+
+    with Database(args.db) as db:
+        db.init_schema()
+        db.init_app_schema()
+        report = run_backfill(db)
+    print(json.dumps(report.as_dict(), indent=2))
+    return 0
+
+
+def cmd_integrity(args: argparse.Namespace) -> int:
+    """Read-only integrity audit over the intelligence graph and its invariants."""
+    from .intelligence import integrity_report
+    from .monitoring import monitoring_report
+
+    with Database(args.db) as db:
+        db.init_schema()
+        report = {
+            "intelligence": integrity_report(db),
+            "monitoring": monitoring_report(db),
+        }
+    print(json.dumps(report, indent=2, default=str))
+    return 0 if report["intelligence"]["healthy"] else 1
+
+
 def cmd_projects(args: argparse.Namespace) -> int:
     """List assembled projects. Used to inspect Phase 1 output before the dashboard."""
     clauses: list[str] = []
@@ -253,6 +284,17 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("assemble", help="Assemble permits into projects and classify"
                    ).set_defaults(func=cmd_assemble)
     sub.add_parser("stats", help="Show database statistics").set_defaults(func=cmd_stats)
+
+    backfill = sub.add_parser(
+        "backfill-intelligence",
+        help="Derive the intelligence graph (entities, events, trades, locations) for existing projects",
+    )
+    backfill.set_defaults(func=cmd_backfill_intelligence)
+
+    sub.add_parser(
+        "integrity",
+        help="Audit the intelligence graph for orphaned rows and violated invariants",
+    ).set_defaults(func=cmd_integrity)
 
     projects = sub.add_parser("projects", help="List assembled projects")
     projects.add_argument("--classification", choices=["HIGH", "MEDIUM", "NEEDS_VERIFICATION"])

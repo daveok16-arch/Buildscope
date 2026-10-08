@@ -690,3 +690,64 @@ real-time alerting, and any automated outreach. The MVP exists to prove that val
 Adding a city means: add a `sources.yaml` entry, add a connector class, register it.
 Adding a trade means: add a `trades.yaml` profile with its keywords and weights. The core
 domain, pipeline, and dashboard remain unchanged.
+
+---
+
+## 9. Intelligence foundation (BuildScope 2.0, Phase 2)
+
+The MVP answered "what is documented?" The intelligence foundation makes the answer durable
+and relational, without relaxing the honesty rules. Every relationship is *derived* from a
+stored fact; nothing is inferred into existence.
+
+### 9.1 Durable project identity
+
+`project_key` is deterministic from the building identity (address + city + the permit that
+opened the project), so re-assembling an unchanged source set re-uses the same project row
+instead of creating a second one. `test_intelligence.py` asserts the key and id do not move
+across a re-assembly.
+
+### 9.2 Immutable evidence history
+
+The `evidence` table is the *current* supporting set and is rebuilt on every assembly pass.
+`evidence_history` is an append-only archive of every observation ever made, keyed by a
+fingerprint of (project, field, value, source record, date, type, tier):
+
+- re-observing the identical fact refreshes `last_seen_at` and inserts nothing;
+- observing a *changed* value appends a new row and leaves the prior one in place.
+
+This is what makes "what changed over time" answerable. The pipeline archives on each
+assembly pass; `run_backfill` archives for projects that already existed.
+
+### 9.3 Entity resolution
+
+`identity.py` maps an observed name to a canonical key by folding only deterministic signals:
+case, punctuation, legal forms (`LLC`, `Inc`, `L.L.C.`, ...), `&`/`and`, leading articles, and
+(last, first) person ordering. There is no fuzzy matching: a distinguishing word keeps two
+entities apart, because a false merge invents a relationship that does not exist, which is
+worse than a visible duplicate. Noise values (`N/A`, `Unknown`) resolve to no entity.
+
+### 9.4 Durable events
+
+`project_event` holds the evidenced timeline. Each event carries a stable `event_uid`, so
+re-deriving an unchanged fact is a no-op. Event types: `PROJECT_DISCOVERED`,
+`PERMIT_RECORDED`, `SCOPE_IDENTIFIED` (mechanical evidence only), `COMPANY_IDENTIFIED`,
+`DOCUMENT_ADDED`, and `PROJECT_REVISED` (from a recorded `project_change`). No evidence means
+no event.
+
+### 9.5 Locations, documents and trades
+
+- `project_location` stores the normalized address and building key, preserving the raw
+  address verbatim. Coordinates are written only with a `geocode_source`; the guard is enforced
+  in `db.upsert_project_location` and audited by `integrity_report`.
+- `document` records each source document a project's facts were drawn from, referencing the
+  landed `raw_record` by natural key.
+- `project_trade` holds the trades classified from documented permit text via
+  `config/trade_taxonomy.yaml`. The permit type is read before the description, and a record
+  naming no trade gets no trade.
+
+### 9.6 Integrity audit
+
+`intelligence.integrity_report` runs read-only checks for conditions that must never hold
+(orphaned rows, duplicate event uids, coordinates without provenance, evidence without an
+archive) and reports any that are present rather than repairing them. Surfaced on the
+`/admin/data` operations view and via `python -m oppintel.cli integrity`.

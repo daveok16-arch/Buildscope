@@ -244,6 +244,69 @@ def active_trade() -> TradeConfig:
     raise RuntimeError("No active trade profile found in config/trades.yaml")
 
 
+# --- trade taxonomy -----------------------------------------------------------
+
+
+@dataclass
+class TradeTaxonomyEntry:
+    """One trade in the controlled vocabulary.
+
+    Distinct from `TradeConfig`: a `TradeConfig` is a full intelligence profile (scoring,
+    thresholds, market) for the trade the product actively serves, whereas a taxonomy entry
+    is only the label and the keywords used to recognise the trade on a record. The taxonomy
+    lets a project carry any trade without a schema change, and `active_profile` links an
+    entry to its deeper profile where one exists.
+    """
+
+    id: str
+    label: str
+    slug: str
+    keywords: tuple[str, ...] = ()
+    active_profile: str | None = None
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> TradeTaxonomyEntry:
+        return cls(
+            id=str(data["id"]),
+            label=str(data.get("label") or data["id"]),
+            slug=str(data.get("slug") or data["id"]),
+            keywords=tuple(str(k).lower() for k in data.get("keywords") or ()),
+            active_profile=data.get("active_profile"),
+        )
+
+
+@lru_cache(maxsize=1)
+def load_trade_taxonomy(path: Path | None = None) -> tuple[TradeTaxonomyEntry, ...]:
+    """Load the trade taxonomy from configuration, in declared order."""
+    path = path or (CONFIG_DIR / "trade_taxonomy.yaml")
+    raw = yaml.safe_load(path.read_text()) or {}
+    return tuple(TradeTaxonomyEntry.from_dict(t) for t in raw.get("trades") or [])
+
+
+def classify_trade(text: str | None, *, taxonomy: tuple[TradeTaxonomyEntry, ...] | None = None) -> str | None:
+    """The taxonomy trade id that best matches the given text, or None.
+
+    The longest matching keyword wins, so "fire protection" beats a stray "fire", and the
+    match is whole-word so "electric" does not fire on "electrical" twice over. A record whose
+    text names no trade keeps a null trade rather than a default: an unknown trade is an
+    honest gap, not a value to invent.
+    """
+    if not text or not text.strip():
+        return None
+    entries = taxonomy if taxonomy is not None else load_trade_taxonomy()
+    haystack = text.lower()
+    best: str | None = None
+    best_len = 0
+    for entry in entries:
+        for keyword in entry.keywords:
+            if len(keyword) <= best_len:
+                continue
+            if re.search(r"(?<![a-z0-9])" + re.escape(keyword) + r"(?![a-z0-9])", haystack):
+                best = entry.id
+                best_len = len(keyword)
+    return best
+
+
 # --- markets ------------------------------------------------------------------
 
 

@@ -1,6 +1,8 @@
 """Ingestion pipeline orchestration.
 
-Stages: FETCH -> LAND -> NORMALIZE -> PERSIST permits -> ASSEMBLE -> CLASSIFY -> PERSIST.
+Stages: FETCH -> LAND -> NORMALIZE -> PERSIST permits -> ASSEMBLE -> CLASSIFY -> PERSIST ->
+DERIVE. The final stage writes the derived intelligence graph (location, trades, entities,
+documents, durable events) for each assembled project.
 
 Stages after LAND are pure functions over data and never touch the network, which is why
 the test suite can exercise the real assembly and classification paths offline.
@@ -206,6 +208,11 @@ class Pipeline:
             if monitor:
                 self._monitor_project(project_id, prior_values)
 
+            # Derive the intelligence graph for this project. Everything written is read back
+            # from stored facts, so this stays current as new records arrive without the
+            # assembler needing to know about entities, events or trades.
+            self._derive_intelligence(project_id)
+
             report.projects_written += 1
             label = project.classification or "UNCLASSIFIED"
             report.classification_counts[label] = report.classification_counts.get(label, 0) + 1
@@ -237,6 +244,43 @@ class Pipeline:
         changes = diff_project(row, prior_values, permits)
         self.db.record_changes([c for c in changes if c.is_notifiable or c.change_kind])
         self.db.save_snapshot(project_id, current, digest)
+
+    def _derive_intelligence(self, project_id: int) -> None:
+        """Derive the intelligence graph (location, trades, entities, documents, events).
+
+        Read-only over the intelligence tables and write-only into the graph tables. Failures
+        are logged and swallowed so a derivation problem cannot roll back a successfully
+        assembled project; the graph is derived data that can be rebuilt, whereas the project
+        and its evidence are the record.
+        """
+        from .intelligence import derive_for_project
+
+        try:
+            project = self.db.project_row(project_id)
+            if project is None:
+                return
+            derive_for_project(
+                self.db,
+                project_id,
+                project=project,
+                permits=self.db.permits_for_project(project_id),
+                parties=[
+                    dict(r)
+                    for r in self.db.conn.execute(
+                        "SELECT * FROM project_party WHERE project_id = ?", (project_id,)
+                    ).fetchall()
+                ],
+                evidence=[
+                    dict(r)
+                    for r in self.db.conn.execute(
+                        "SELECT * FROM evidence WHERE project_id = ?", (project_id,)
+                    ).fetchall()
+                ],
+                documents=self.db.documents_for_project(project_id),
+                changes=self.db.changes_for_project(project_id, limit=200),
+            )
+        except Exception:  # noqa: BLE001 - derived data; never fail the assembly pass
+            log.exception("Intelligence derivation failed for project %s", project_id)
 
     def _record_quality_issues(self, permits: list[Any]) -> None:
         """Record observable data-quality problems for the operations view.

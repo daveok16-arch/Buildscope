@@ -121,6 +121,15 @@ def test_admin_page_shows_the_operations_content(admin_client):
     assert "Data quality report" in body
 
 
+def test_admin_page_shows_the_intelligence_graph_health(admin_client):
+    """The operations view reports the intelligence graph's integrity, not just its counts."""
+    body = admin_client.get(ADMIN_PATH).get_data(as_text=True)
+    assert "Intelligence graph" in body
+    assert "Resolved entities" in body
+    assert "Durable events" in body
+    assert "Archived observations" in body
+
+
 def test_admin_page_is_noindex(admin_client):
     """Even an authorised page must not be indexed."""
     body = admin_client.get(ADMIN_PATH).get_data(as_text=True)

@@ -1537,6 +1537,8 @@ def create_app(config: AppConfig | None = None) -> Flask:
         from ..reporting import data_quality_report
         from .search_analytics import analytics_report
 
+        from ..intelligence import integrity_report
+
         stats = g.service.market_statistics()
         freshness = g.service.data_freshness()
         health = _system_health(g.db)
@@ -1548,6 +1550,7 @@ def create_app(config: AppConfig | None = None) -> Flask:
             coverage=all_market_coverage(g.db),
             search_report=analytics_report(g.db),
             health=health,
+            intelligence=integrity_report(g.db),
             page_title="Data operations",
             seo=_private_seo(g, "Data operations", "Internal operations view."),
         )

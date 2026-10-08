@@ -99,6 +99,29 @@
   </div>
   {% endif %}
 
+  <h2 style="margin-top:30px">Intelligence graph</h2>
+  {% if intelligence.healthy %}
+  <p class="muted small">Every intelligence invariant holds: no orphaned rows, no duplicate events, no coordinates without provenance, and every project with evidence has an immutable archive.</p>
+  {% else %}
+  <div class="notice notice-action">
+    <h4>{{ intelligence.findings | length }} intelligence finding(s)</h4>
+    <ul>
+      {% for f in intelligence.findings %}
+      <li><strong>{{ f.check }}</strong> ({{ f.severity }}, {{ f.count }}): {{ f.detail }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+  <div class="stat-strip">
+    <div class="stat"><span class="stat-value">{{ "{:,}".format(intelligence.counts.entities) }}</span><span class="stat-label">Resolved entities</span></div>
+    <div class="stat"><span class="stat-value">{{ "{:,}".format(intelligence.counts.entity_links) }}</span><span class="stat-label">Entity relationships</span></div>
+    <div class="stat"><span class="stat-value">{{ "{:,}".format(intelligence.counts.locations) }}</span><span class="stat-label">Normalized locations</span></div>
+    <div class="stat"><span class="stat-value">{{ "{:,}".format(intelligence.counts.documents) }}</span><span class="stat-label">Source documents</span></div>
+    <div class="stat"><span class="stat-value">{{ "{:,}".format(intelligence.counts.events) }}</span><span class="stat-label">Durable events</span></div>
+    <div class="stat"><span class="stat-value">{{ "{:,}".format(intelligence.counts.evidence_history) }}</span><span class="stat-label">Archived observations</span></div>
+    <div class="stat"><span class="stat-value">{{ "{:,}".format(intelligence.counts.project_trades) }}</span><span class="stat-label">Trade classifications</span></div>
+  </div>
+
   <h2 style="margin-top:30px">Data quality summary</h2>
   <div class="report-body">
     {{ quality_report }}

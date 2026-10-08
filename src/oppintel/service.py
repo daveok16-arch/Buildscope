@@ -1129,6 +1129,157 @@ class OpportunityService:
         timeline.sort(key=lambda x: str(x.get("date") or ""), reverse=True)
         return timeline
 
+    # --- intelligence graph ---------------------------------------------------
+
+    def get_project(self, project_id: int) -> dict[str, Any] | None:
+        """One project by internal id, with its permits, evidence and graph relationships.
+
+        The id-based sibling of `get_by_slug`, exposed so the intelligence graph is reachable
+        through the same boundary the rest of the application uses rather than by touching the
+        database directly.
+        """
+        row = self.db.conn.execute(
+            """
+            SELECT p.*, s.slug
+              FROM project p
+              LEFT JOIN project_slug s ON s.project_id = p.id
+             WHERE p.id = ?
+            """,
+            (project_id,),
+        ).fetchone()
+        if row is None:
+            return None
+        project = self.decorate(dict(row))
+        project["permits"] = self.permits_for(project_id)
+        project["sources"] = self.sources_for(project_id)
+        project["evidence"] = self.evidence_for(project_id)
+        project["field_status"] = self.field_status_for(project)
+        project["discrepancies"] = self.discrepancies_for(project)
+        return project
+
+    def get_project_evidence(self, project_id: int, *, field_name: str | None = None) -> list[dict[str, Any]]:
+        """The immutable evidence history for a project, newest observation first.
+
+        This is the archive, not the current supporting set: every observation ever made is
+        retained, so a fact that changed value shows both the old and the new value rather
+        than only the latest.
+        """
+        return self.db.evidence_history_for(project_id, field_name=field_name)
+
+    def get_project_events(self, project_id: int) -> list[dict[str, Any]]:
+        """The durable, evidenced event timeline for a project, oldest first."""
+        return self.db.events_for_project(project_id)
+
+    def get_project_companies(self, project_id: int) -> list[dict[str, Any]]:
+        """Company entities resolved on a project, with the role each was observed in."""
+        return [
+            e for e in self.db.entities_for_project(project_id)
+            if e.get("entity_type") == "company"
+        ]
+
+    def get_project_people(self, project_id: int) -> list[dict[str, Any]]:
+        return [
+            e for e in self.db.entities_for_project(project_id)
+            if e.get("entity_type") == "person"
+        ]
+
+    def get_project_documents(self, project_id: int) -> list[dict[str, Any]]:
+        """Source documents a project's facts were drawn from."""
+        return self.db.documents_for_project(project_id)
+
+    def get_project_location(self, project_id: int) -> dict[str, Any] | None:
+        return self.db.location_for_project(project_id)
+
+    def get_project_trades(self, project_id: int) -> list[dict[str, Any]]:
+        """Trades the project carries, classified from documented permit text."""
+        return self.db.trades_for_project(project_id)
+
+    def search_companies(
+        self, *, q: str | None = None, role: str | None = None, limit: int = 50
+    ) -> list[dict[str, Any]]:
+        """Search resolved company entities by name, optionally filtered by role.
+
+        Reads the entity graph, so results are the *resolved* companies rather than raw
+        spellings. A role filter selects entities observed in that role on at least one
+        project.
+        """
+        clauses: list[str] = ["e.entity_type = 'company'"]
+        params: list[Any] = []
+        if q and q.strip():
+            clauses.append("LOWER(e.display_name) LIKE ?")
+            params.append(f"%{q.strip().lower()}%")
+        if role:
+            clauses.append(
+                "EXISTS (SELECT 1 FROM entity_project ep WHERE ep.entity_id = e.id AND ep.role = ?)"
+            )
+            params.append(role)
+        where = " AND ".join(clauses)
+        rows = self.db.conn.execute(
+            f"""
+            SELECT e.id, e.display_name,
+                   COUNT(DISTINCT ep.project_id) AS project_count,
+                   GROUP_CONCAT(DISTINCT ep.role) AS roles
+              FROM entity e
+              LEFT JOIN entity_project ep ON ep.entity_id = e.id
+             WHERE {where}
+             GROUP BY e.id
+             ORDER BY project_count DESC, e.display_name
+             LIMIT ?
+            """,
+            tuple(params) + (limit,),
+        ).fetchall()
+        out: list[dict[str, Any]] = []
+        for r in rows:
+            item = dict(r)
+            item["roles"] = sorted((item.get("roles") or "").split(",")) if item.get("roles") else []
+            out.append(item)
+        return out
+
+    def search_projects(
+        self, *, q: str | None = None, trade_id: str | None = None,
+        city: str | None = None, limit: int = 50,
+    ) -> list[dict[str, Any]]:
+        """Search discoverable projects, optionally filtered by trade and city.
+
+        Built on the same public rules as the directory (classification and procurement), and
+        extended with the trade graph. Returns ids and display fields only; a caller loads a
+        full record through `get_project`, which reapplies the same rules.
+        """
+        clauses: list[str] = [
+            "p.classification IN (?, ?)",
+            "p.procurement_status IN (?, ?, ?)",
+        ]
+        params: list[Any] = list(PUBLIC_CLASSIFICATIONS) + list(DISCOVERABLE_PROCUREMENT)
+        if city:
+            clauses.append("p.city = ?")
+            params.append(city)
+        if trade_id:
+            clauses.append(
+                "EXISTS (SELECT 1 FROM project_trade pt WHERE pt.project_id = p.id AND pt.trade_id = ?)"
+            )
+            params.append(trade_id)
+        if q and q.strip():
+            ids = self._search_ids(q)
+            if not ids:
+                return []
+            placeholders = ",".join("?" for _ in ids)
+            clauses.append(f"p.id IN ({placeholders})")
+            params.extend(ids)
+        where = " AND ".join(clauses)
+        rows = self.db.conn.execute(
+            f"""
+            SELECT p.id, p.project_name, p.address, p.city, p.project_type,
+                   p.classification, p.procurement_status, p.permit_date, s.slug
+              FROM project p
+              LEFT JOIN project_slug s ON s.project_id = p.id
+             WHERE {where}
+             ORDER BY p.permit_date DESC NULLS LAST, p.id
+             LIMIT ?
+            """,
+            tuple(params) + (limit,),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
     def changes_for(self, project_id: int, limit: int = 50) -> list[dict[str, Any]]:
         """Recorded changes for one project, newest first.
 

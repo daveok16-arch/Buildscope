@@ -1,0 +1,127 @@
+# Construction trade taxonomy.
+#
+# Data-driven rather than hardcoded in UI or pipeline code, so a new trade is a configuration
+# change. This is a *taxonomy* — the controlled vocabulary of trades a project can carry — and
+# is deliberately broader than the single active trade profile in trades.yaml.
+#
+# `keywords` are matched against permit type/subtype and work-description text. They are used
+# to *classify* a project's trade from what a source actually states, never to invent one: a
+# project with no matching text keeps a null trade rather than a default.
+#
+# HVAC / mechanical is the deepest intelligence area today (see trades.yaml), but it is one
+# entry in this list, not the architecture. Nothing keys off `commercial_hvac` specifically.
+
+trades:
+  - id: hvac_mechanical
+    label: "HVAC / Mechanical"
+    slug: hvac-mechanical
+    active_profile: commercial_hvac
+    keywords:
+      - mechanical
+      - hvac
+      - refrigeration
+      - chiller
+      - boiler
+      - "air handler"
+      - "air handling"
+      - "rooftop unit"
+      - "make-up air"
+      - "make up air"
+      - "split system"
+      - vav
+      - "cooling tower"
+      - "heat pump"
+      - ventilation
+      - ductwork
+
+  - id: electrical
+    label: "Electrical"
+    slug: electrical
+    keywords:
+      - electrical
+      - electric
+      - "service entrance"
+      - switchgear
+      - "panel board"
+      - panelboard
+      - "low voltage"
+      - transformer
+      - "fire alarm"
+
+  - id: plumbing
+    label: "Plumbing"
+    slug: plumbing
+    keywords:
+      - plumbing
+      - "domestic water"
+      - "water heater"
+      - sanitary
+      - "gas piping"
+      - "backflow"
+      - irrigation
+
+  - id: fire_protection
+    label: "Fire Protection"
+    slug: fire-protection
+    keywords:
+      - "fire protection"
+      - sprinkler
+      - "fire suppression"
+      - "standpipe"
+      - "fire pump"
+
+  - id: general_construction
+    label: "General Construction"
+    slug: general-construction
+    keywords:
+      - "general construction"
+      - "new construction"
+      - "shell"
+      - "core and shell"
+      - "finish out"
+      - "build-out"
+      - buildout
+      - "tenant improvement"
+      - "interior remodel"
+      - addition
+
+  - id: roofing
+    label: "Roofing"
+    slug: roofing
+    keywords:
+      - roof
+      - roofing
+      - "re-roof"
+      - reroof
+      - "membrane roof"
+
+  - id: concrete
+    label: "Concrete"
+    slug: concrete
+    keywords:
+      - concrete
+      - "foundation"
+      - slab
+      - "pier and beam"
+      - paving
+
+  - id: structural
+    label: "Structural"
+    slug: structural
+    keywords:
+      - structural
+      - "steel"
+      - "foundation repair"
+      - "load bearing"
+      - "retaining wall"
+
+  - id: other_specialty
+    label: "Other Specialty"
+    slug: other-specialty
+    keywords:
+      - demolition
+      - grading
+      - "site work"
+      - landscaping
+      - "asbestos"
+      - "elevator"

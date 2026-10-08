@@ -7,6 +7,7 @@ rather than a rewrite of the queries.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import sqlite3
 from datetime import date, datetime, timezone
@@ -192,6 +193,155 @@ CREATE TABLE IF NOT EXISTS project_classification (
 );
 
 CREATE INDEX IF NOT EXISTS idx_classification_project ON project_classification(project_id);
+
+-- =====================================================================
+-- Intelligence graph: entities, locations, documents, events, evidence history
+-- =====================================================================
+--
+-- These tables extend the existing permit/project/evidence pipeline; they do not replace
+-- it. The rule that shapes every one of them is that a relationship exists only when a
+-- source stated it, and an observation is appended, never overwritten.
+
+-- One row per real-world company or person. Two names merge only when their deterministic
+-- canonical keys are equal; nothing is merged on fuzzy similarity, because a false merge
+-- (two different companies presented as one) is more damaging than a duplicate entity.
+CREATE TABLE IF NOT EXISTS entity (
+    id                 INTEGER PRIMARY KEY,
+    entity_type        TEXT NOT NULL,              -- 'company' | 'person'
+    canonical_key      TEXT NOT NULL,              -- deterministic merge identity
+    display_name       TEXT NOT NULL,              -- most complete observed spelling
+    created_at         TEXT NOT NULL,
+    updated_at         TEXT NOT NULL,
+    UNIQUE (entity_type, canonical_key)
+);
+
+-- Every observed spelling of an entity, with the source that used it. Kept so a name
+-- variant is preserved rather than overwritten by the canonical form.
+CREATE TABLE IF NOT EXISTS entity_name (
+    id                 INTEGER PRIMARY KEY,
+    entity_id          INTEGER NOT NULL REFERENCES entity(id) ON DELETE CASCADE,
+    name               TEXT NOT NULL,
+    normalized_name    TEXT NOT NULL,
+    source_id          TEXT,
+    observed_at        TEXT NOT NULL,
+    UNIQUE (entity_id, normalized_name)
+);
+CREATE INDEX IF NOT EXISTS idx_entity_name_norm ON entity_name(normalized_name);
+
+-- A resolved relationship between an entity and a project, carrying the role the source
+-- actually stated. The role comes from evidence, never from the mere presence of a name.
+CREATE TABLE IF NOT EXISTS entity_project (
+    id                 INTEGER PRIMARY KEY,
+    entity_id          INTEGER NOT NULL REFERENCES entity(id) ON DELETE CASCADE,
+    project_id         INTEGER NOT NULL REFERENCES project(id) ON DELETE CASCADE,
+    role               TEXT NOT NULL,              -- owner, general_contractor, architect, ...
+    source_id          TEXT,
+    source_url         TEXT,
+    excerpt            TEXT,
+    observed_at        TEXT NOT NULL,
+    UNIQUE (entity_id, project_id, role)
+);
+CREATE INDEX IF NOT EXISTS idx_entity_project_project ON entity_project(project_id, role);
+CREATE INDEX IF NOT EXISTS idx_entity_project_entity ON entity_project(entity_id);
+
+-- Normalized project location. The raw address is preserved exactly as the source stated
+-- it. Coordinates are populated only with a recorded provenance and confidence; a value
+-- with no provenance is left null rather than guessed.
+CREATE TABLE IF NOT EXISTS project_location (
+    project_id         INTEGER PRIMARY KEY REFERENCES project(id) ON DELETE CASCADE,
+    raw_address        TEXT,
+    normalized_address TEXT,
+    building_key       TEXT,
+    city               TEXT,
+    state              TEXT,
+    zip_code           TEXT,
+    latitude           REAL,
+    longitude          REAL,
+    geocode_source     TEXT,
+    geocode_confidence REAL,
+    jurisdiction       TEXT,
+    location_precision TEXT,
+    updated_at         TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_location_building ON project_location(building_key);
+CREATE INDEX IF NOT EXISTS idx_location_city ON project_location(city);
+
+-- A source record or published document a project's facts were drawn from. The verbatim
+-- payload itself stays in `raw_record`; this references it by id.
+CREATE TABLE IF NOT EXISTS document (
+    id                 INTEGER PRIMARY KEY,
+    project_id         INTEGER REFERENCES project(id) ON DELETE CASCADE,
+    source_id          TEXT,
+    document_type      TEXT NOT NULL,             -- permit_record, plan, filing, ...
+    title              TEXT,
+    source_url         TEXT,
+    source_record_key  TEXT,
+    raw_record_id      INTEGER REFERENCES raw_record(id),
+    captured_at        TEXT NOT NULL,
+    source_date        TEXT,
+    UNIQUE (source_id, source_record_key, document_type)
+);
+CREATE INDEX IF NOT EXISTS idx_document_project ON document(project_id);
+
+-- Durable, append-only project events: documented lifecycle changes derived from evidence.
+-- `event_uid` is a deterministic identity, so re-deriving the same fact is a no-op and an
+-- unchanged project produces no new event.
+CREATE TABLE IF NOT EXISTS project_event (
+    id                 INTEGER PRIMARY KEY,
+    event_uid          TEXT NOT NULL UNIQUE,
+    project_id         INTEGER NOT NULL REFERENCES project(id) ON DELETE CASCADE,
+    event_type         TEXT NOT NULL,
+    occurred_at        TEXT,                      -- when the fact happened at the source
+    recorded_at        TEXT NOT NULL,             -- when BuildScope observed it
+    source_id          TEXT,
+    source_url         TEXT,
+    source_record_key  TEXT,
+    summary            TEXT NOT NULL,
+    payload            TEXT NOT NULL DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_event_project ON project_event(project_id, occurred_at, recorded_at);
+CREATE INDEX IF NOT EXISTS idx_event_type ON project_event(event_type, recorded_at);
+
+-- The trade(s) a project carries, classified from documented permit text via the configured
+-- taxonomy. A project may legitimately carry more than one trade (a building permit for
+-- general construction and a mechanical permit at the same address), so this is a
+-- relationship rather than a single column. `is_primary` marks the deepest-evidence trade.
+CREATE TABLE IF NOT EXISTS project_trade (
+    id                 INTEGER PRIMARY KEY,
+    project_id         INTEGER NOT NULL REFERENCES project(id) ON DELETE CASCADE,
+    trade_id           TEXT NOT NULL,
+    is_primary         INTEGER NOT NULL DEFAULT 0,
+    confidence         TEXT NOT NULL DEFAULT 'documented',
+    evidence_source    TEXT,
+    classified_at      TEXT NOT NULL,
+    UNIQUE (project_id, trade_id)
+);
+CREATE INDEX IF NOT EXISTS idx_project_trade ON project_trade(trade_id, is_primary);
+CREATE INDEX IF NOT EXISTS idx_project_trade_project ON project_trade(project_id);
+
+-- Immutable evidence archive. Every distinct observation is appended here and never
+-- overwritten, so a newer record adds history rather than erasing the prior one. This is
+-- what makes "what changed over time" answerable; the `evidence` table remains the current
+-- supporting set for the displayed values.
+CREATE TABLE IF NOT EXISTS evidence_history (
+    id                 INTEGER PRIMARY KEY,
+    fingerprint        TEXT NOT NULL UNIQUE,      -- deterministic identity of the observation
+    project_id         INTEGER NOT NULL REFERENCES project(id) ON DELETE CASCADE,
+    field_name         TEXT NOT NULL,
+    value              TEXT,
+    source_id          TEXT NOT NULL,
+    source_name        TEXT NOT NULL,
+    source_url         TEXT,
+    source_record_key  TEXT,
+    source_date        TEXT,
+    evidence_type      TEXT,
+    tier               INTEGER,
+    excerpt            TEXT,
+    first_seen_at      TEXT NOT NULL,
+    last_seen_at       TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_ehistory_project ON evidence_history(project_id, field_name);
+CREATE INDEX IF NOT EXISTS idx_ehistory_source ON evidence_history(source_id, source_record_key);
 """
 
 #: Application-layer schema. Kept separate from the intelligence schema above so the
@@ -501,6 +651,32 @@ def _iso(value: Any) -> str | None:
 
 def _utcnow() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _evidence_fingerprint(project_id: int, ev: dict[str, Any]) -> str:
+    """Deterministic identity of one evidence observation.
+
+    The fingerprint covers what makes two observations *the same fact*: the project, the
+    field, the asserted value, and the source record it came from. A newer record with a
+    different value produces a different fingerprint and is appended alongside the old one;
+    re-observing the identical fact produces the same fingerprint and only refreshes
+    `last_seen_at`. Nothing about the observation is ever rewritten.
+    """
+    digest = hashlib.sha1(
+        "|".join(
+            [
+                str(project_id),
+                str(ev.get("field_name")),
+                str(ev.get("value")),
+                str(ev.get("source_id")),
+                str(ev.get("source_record_key") or ""),
+                str(ev.get("source_date") or ""),
+                str(ev.get("evidence_type") or ""),
+                str(ev.get("tier") if ev.get("tier") is not None else ""),
+            ]
+        ).encode("utf-8")
+    )
+    return digest.hexdigest()[:40]
 
 
 class Database:
@@ -955,8 +1131,62 @@ class Database:
                 (project_id, party.role, party.name, party.source_id,
                  party.source_url, party.excerpt),
             )
+        # The `evidence` table above is the current supporting set and is rebuilt each pass.
+        # The immutable archive below is append-only: a re-observation refreshes last_seen_at,
+        # and a value that changed appends a new row, so the prior fact is never lost.
+        seen_at = now
+        self.append_evidence_history(project_id, project.evidence, seen_at=seen_at)
+        self.record_documents_from_evidence(project_id, project.evidence)
         self.conn.commit()
         return project_id
+
+    def record_documents_from_evidence(self, project_id: int, evidence_rows: Iterable[Any]) -> int:
+        """Record the source documents a project's facts were drawn from.
+
+        One document per (source, source record) that contributed evidence. The verbatim
+        payload itself stays in `raw_record`; this references it by natural key where one
+        exists, so a reader can trace a claim back to the landed record without copying it.
+        Returns the number of documents touched.
+        """
+        seen: set[tuple[str | None, str | None]] = set()
+        touched = 0
+        for ev in evidence_rows:
+            if isinstance(ev, dict):
+                source_id = ev.get("source_id")
+                record_key = ev.get("source_record_key")
+                source_url = ev.get("source_url")
+                excerpt = ev.get("excerpt")
+                observed_at = ev.get("observed_at")
+                source_date = ev.get("source_date")
+            else:
+                source_id = ev.source_id
+                record_key = ev.source_record_key
+                source_url = ev.source_url
+                excerpt = ev.excerpt
+                observed_at = _iso(ev.observed_at)
+                source_date = _iso(ev.source_date)
+            key = (source_id, record_key)
+            if key in seen or not (source_id and record_key):
+                continue
+            seen.add(key)
+            raw = self.conn.execute(
+                "SELECT id FROM raw_record WHERE source_id = ? AND natural_key = ? "
+                "ORDER BY id DESC LIMIT 1",
+                (source_id, record_key),
+            ).fetchone()
+            self.upsert_document(
+                project_id,
+                source_id=source_id,
+                document_type="permit_record",
+                title=excerpt or f"Source record {record_key}",
+                source_url=source_url,
+                source_record_key=record_key,
+                raw_record_id=int(raw["id"]) if raw else None,
+                captured_at=_iso(observed_at),
+                source_date=_iso(source_date),
+            )
+            touched += 1
+        return touched
 
     def _insert_evidence(self, project_id: int, ev: Evidence) -> None:
         self.conn.execute(
@@ -1264,6 +1494,323 @@ class Database:
                  ORDER BY c.record_count DESC NULLS LAST, s.name
                 """
             )
+        ]
+
+    # --- intelligence graph: evidence history ---------------------------------
+
+    def append_evidence_history(self, project_id: int, rows: Iterable[Any], *, seen_at: str) -> int:
+        """Append each distinct evidence observation to the immutable archive.
+
+        Accepts either `Evidence` objects or plain mappings. Returns the number of *new*
+        observations. The fingerprint is the identity of the observation, so a re-run that
+        observes the same fact updates `last_seen_at` instead of inserting a duplicate, while a
+        fact that changes value appends a new row and leaves the prior one in place. Nothing
+        here is ever deleted or overwritten.
+        """
+        created = 0
+        for ev in rows:
+            row = ev if isinstance(ev, dict) else {
+                "field_name": ev.field_name, "value": ev.value, "source_id": ev.source_id,
+                "source_name": ev.source_name, "source_url": ev.source_url,
+                "source_record_key": ev.source_record_key,
+                "source_date": _iso(ev.source_date), "evidence_type": ev.evidence_type,
+                "tier": ev.tier, "excerpt": ev.excerpt,
+            }
+            fingerprint = _evidence_fingerprint(project_id, row)
+            cur = self.conn.execute(
+                """
+                INSERT INTO evidence_history (fingerprint, project_id, field_name, value,
+                    source_id, source_name, source_url, source_record_key, source_date,
+                    evidence_type, tier, excerpt, first_seen_at, last_seen_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(fingerprint) DO UPDATE SET last_seen_at = excluded.last_seen_at
+                """,
+                (
+                    fingerprint, project_id, row["field_name"], row.get("value"),
+                    row["source_id"], row["source_name"], row.get("source_url"),
+                    row.get("source_record_key"), row.get("source_date"),
+                    row.get("evidence_type"), row.get("tier"), row.get("excerpt"),
+                    seen_at, seen_at,
+                ),
+            )
+            created += 1 if cur.rowcount and cur.rowcount > 0 else 0
+        return created
+
+    def evidence_history_for(self, project_id: int, *, field_name: str | None = None) -> list[dict[str, Any]]:
+        """Every archived observation for a project, newest observation first."""
+        sql = "SELECT * FROM evidence_history WHERE project_id = ?"
+        params: list[Any] = [project_id]
+        if field_name:
+            sql += " AND field_name = ?"
+            params.append(field_name)
+        sql += " ORDER BY first_seen_at DESC, id DESC"
+        return [dict(r) for r in self.conn.execute(sql, tuple(params)).fetchall()]
+
+    def evidence_history_count(self, project_id: int) -> int:
+        return int(
+            self.conn.execute(
+                "SELECT COUNT(*) FROM evidence_history WHERE project_id = ?", (project_id,)
+            ).fetchone()[0]
+        )
+
+    # --- intelligence graph: entities -----------------------------------------
+
+    def upsert_entity(self, *, entity_type: str, canonical_key: str, display_name: str) -> int:
+        """Insert or fetch an entity by its deterministic key. Returns its id.
+
+        The display name is refreshed to the most complete observed spelling by the caller;
+        this method only guarantees one row per (type, key), which is what stops two spellings
+        of one company becoming two entities.
+        """
+        now = _utcnow()
+        self.conn.execute(
+            """
+            INSERT INTO entity (entity_type, canonical_key, display_name, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(entity_type, canonical_key) DO UPDATE SET
+                display_name = excluded.display_name,
+                updated_at = excluded.updated_at
+            """,
+            (entity_type, canonical_key, display_name, now, now),
+        )
+        row = self.conn.execute(
+            "SELECT id FROM entity WHERE entity_type = ? AND canonical_key = ?",
+            (entity_type, canonical_key),
+        ).fetchone()
+        return int(row["id"])
+
+    def add_entity_name(
+        self, entity_id: int, *, name: str, normalized_name: str,
+        source_id: str | None = None,
+    ) -> None:
+        """Record an observed spelling of an entity, preserving the variant."""
+        self.conn.execute(
+            """
+            INSERT OR IGNORE INTO entity_name (entity_id, name, normalized_name, source_id, observed_at)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (entity_id, name, normalized_name, source_id, _utcnow()),
+        )
+
+    def link_entity_project(
+        self, entity_id: int, project_id: int, *, role: str,
+        source_id: str | None = None, source_url: str | None = None, excerpt: str | None = None,
+    ) -> None:
+        """Record an entity's evidenced role on a project. Idempotent per (entity, project, role)."""
+        self.conn.execute(
+            """
+            INSERT OR IGNORE INTO entity_project (entity_id, project_id, role, source_id,
+                source_url, excerpt, observed_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (entity_id, project_id, role, source_id, source_url, excerpt, _utcnow()),
+        )
+
+    def entities_for_project(self, project_id: int, *, role: str | None = None) -> list[dict[str, Any]]:
+        sql = """
+            SELECT e.id, e.entity_type, e.display_name, ep.role, ep.source_id, ep.source_url,
+                   ep.excerpt
+              FROM entity_project ep
+              JOIN entity e ON e.id = ep.entity_id
+             WHERE ep.project_id = ?
+        """
+        params: list[Any] = [project_id]
+        if role:
+            sql += " AND ep.role = ?"
+            params.append(role)
+        sql += " ORDER BY ep.role, e.display_name"
+        return [dict(r) for r in self.conn.execute(sql, tuple(params)).fetchall()]
+
+    def entity_by_key(self, canonical_key: str) -> dict[str, Any] | None:
+        row = self.conn.execute(
+            "SELECT * FROM entity WHERE canonical_key = ?", (canonical_key,)
+        ).fetchone()
+        return dict(row) if row else None
+
+    # --- intelligence graph: locations ----------------------------------------
+
+    def upsert_project_location(self, project_id: int, location: dict[str, Any]) -> None:
+        """Store the normalized location for a project.
+
+        Coordinates are written only when the caller supplies a geocode source; the method
+        refuses to persist a latitude or longitude without one, so a fabricated coordinate
+        cannot be stored.
+        """
+        lat = location.get("latitude")
+        lon = location.get("longitude")
+        geocode_source = location.get("geocode_source")
+        if (lat is not None or lon is not None) and not geocode_source:
+            raise ValueError("Refusing to store coordinates without a geocode provenance.")
+        self.conn.execute(
+            """
+            INSERT INTO project_location (project_id, raw_address, normalized_address,
+                building_key, city, state, zip_code, latitude, longitude, geocode_source,
+                geocode_confidence, jurisdiction, location_precision, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(project_id) DO UPDATE SET
+                raw_address = excluded.raw_address,
+                normalized_address = excluded.normalized_address,
+                building_key = excluded.building_key,
+                city = excluded.city,
+                state = excluded.state,
+                zip_code = excluded.zip_code,
+                latitude = excluded.latitude,
+                longitude = excluded.longitude,
+                geocode_source = excluded.geocode_source,
+                geocode_confidence = excluded.geocode_confidence,
+                jurisdiction = excluded.jurisdiction,
+                location_precision = excluded.location_precision,
+                updated_at = excluded.updated_at
+            """,
+            (
+                project_id, location.get("raw_address"), location.get("normalized_address"),
+                location.get("building_key"), location.get("city"), location.get("state"),
+                location.get("zip_code"), lat, lon, geocode_source,
+                location.get("geocode_confidence"), location.get("jurisdiction"),
+                location.get("location_precision"), _utcnow(),
+            ),
+        )
+
+    def location_for_project(self, project_id: int) -> dict[str, Any] | None:
+        row = self.conn.execute(
+            "SELECT * FROM project_location WHERE project_id = ?", (project_id,)
+        ).fetchone()
+        return dict(row) if row else None
+
+    # --- intelligence graph: documents ----------------------------------------
+
+    def upsert_document(
+        self, project_id: int | None, *, source_id: str | None, document_type: str,
+        title: str | None, source_url: str | None, source_record_key: str | None,
+        raw_record_id: int | None = None, captured_at: str | None = None,
+        source_date: str | None = None,
+    ) -> None:
+        """Record a source document a project's facts were drawn from."""
+        self.conn.execute(
+            """
+            INSERT INTO document (project_id, source_id, document_type, title, source_url,
+                source_record_key, raw_record_id, captured_at, source_date)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(source_id, source_record_key, document_type) DO UPDATE SET
+                project_id = COALESCE(excluded.project_id, document.project_id),
+                title = excluded.title,
+                source_url = excluded.source_url,
+                raw_record_id = COALESCE(excluded.raw_record_id, document.raw_record_id),
+                source_date = excluded.source_date
+            """,
+            (
+                project_id, source_id, document_type, title, source_url, source_record_key,
+                raw_record_id, captured_at or _utcnow(), source_date,
+            ),
+        )
+
+    def documents_for_project(self, project_id: int) -> list[dict[str, Any]]:
+        return [
+            dict(r)
+            for r in self.conn.execute(
+                "SELECT * FROM document WHERE project_id = ? ORDER BY captured_at, id",
+                (project_id,),
+            ).fetchall()
+        ]
+
+    # --- intelligence graph: events -------------------------------------------
+
+    def insert_events(self, events: Iterable[dict[str, Any]]) -> int:
+        """Append events, ignoring ones already recorded. Returns the number newly inserted.
+
+        `event_uid` is unique, so re-deriving an unchanged fact is a no-op. This is the
+        mechanism that guarantees "no change = no new event".
+        """
+        created = 0
+        for event in events:
+            cur = self.conn.execute(
+                """
+                INSERT OR IGNORE INTO project_event (event_uid, project_id, event_type,
+                    occurred_at, recorded_at, source_id, source_url, source_record_key,
+                    summary, payload)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    event["event_uid"], event["project_id"], event["event_type"],
+                    event.get("occurred_at"), event["recorded_at"], event.get("source_id"),
+                    event.get("source_url"), event.get("source_record_key"),
+                    event["summary"], event.get("payload") or "{}",
+                ),
+            )
+            created += 1 if cur.rowcount and cur.rowcount > 0 else 0
+        return created
+
+    def events_for_project(self, project_id: int) -> list[dict[str, Any]]:
+        """A project's events, oldest first, ordered for a timeline."""
+        return [
+            dict(r)
+            for r in self.conn.execute(
+                """
+                SELECT * FROM project_event
+                 WHERE project_id = ?
+                 ORDER BY COALESCE(occurred_at, recorded_at), recorded_at, id
+                """,
+                (project_id,),
+            ).fetchall()
+        ]
+
+    def event_count(self, project_id: int) -> int:
+        return int(
+            self.conn.execute(
+                "SELECT COUNT(*) FROM project_event WHERE project_id = ?", (project_id,)
+            ).fetchone()[0]
+        )
+
+    # --- intelligence graph: trades -------------------------------------------
+
+    def replace_project_trades(self, project_id: int, trades: Iterable[dict[str, Any]]) -> None:
+        """Replace a project's classified trades.
+
+        Trades are derived from the current permit text, so they are rebuilt on each pass the
+        same way evidence is; unlike evidence, a trade classification is a derived analytical
+        label rather than a sourced fact, so rebuilding does not lose history (the history of a
+        *fact* lives in evidence_history).
+        """
+        self.conn.execute("DELETE FROM project_trade WHERE project_id = ?", (project_id,))
+        for trade in trades:
+            self.conn.execute(
+                """
+                INSERT OR IGNORE INTO project_trade (project_id, trade_id, is_primary,
+                    confidence, evidence_source, classified_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    project_id, trade["trade_id"], 1 if trade.get("is_primary") else 0,
+                    trade.get("confidence") or "documented", trade.get("evidence_source"),
+                    _utcnow(),
+                ),
+            )
+
+    def trades_for_project(self, project_id: int) -> list[dict[str, Any]]:
+        return [
+            dict(r)
+            for r in self.conn.execute(
+                """
+                SELECT * FROM project_trade
+                 WHERE project_id = ?
+                 ORDER BY is_primary DESC, trade_id
+                """,
+                (project_id,),
+            ).fetchall()
+        ]
+
+    def trade_counts(self) -> list[dict[str, Any]]:
+        return [
+            dict(r)
+            for r in self.conn.execute(
+                """
+                SELECT trade_id, COUNT(*) AS projects,
+                       SUM(is_primary) AS primary_projects
+                  FROM project_trade
+                 GROUP BY trade_id
+                 ORDER BY projects DESC, trade_id
+                """
+            ).fetchall()
         ]
 
     # --- reporting ------------------------------------------------------------
