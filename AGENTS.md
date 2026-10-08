@@ -200,3 +200,21 @@ These are enforced by tests, not by convention. Breaking one fails the suite.
   category page must link to `/opportunities`, `/markets/dfw`, `/trades/commercial-hvac` and
   `/guides`, and the footer must link the category page on every public page. The shipped
   `templates/base.html` had neither, so those two links were added to the footer Product column.
+
+## Deployment (Render)
+
+* `render.yaml` is the blueprint. Build `pip install -r requirements.txt`, start `bash ops/start.sh`,
+  health check `/healthz`, branch `main`. `ops/start.sh` detects `RENDER=true` and runs the server
+  plus the refresh loop in the foreground on `$PORT`.
+* The data sources are public and unauthenticated, so a fresh instance self-seeds: the first
+  refresh (`ingest → assemble → build-search-index → monitor`) took a fresh empty data dir to ~1,780
+  projects in ~90s. `/healthz` reports `"status":"empty"` (HTTP 200) while filling, then `"ok"`.
+* The Free plan has no disk, so the database is rebuilt on each deploy; the dataset only persists on
+  a paid plan with the disk block uncommented. Leave `OPPINTEL_DATA_DIR` unset without a disk —
+  pointing it at `/var/data` with no disk attached is the one way to break the start.
+* Python is pinned with `.python-version` (`3.13`) rather than a `PYTHON_VERSION` env var: Render
+  accepts an unqualified minor version in the file but requires a fully-qualified patch in the var.
+* The repository is committed on branch `main` (163 files, ~1.8 MB of source). `vendor/python/` and
+  `data/` runtime state are git-ignored — the host installs from `requirements.txt` and regenerates
+  the database. The GitHub App token in this sandbox cannot create repositories; the owner must
+  create the remote and push (see `docs/RENDER_DEPLOY.md`).
