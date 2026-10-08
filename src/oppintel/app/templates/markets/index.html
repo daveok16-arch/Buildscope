@@ -24,6 +24,7 @@
       <h2>Configured Markets</h2>
       <p class="section-sub">
         Each market represents a geographic cluster of municipal and county permit sources. Coverage is strictly driven by verifiable data ingestion.
+        {{ coverage_summary.markets_serving }} of {{ coverage_summary.markets_configured }} configured markets currently serve data.
       </p>
     </div>
 
@@ -31,8 +32,10 @@
       {% for card in cards %}
       <article class="card">
         <div class="card-meta-line">
-          {% if card.market.active %}
-            <span class="signal-indicator signal-high">Active Market</span>
+          {% if card.coverage and card.coverage.is_serving %}
+            <span class="signal-indicator signal-high">Serving Data</span>
+          {% elif card.market.active %}
+            <span class="muted">Active, no data yet</span>
           {% else %}
             <span class="muted">Planned Market</span>
           {% endif %}
@@ -47,6 +50,16 @@
           {% endif %}
         </h3>
         <p class="card-meta">Configured jurisdictions across {{ card.market.state }}</p>
+        {% if card.coverage %}
+        <p class="muted small" style="margin-top:6px">
+          Coverage: <strong>{{ card.coverage.label }}</strong>
+          {%- if card.coverage.sources_with_connector == 0 %} · no connector implemented{% endif %}
+          {%- if card.coverage.cities_with_records %} · {{ card.coverage.cities_with_records }} of {{ card.coverage.cities_configured }} jurisdictions with records{% endif %}
+        </p>
+        {% for note in card.coverage.notes %}
+        <p class="muted small">{{ note }}</p>
+        {% endfor %}
+        {% endif %}
         {% if card.stats %}
           <dl class="facts">
             <div><dt>Commercial projects</dt><dd>{{ "{:,}".format(card.stats.projects_public) }}</dd></div>

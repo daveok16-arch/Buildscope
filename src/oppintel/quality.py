@@ -17,6 +17,7 @@ from __future__ import annotations
 from datetime import date, timedelta
 from typing import Any
 
+from .dates import VERDICT_FUTURE_IMPLAUSIBLE, validate_date
 from .db import Database
 
 #: Issue severities, ordered worst first for display.
@@ -67,13 +68,32 @@ def detect_quality_issues(db: Database, permits: list[Any]) -> int:
             )
             count += 1
         elif permit.permit_date > horizon:
+            # The tolerance window is retained so the same rows are still flagged, but the
+            # message now comes from the semantic model, which states *why* the date is
+            # implausible: an occurrence date cannot be observed before it happens.
+            verdict = validate_date("permit_date", permit.permit_date, observed=today)
             db.record_quality_issue(
                 FUTURE_PERMIT_DATE, SEVERITY_MEDIUM,
                 f"Permit {number} is dated {permit.permit_date}, which is beyond a plausible "
-                f"submission window.",
+                f"submission window. {verdict.reason}",
                 source_id=source_id,
             )
             count += 1
+
+        # A source date is the moment the record was published. It shares the occurrence
+        # semantics of a permit date, so a future source date is checked the same way rather
+        # than being left unflagged.
+        source_date = getattr(permit, "source_date", None)
+        if source_date is not None and source_date > today:
+            verdict = validate_date("source_date", source_date, observed=today)
+            if verdict.verdict == VERDICT_FUTURE_IMPLAUSIBLE:
+                db.record_quality_issue(
+                    FUTURE_PERMIT_DATE, SEVERITY_MEDIUM,
+                    f"Permit {number} carries a source date of {source_date} that is later than "
+                    f"the observation date. {verdict.reason}",
+                    source_id=source_id,
+                )
+                count += 1
         value = getattr(permit, "job_value", None)
         if value is not None and value <= 0:
             db.record_quality_issue(

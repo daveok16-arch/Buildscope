@@ -1,0 +1,98 @@
+"""Semantic date validation.
+
+The behaviour under test is the distinction the product depends on: a future date is judged by
+what its field means, not by the date alone.
+"""
+
+from datetime import date
+
+from oppintel.dates import (
+    KIND_OCCURRENCE,
+    KIND_OBSERVATION,
+    KIND_PLANNED,
+    KIND_UNKNOWN,
+    VERDICT_ANCIENT,
+    VERDICT_FUTURE_IMPLAUSIBLE,
+    VERDICT_FUTURE_PLAUSIBLE,
+    VERDICT_OK,
+    is_usable_occurrence,
+    semantic_kind,
+    validate_date,
+)
+
+OBSERVED = date(2026, 10, 7)
+
+
+def test_kind_from_field_name():
+    assert semantic_kind("permit_date") == KIND_OCCURRENCE
+    assert semantic_kind("source_date") == KIND_OCCURRENCE
+    assert semantic_kind("issued_at") == KIND_OCCURRENCE
+    assert semantic_kind("expiration_date") == KIND_PLANNED
+    assert semantic_kind("scheduled_inspection") == KIND_PLANNED
+    assert semantic_kind("retrieval_date") == KIND_OBSERVATION
+    assert semantic_kind("last_verified") == KIND_OBSERVATION
+    assert semantic_kind("mystery_date") == KIND_UNKNOWN
+
+
+def test_missing_date_is_not_a_problem():
+    verdict = validate_date("permit_date", None, observed=OBSERVED)
+    assert verdict.verdict == VERDICT_OK
+    assert not verdict.is_problem
+    assert not verdict.is_future
+
+
+def test_past_occurrence_is_ok():
+    verdict = validate_date("permit_date", date(2026, 9, 1), observed=OBSERVED)
+    assert verdict.verdict == VERDICT_OK
+
+
+def test_future_occurrence_is_implausible():
+    verdict = validate_date("permit_date", date(2027, 1, 1), observed=OBSERVED)
+    assert verdict.verdict == VERDICT_FUTURE_IMPLAUSIBLE
+    assert verdict.is_problem
+    assert verdict.is_future
+
+
+def test_future_planned_date_is_plausible_within_horizon():
+    verdict = validate_date("expiration_date", date(2027, 1, 1), observed=OBSERVED)
+    assert verdict.verdict == VERDICT_FUTURE_PLAUSIBLE
+    assert not verdict.is_problem
+
+
+def test_future_planned_date_beyond_horizon_is_implausible():
+    verdict = validate_date("expiration_date", date(2040, 1, 1), observed=OBSERVED)
+    assert verdict.verdict == VERDICT_FUTURE_IMPLAUSIBLE
+    assert verdict.is_problem
+
+
+def test_unknown_kind_future_date_is_implausible():
+    # An unknown field is judged as an occurrence: the conservative choice, because treating a
+    # future date as harmless could let a bad value through as a real filing.
+    verdict = validate_date("mystery_date", date(2027, 1, 1), observed=OBSERVED)
+    assert verdict.verdict == VERDICT_FUTURE_IMPLAUSIBLE
+
+
+def test_ancient_date_is_flagged():
+    verdict = validate_date("permit_date", date(1990, 1, 1), observed=OBSERVED)
+    assert verdict.verdict == VERDICT_ANCIENT
+    assert verdict.is_problem
+
+
+def test_observation_field_may_be_slightly_ahead():
+    # Clock skew between the source and this host should not manufacture a defect.
+    verdict = validate_date("retrieval_date", date(2026, 10, 8), observed=OBSERVED)
+    assert verdict.verdict == VERDICT_FUTURE_PLAUSIBLE
+
+
+def test_explicit_kind_overrides_name():
+    verdict = validate_date(
+        "permit_date", date(2027, 1, 1), observed=OBSERVED, kind=KIND_PLANNED
+    )
+    assert verdict.verdict == VERDICT_FUTURE_PLAUSIBLE
+
+
+def test_is_usable_occurrence():
+    assert is_usable_occurrence(date(2026, 1, 1), observed=OBSERVED)
+    assert is_usable_occurrence(OBSERVED, observed=OBSERVED)
+    assert not is_usable_occurrence(date(2027, 1, 1), observed=OBSERVED)
+    assert not is_usable_occurrence(None, observed=OBSERVED)

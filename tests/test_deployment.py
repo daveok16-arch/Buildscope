@@ -44,7 +44,14 @@ def test_health_discloses_no_project_content(client):
     """Counts are fine; a name, address or permit number would not be."""
     body = client.get("/healthz").get_data(as_text=True)
     payload = json.loads(body)
-    assert set(payload) == {"status", "database", "projects", "permits"}
+    # The payload is a closed set: a new key must be added here deliberately, so an accidental
+    # field that carries content cannot slip into the probe unnoticed.
+    assert set(payload) == {"status", "database", "projects", "permits", "coverage"}
+    # Coverage reports counts and state only, never a record.
+    coverage = payload["coverage"]
+    assert {"markets_configured", "markets_serving", "markets"} <= set(coverage)
+    for market in coverage["markets"]:
+        assert "records" in market and isinstance(market["records"], int)
     for leak in ("ROSS", "TOWER", "MAIN", "permit_number", "address"):
         assert leak not in body
 

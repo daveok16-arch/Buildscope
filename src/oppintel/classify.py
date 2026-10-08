@@ -15,6 +15,7 @@ from datetime import date, timedelta
 
 from .config import TradeConfig
 from .constants import HIGH, MEDIUM, NEEDS_VERIFICATION
+from .dates import is_usable_occurrence, validate_date
 from .models import Project, utcnow
 
 
@@ -97,9 +98,20 @@ def classify(
 
     if project.permit_date:
         window = int(scoring.get("recent_permit_days", 180))
-        if project.permit_date >= today - timedelta(days=window):
-            score += int(scoring.get("recent_permit_points", 10))
-            reasons.append(f"Permit filed within the last {window} days.")
+        # A permit date in the future cannot describe a filing that has already happened, so it
+        # must not earn the recency points. Before this check a future-dated permit satisfied
+        # `permit_date >= today - window` and the product asserted a historical filing that had
+        # not occurred.
+        if is_usable_occurrence(project.permit_date, observed=today):
+            if project.permit_date >= today - timedelta(days=window):
+                score += int(scoring.get("recent_permit_points", 10))
+                reasons.append(f"Permit filed within the last {window} days.")
+        else:
+            verdict = validate_date("permit_date", project.permit_date, observed=today)
+            reasons.append(
+                "Permit date is later than the observation date, so it does not evidence a "
+                f"filing that has already happened. {verdict.reason}"
+            )
 
     # --- Label thresholds, then the gates --------------------------------------
     high_min = int(thresholds.get("high_min_score", 70))

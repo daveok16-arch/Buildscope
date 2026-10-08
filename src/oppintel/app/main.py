@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import secrets
 import urllib.request
 from datetime import datetime, timezone
 
@@ -38,6 +39,7 @@ from ..config import (
     market_by_slug,
     trade_by_slug,
 )
+from ..coverage import all_market_coverage, coverage_summary
 from ..db import Database
 from ..slugs import project_id_for_slug
 from ..service import (
@@ -272,6 +274,8 @@ def create_app(config: AppConfig | None = None) -> Flask:
         g.subscriptions = SubscriptionService(g.db)
         g.entitlement = g.subscriptions.entitlements_for(g.user)
         g.started_at = datetime.now(timezone.utc)
+        g.session_id = _session_token()
+        g.campaign = _campaign_from_request()
 
     @app.teardown_request
     def close_db(exception: BaseException | None = None) -> None:
@@ -435,6 +439,9 @@ def create_app(config: AppConfig | None = None) -> Flask:
     @app.route("/opportunities")
     def opportunities() -> str:
         filters = _filters_from_request(request.args)
+        # The visitor's own words, kept before the interpreter rewrites `filters.q` into
+        # structured filters. Analytics must record what was typed, not the residual keyword.
+        raw_query = filters.q
         available_cities = g.service.available_cities()
         interpreted = _interpret_search_query(filters.q, available_cities)
         if interpreted and interpreted.get("has_structured_intent"):
@@ -466,6 +473,11 @@ def create_app(config: AppConfig | None = None) -> Flask:
         record_analytics(
             g.db, "search_performed",
             market_id=g.market.id, trade_id=g.trade.id,
+            query_text=raw_query,
+            result_count=result.total,
+            filter_summary=_filter_summary(filters),
+            session_id=getattr(g, "session_id", None),
+            campaign=getattr(g, "campaign", None),
         )
         # The directory is the product's main organic entry point, so a view of it is recorded
         # as a funnel landing.
@@ -531,15 +543,21 @@ def create_app(config: AppConfig | None = None) -> Flask:
 
     @app.route("/markets")
     def markets_index() -> str:
+        # Coverage is computed from stored rows, not from configuration intent, so a market
+        # that is merely listed is never presented as one that is served.
+        coverage = {c.market_id: c for c in all_market_coverage(g.db)}
         cards = []
         for market in sorted(markets.values(), key=lambda m: (not m.active, m.name)):
             stats = None
             if market.id == g.market.id:
                 stats = g.service.market_statistics()
-            cards.append({"market": market, "stats": stats})
+            cards.append(
+                {"market": market, "stats": stats, "coverage": coverage.get(market.id)}
+            )
         return render_template(
             "markets/index.html",
             cards=cards,
+            coverage_summary=coverage_summary(g.db),
             page_title="Markets",
             seo=g.seo_for_simple("Markets", "Markets covered by the platform."),
         )
@@ -952,6 +970,12 @@ def create_app(config: AppConfig | None = None) -> Flask:
             ).fetchone()
             payload["projects"] = row["projects"]
             payload["permits"] = row["permits"]
+            # Coverage state is reported so an operator can distinguish "the process is up" from
+            # "the market is actually served". Counts only; never project content.
+            try:
+                payload["coverage"] = coverage_summary(g.db)
+            except Exception as exc:  # pragma: no cover - coverage must not fail the probe
+                log.warning("coverage summary failed: %r", exc)
             if not row["projects"]:
                 payload["status"] = "empty"
         except Exception as exc:
@@ -1499,6 +1523,7 @@ def create_app(config: AppConfig | None = None) -> Flask:
         the page were reached.
         """
         from ..reporting import data_quality_report
+        from .search_analytics import analytics_report
 
         stats = g.service.market_statistics()
         freshness = g.service.data_freshness()
@@ -1508,6 +1533,8 @@ def create_app(config: AppConfig | None = None) -> Flask:
             stats=stats,
             freshness=freshness,
             quality_report=data_quality_report(g.db),
+            coverage=all_market_coverage(g.db),
+            search_report=analytics_report(g.db),
             health=health,
             page_title="Data operations",
             seo=_private_seo(g, "Data operations", "Internal operations view."),
@@ -1635,6 +1662,70 @@ def _safe_int(value: Any, default: int) -> int:
         return int(value)
     except (TypeError, ValueError):
         return default
+
+
+def _session_token() -> str:
+    """A random, per-visit analytics token.
+
+    Not a user id and not derived from one: it exists so a sequence of searches in one visit can
+    be grouped for funnel measurement. It lives in the signed session cookie and is discarded
+    when the browser session ends.
+    """
+    token = session.get("analytics_session")
+    if not token:
+        token = secrets.token_urlsafe(12)
+        session["analytics_session"] = token
+    return token
+
+
+#: Campaign tags recognised on landing. Anything else is ignored rather than stored, so the
+#: column cannot be filled with arbitrary text.
+_CAMPAIGN_KEYS = ("utm_campaign", "campaign", "ref")
+_CAMPAIGN_MAX = 80
+
+
+def _campaign_from_request() -> str | None:
+    """The campaign a visit arrived under, from a recognised tag, remembered for the session.
+
+    Stored so a search can be attributed to the channel that produced it without a third-party
+    tracker. The value is bounded and whitespace-collapsed.
+    """
+    for key in _CAMPAIGN_KEYS:
+        value = request.args.get(key)
+        if value:
+            cleaned = " ".join(str(value).split())[:_CAMPAIGN_MAX]
+            if cleaned:
+                session["analytics_campaign"] = cleaned
+                return cleaned
+    return session.get("analytics_campaign")
+
+
+def _filter_summary(filters: OpportunityFilters) -> str | None:
+    """The names of the filters a search actually applied, sorted, comma-joined.
+
+    Only non-default filters are listed, so the summary reports deliberate narrowing rather than
+    the always-present defaults.
+    """
+    names: list[str] = []
+    if filters.q:
+        names.append("query")
+    if filters.city:
+        names.append("city")
+    if filters.project_type:
+        names.append("project_type")
+    if filters.classification:
+        names.append("classification")
+    if filters.procurement_status:
+        names.append("procurement_status")
+    if filters.date_from or filters.date_to:
+        names.append("date_range")
+    if filters.mechanical_only:
+        names.append("mechanical_only")
+    if filters.include_unverified:
+        names.append("include_unverified")
+    if filters.min_value or filters.max_value:
+        names.append("value_range")
+    return ",".join(sorted(names)) or None
 
 
 def _wants_json() -> bool:

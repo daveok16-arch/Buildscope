@@ -153,6 +153,18 @@ def test_recent_permit_earns_recency_points(trade):
     assert not any("within the last" in r for r in old.classification_reasons)
 
 
+def test_future_permit_date_does_not_earn_recency_points(trade):
+    """A permit dated after the reference date cannot describe a filing that has happened.
+
+    Regression: before the semantic date check, a future date satisfied
+    `permit_date >= today - window` and the record was reported as recently filed.
+    """
+    future = build_project(property_class="Office", permit_date=date(2027, 6, 1))
+    classify(future, trade, reference_date=REFERENCE)
+    assert not any("within the last" in r for r in future.classification_reasons)
+    assert any("later than the observation date" in r for r in future.classification_reasons)
+
+
 def test_every_classification_records_its_reasons(trade):
     """A label with no reasons is a black box; the classifier must always explain itself."""
     for tier, value in ((None, 50_000.0), (2, 2_000_000.0), (1, None)):

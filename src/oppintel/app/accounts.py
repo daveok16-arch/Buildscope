@@ -536,18 +536,37 @@ class AccountService:
 def record_analytics(
     db: Database, event_name: str, *, project_id: int | None = None,
     market_id: str | None = None, trade_id: str | None = None,
+    query_text: str | None = None, result_count: int | None = None,
+    filter_summary: str | None = None, session_id: str | None = None,
+    campaign: str | None = None,
 ) -> None:
     """Record a product event.
 
-    Intentionally narrow: an event name, an optional project, and the market/trade. No IP
-    address, no user agent, no free-text payload, and no link to a user account, so the
-    analytics table cannot become a record of who looked at what.
+    Intentionally narrow: an event name, an optional project, the market/trade, and — for a
+    search — the query the visitor typed and how many results it returned. Still no IP address,
+    no user agent, and no link to a user account, so the table cannot become a record of who
+    looked at what.
+
+    `session_id` is a random per-visit token, not a user id. It lets a sequence of searches in
+    one visit be grouped so a funnel can be measured; it cannot be resolved to a person, and it
+    is dropped when the browser session ends.
+
+    `query_text` is truncated to a bounded length so a pathological input cannot bloat the
+    table. It is the one piece of visitor-entered text stored anywhere, and it is stored only
+    for a search event.
     """
+    if query_text is not None:
+        query_text = " ".join(str(query_text).split())[:200] or None
     db.conn.execute(
         """
-        INSERT INTO analytics_event (event_name, project_id, market_id, trade_id, created_at)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO analytics_event (event_name, project_id, market_id, trade_id, created_at,
+            query_text, result_count, filter_summary, session_id, campaign)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
-        (event_name, project_id, market_id, trade_id, datetime.now(timezone.utc).isoformat()),
+        (
+            event_name, project_id, market_id, trade_id,
+            datetime.now(timezone.utc).isoformat(),
+            query_text, result_count, filter_summary, session_id, campaign,
+        ),
     )
     db.conn.commit()

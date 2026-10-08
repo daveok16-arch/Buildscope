@@ -40,6 +40,65 @@
     </table>
   </div>
 
+  <h2 style="margin-top:30px">Market coverage states</h2>
+  <p class="muted small">
+    Derived from stored rows, not configuration. A market that is merely listed is shown as such.
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Market</th><th>State</th><th class="num">Records</th><th class="num">Sources</th><th class="num">Jurisdictions with records</th><th>Latest record</th></tr>
+      </thead>
+      <tbody>
+        {% for c in coverage %}
+        <tr>
+          <td>{{ c.name }}</td>
+          <td>{{ c.label }}</td>
+          <td class="num">{{ "{:,}".format(c.records) }}</td>
+          <td class="num">{{ c.enabled_sources }} of {{ c.configured_sources }} enabled</td>
+          <td class="num">{{ c.cities_with_records }} of {{ c.cities_configured }}</td>
+          <td>{{ c.latest_record_date | or_na }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <h2 style="margin-top:30px">Search demand ({{ search_report.window_days }} days)</h2>
+  <div class="stat-strip">
+    <div class="stat"><span class="stat-value">{{ "{:,}".format(search_report.totals.searches) }}</span><span class="stat-label">Searches</span></div>
+    <div class="stat"><span class="stat-value">{{ "{:,}".format(search_report.totals.distinct_terms) }}</span><span class="stat-label">Distinct terms</span></div>
+    <div class="stat"><span class="stat-value">{{ search_report.totals.zero_results }}</span><span class="stat-label">Zero-result searches</span></div>
+    <div class="stat"><span class="stat-value">{{ search_report.totals.sessions }}</span><span class="stat-label">Sessions</span></div>
+  </div>
+  {% if search_report.zero_result_queries %}
+  <h3 style="margin-top:20px">Searches that returned nothing</h3>
+  <p class="muted small">Each is a coverage or vocabulary gap worth investigating.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Term</th><th class="num">Searches</th></tr></thead>
+      <tbody>
+        {% for q in search_report.zero_result_queries %}
+        <tr><td>{{ q.term }}</td><td class="num">{{ q.searches }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+  {% if search_report.top_queries %}
+  <h3 style="margin-top:20px">Top search terms</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Term</th><th class="num">Searches</th><th class="num">Avg results</th></tr></thead>
+      <tbody>
+        {% for q in search_report.top_queries %}
+        <tr><td>{{ q.term }}</td><td class="num">{{ q.searches }}</td><td class="num">{{ q.avg_results }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
   <h2 style="margin-top:30px">Data quality summary</h2>
   <div class="report-body">
     {{ quality_report }}

@@ -456,10 +456,19 @@ CREATE TABLE IF NOT EXISTS analytics_event (
     project_id         INTEGER REFERENCES project(id) ON DELETE SET NULL,
     market_id          TEXT,
     trade_id           TEXT,
-    created_at         TEXT NOT NULL
+    created_at         TEXT NOT NULL,
+    -- Search diagnostics. Added so the product can answer "what do users search for" and
+    -- "which searches return nothing", which the event name alone could not. Still carries no
+    -- user id, no IP, and no user agent, so the table cannot be joined back to a person.
+    query_text         TEXT,
+    result_count       INTEGER,
+    filter_summary     TEXT,
+    session_id         TEXT,
+    campaign           TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_analytics_event ON analytics_event(event_name, created_at);
+CREATE INDEX IF NOT EXISTS idx_analytics_query ON analytics_event(event_name, query_text);
 
 -- Full-text index over the searchable project text. A separate table rather than a virtual
 -- column on `project`, so the intelligence schema stays untouched and the index can be
@@ -588,6 +597,13 @@ class Database:
                 ("onboarding_completed", "INTEGER DEFAULT 0"),
                 ("reset_token", "TEXT"),
                 ("reset_token_expires_at", "TEXT"),
+            ),
+            "analytics_event": (
+                ("query_text", "TEXT"),
+                ("result_count", "INTEGER"),
+                ("filter_summary", "TEXT"),
+                ("session_id", "TEXT"),
+                ("campaign", "TEXT"),
             ),
         }
         for table, columns in expected.items():
