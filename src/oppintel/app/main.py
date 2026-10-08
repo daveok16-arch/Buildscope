@@ -64,6 +64,7 @@ from .analytics_funnel import (
 )
 from .config import AppConfig, load_config
 from .entitlements import SubscriptionService
+from .mailer import DeliveryError, ResetMailer
 from .seo import SeoBuilder
 from .security import install_security
 from ..companies import CompanyService
@@ -273,6 +274,7 @@ def create_app(config: AppConfig | None = None) -> Flask:
         g.alerts = AlertService(g.db)
         g.subscriptions = SubscriptionService(g.db)
         g.entitlement = g.subscriptions.entitlements_for(g.user)
+        g.mailer = ResetMailer(backend=cfg.mail_backend, base_url=cfg.base_url)
         g.started_at = datetime.now(timezone.utc)
         g.session_id = _session_token()
         g.campaign = _campaign_from_request()
@@ -1116,10 +1118,20 @@ def create_app(config: AppConfig | None = None) -> Flask:
             if not email:
                 error = "Please enter your work email address."
             else:
-                # A token is generated for a real account, but it is never rendered, logged or
-                # returned here: exposing it would let anyone reset a password they do not own.
-                # Delivery must happen out of band (email) when a mailer is configured.
-                g.accounts.create_password_reset_token(email)
+                # A token is generated only for a real account, and it is delivered out of band
+                # by the mailer — never rendered, logged or returned here, because exposing it
+                # would let anyone reset a password they do not own. Delivery happens only when
+                # an account exists, so it cannot become an enumeration oracle.
+                issued = g.accounts.create_password_reset_token(email)
+                if issued is not None:
+                    token, user = issued
+                    try:
+                        g.mailer.send_reset(to_email=user.email, token=token)
+                    except DeliveryError:
+                        # A delivery failure is logged server-side without the token, and the
+                        # visitor still sees the same neutral message, so the form reveals
+                        # nothing about whether the address is registered.
+                        log.exception("Password reset delivery failed")
                 success = "If an active account exists for that email, password reset instructions have been generated."
         return render_template(
             "account/forgot_password.html",

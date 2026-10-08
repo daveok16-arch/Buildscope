@@ -75,6 +75,13 @@ class AppConfig:
         default_factory=lambda: _env_int("FREE_VIEW_LIMIT", 0)
     )
 
+    #: Password-reset delivery channel (`console`, `smtp` or `null`). None defers to
+    #: `MAIL_BACKEND` at send time, defaulting to the non-sending `console` backend so a
+    #: deployment cannot accidentally deliver through an unconfigured channel.
+    mail_backend: str | None = field(
+        default_factory=lambda: (os.environ.get("MAIL_BACKEND") or "").strip() or None
+    )
+
     #: Whether CSRF, rate limiting and response headers are enforced. Derived in
     #: `__post_init__` from the `debug` value rather than from the environment, because the
     #: field is often set explicitly (by a test or a factory) and reading the environment

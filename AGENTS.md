@@ -251,3 +251,22 @@ These are enforced by tests, not by convention. Breaking one fails the suite.
   taking `MAX(permit_date)` over it would report a future date as the newest record and keep a
   stale market looking current. Tests: `test_future_permit_does_not_set_the_coverage_boundary`,
   `test_future_only_market_has_no_latest_record_date`.
+
+## Parameterized SQL
+
+* Never build one filter fragment and string-substitute it into several branches of a query
+  (`str.replace` on a `WHERE` clause). Each placeholder needs exactly one binding, so a fragment
+  reused N times needs N copies of its bindings — the mismatch is a runtime
+  `sqlite3.ProgrammingError` that surfaces as HTTP 500. Build each branch's SQL and its bindings
+  together instead. Regression: `CompanyService.list_companies` and
+  `tests/test_companies.py::test_each_single_filter_returns_a_subset_without_error`.
+
+## Password-reset delivery
+
+* `app/mailer.py` is the single reset-delivery boundary. Backends: `console` (default; logs that
+  a request happened, never the token), `smtp` (requires `SMTP_HOST`; raises `DeliveryError` when
+  unconfigured rather than falling back), `null` (delivers nothing). Chosen by `MAIL_BACKEND`
+  (`AppConfig.mail_backend`). A token is generated only for a real account, so delivery cannot
+  become an enumeration oracle; the visitor-facing message is identical either way. Tests in
+  `tests/test_auth_security.py` (section L) assert the token never reaches a page, response or
+  log.

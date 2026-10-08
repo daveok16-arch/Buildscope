@@ -46,6 +46,10 @@ CSRF_HEADER = "X-CSRF-Token"
 RATE_LIMITS: tuple[tuple[str, int, int], ...] = (
     ("/signin", 10, 300),
     ("/signup", 10, 300),
+    # Password reset is both a credential-guessing surface and an email-amplification vector,
+    # so it gets its own tight allowance rather than falling through to the broad "/" bucket.
+    ("/forgot-password", 5, 300),
+    ("/reset-password", 10, 300),
     ("/api", 300, 60),
     ("/", 600, 60),
 )

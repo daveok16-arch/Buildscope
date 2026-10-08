@@ -67,6 +67,29 @@ class CompanyProfile:
     sources_observed: list[str]
 
 
+#: Role filter aliases a caller may use, mapped to the filter key they select. An unrecognised
+#: role selects nothing here and is treated as "no role filter", matching the route's fixed
+#: select options; it never widens the result set.
+_ROLE_ALIASES: dict[str, str] = {
+    "contractor": "contractor",
+    "general_contractor": "contractor",
+    "gc": "contractor",
+    "owner": "owner",
+    "property_owner": "owner",
+    "architect": "architect",
+    "designer": "architect",
+    "developer": "developer",
+}
+
+#: The stored party roles each filter key selects.
+_ROLE_SELECTION: dict[str, tuple[str, ...]] = {
+    "contractor": ("general_contractor", "contractor"),
+    "owner": ("owner",),
+    "architect": ("architect",),
+    "developer": ("developer",),
+}
+
+
 def clean_company_name(raw: str | None) -> str | None:
     if not raw:
         return None
@@ -97,56 +120,68 @@ class CompanyService:
         city: str | None = None,
         limit: int = 60,
     ) -> list[CompanySummary]:
-        """Aggregate stakeholder companies across all assembled commercial projects."""
-        conditions = [
-            "p.classification IN ('HIGH', 'MEDIUM')",
-            "name IS NOT NULL",
-            "LENGTH(TRIM(name)) > 1",
-            "LOWER(TRIM(name)) NOT IN ('none', 'n/a', 'unknown', 'null', 'owner')",
-        ]
-        params: list[Any] = []
+        """Aggregate stakeholder companies across all assembled commercial projects.
 
+        Each branch of the union carries its own copy of the filters, so its bindings are
+        built alongside its own SQL. The previous version built one filter string and
+        string-substituted it into every branch, which both duplicated the placeholders and
+        rewrote the `role` column name inside unrelated fragments; that is why a filtered
+        query failed with a binding-count error.
+        """
+        role_selection: tuple[str, ...] | None = None
         if role:
-            role_clean = role.lower().strip()
-            if role_clean in ("contractor", "general_contractor", "gc"):
-                conditions.append("role IN ('general_contractor', 'contractor')")
-            elif role_clean in ("owner", "property_owner"):
-                conditions.append("role = 'owner'")
-            elif role_clean in ("architect", "designer"):
-                conditions.append("role = 'architect'")
-            elif role_clean in ("developer",):
-                conditions.append("role = 'developer'")
+            key = _ROLE_ALIASES.get(role.lower().strip())
+            if key:
+                role_selection = _ROLE_SELECTION[key]
 
-        if q and q.strip():
-            conditions.append("LOWER(name) LIKE ?")
-            params.append(f"%{q.strip().lower()}%")
+        name_like = f"%{q.strip().lower()}%" if q and q.strip() else None
+        city_exact = city.strip().lower() if city and city.strip() else None
 
-        if city and city.strip():
-            conditions.append("LOWER(p.city) = ?")
-            params.append(city.strip().lower())
+        def branch(role_expr: str, name_expr: str) -> tuple[str, list[Any]]:
+            """The filter fragment and its bindings for one branch."""
+            clauses = [
+                "p.classification IN ('HIGH', 'MEDIUM')",
+                f"{name_expr} IS NOT NULL",
+                f"LENGTH(TRIM({name_expr})) > 1",
+                f"LOWER(TRIM({name_expr})) NOT IN ('none', 'n/a', 'unknown', 'null', 'owner')",
+            ]
+            branch_params: list[Any] = []
+            if role_selection is not None:
+                placeholders = ", ".join("?" for _ in role_selection)
+                clauses.append(f"{role_expr} IN ({placeholders})")
+                branch_params.extend(role_selection)
+            if name_like is not None:
+                clauses.append(f"LOWER({name_expr}) LIKE ?")
+                branch_params.append(name_like)
+            if city_exact is not None:
+                clauses.append("LOWER(p.city) = ?")
+                branch_params.append(city_exact)
+            return " AND ".join(clauses), branch_params
 
-        where_clause = " AND ".join(conditions)
+        party_where, party_params = branch("pp.role", "pp.name")
+        gc_where, gc_params = branch("'general_contractor'", "p.general_contractor")
+        owner_where, owner_params = branch("'owner'", "p.owner")
 
-        # Union stakeholders from project_party and the direct project role columns
+        # Union stakeholders from project_party and the direct project role columns. The role
+        # and name columns are aliased before the filters apply, so the same filter text is
+        # valid in every branch without a substitution step.
         query = f"""
         WITH stakeholder_raw AS (
-            SELECT p.id as project_id, pp.role, pp.name, p.city, p.project_type,
+            SELECT p.id as project_id, pp.role as role, pp.name as name, p.city, p.project_type,
                    p.estimated_project_value, p.mechanical_evidence_tier
               FROM project p
               JOIN project_party pp ON pp.project_id = p.id
-             WHERE {where_clause.replace('name', 'pp.name').replace('role', 'pp.role')}
+             WHERE {party_where}
             UNION ALL
             SELECT p.id as project_id, 'general_contractor' as role, p.general_contractor as name,
                    p.city, p.project_type, p.estimated_project_value, p.mechanical_evidence_tier
               FROM project p
-             WHERE p.general_contractor IS NOT NULL
-               AND {where_clause.replace('name', 'p.general_contractor').replace('role', "'general_contractor'")}
+             WHERE {gc_where}
             UNION ALL
             SELECT p.id as project_id, 'owner' as role, p.owner as name,
                    p.city, p.project_type, p.estimated_project_value, p.mechanical_evidence_tier
               FROM project p
-             WHERE p.owner IS NOT NULL
-               AND {where_clause.replace('name', 'p.owner').replace('role', "'owner'")}
+             WHERE {owner_where}
         )
         SELECT name,
                role as primary_role,
@@ -161,7 +196,7 @@ class CompanyService:
          ORDER BY project_count DESC, total_declared_value DESC
          LIMIT ?
         """
-        params.append(limit)
+        params: list[Any] = [*party_params, *gc_params, *owner_params, limit]
 
         rows = self.db.conn.execute(query, tuple(params)).fetchall()
         summaries: list[CompanySummary] = []

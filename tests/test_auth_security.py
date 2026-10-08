@@ -30,6 +30,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
+from conftest_app import csrf_from
 from oppintel.app import main as app_main
 from oppintel.app.accounts import AccountService, AuthError
 from oppintel.config import active_market, active_trade
@@ -429,3 +430,113 @@ def test_reset_changes_the_password_for_real(app_db):
         assert accounts.authenticate(VICTIM_EMAIL, "brand-new-password").email == VICTIM_EMAIL
     finally:
         db.close()
+
+
+# --- L: reset delivery boundary ------------------------------------------------
+
+
+def test_reset_delivery_is_abstracted_and_console_backend_hides_the_token(caplog):
+    """L. The console backend records a request without ever writing the token."""
+    from oppintel.app.mailer import BACKEND_CONSOLE, ResetMailer
+
+    with caplog.at_level("INFO", logger="oppintel.app.mailer"):
+        ResetMailer(backend=BACKEND_CONSOLE).send_reset(
+            to_email="someone@example.com", token="SUPER-SECRET-TOKEN"
+        )
+    assert "SUPER-SECRET-TOKEN" not in caplog.text
+    assert "someone@example.com" in caplog.text
+
+
+def test_null_backend_delivers_nothing_and_does_not_raise():
+    """L. The null backend accepts a request and sends nothing, for disabled delivery."""
+    from oppintel.app.mailer import BACKEND_NULL, ResetMailer
+
+    ResetMailer(backend=BACKEND_NULL).send_reset(to_email="a@example.com", token="t")
+
+
+def test_smtp_backend_without_configuration_fails_loudly(monkeypatch):
+    """L. Selecting smtp without a host must not silently fall back to a leaking channel."""
+    from oppintel.app.mailer import BACKEND_SMTP, DeliveryError, ResetMailer
+
+    monkeypatch.delenv("SMTP_HOST", raising=False)
+    with pytest.raises(DeliveryError):
+        ResetMailer(backend=BACKEND_SMTP).send_reset(to_email="a@example.com", token="t")
+
+
+def test_unknown_mail_backend_is_refused():
+    from oppintel.app.mailer import DeliveryError, ResetMailer
+
+    with pytest.raises(DeliveryError):
+        ResetMailer(backend="carrier-pigeon").send_reset(to_email="a@example.com", token="t")
+
+
+def test_forgot_password_does_not_reveal_whether_an_account_exists(app_db):
+    """L. The response is identical for a registered and an unregistered address."""
+    _create_victim(app_db)
+    client = app_db.test_client()
+
+    known = client.post("/forgot-password", data={"email": VICTIM_EMAIL})
+    unknown = client.post("/forgot-password", data={"email": "nobody@example.com"})
+
+    assert known.status_code == unknown.status_code == 200
+    assert known.get_data(as_text=True) == unknown.get_data(as_text=True)
+
+
+def test_forgot_password_delivers_through_the_mailer_for_a_real_account(app_db, monkeypatch):
+    """L. A real account routes the token through the mailer, not through the response."""
+    _create_victim(app_db)
+    client = app_db.test_client()
+
+    delivered: list[tuple[str, str]] = []
+
+    from oppintel.app import main as app_main
+
+    class _RecordingMailer:
+        def __init__(self, **kwargs: object) -> None:
+            pass
+
+        def send_reset(self, *, to_email: str, token: str) -> None:
+            delivered.append((to_email, token))
+
+    monkeypatch.setattr(app_main, "ResetMailer", _RecordingMailer)
+
+    response = client.post("/forgot-password", data={"email": VICTIM_EMAIL})
+    body = response.get_data(as_text=True)
+
+    assert len(delivered) == 1, "a real account must trigger exactly one delivery"
+    to_email, token = delivered[0]
+    assert to_email == VICTIM_EMAIL
+    assert token
+    assert token not in body, "the token must never appear in the response"
+
+
+def test_forgot_password_delivers_nothing_for_an_unknown_account(app_db, monkeypatch):
+    """L. No delivery is attempted for an address with no account."""
+    client = app_db.test_client()
+
+    delivered: list[tuple[str, str]] = []
+    from oppintel.app import main as app_main
+
+    class _RecordingMailer:
+        def __init__(self, **kwargs: object) -> None:
+            pass
+
+        def send_reset(self, *, to_email: str, token: str) -> None:
+            delivered.append((to_email, token))
+
+    monkeypatch.setattr(app_main, "ResetMailer", _RecordingMailer)
+    client.post("/forgot-password", data={"email": "nobody@example.com"})
+    assert delivered == []
+
+
+def test_forgot_password_is_rate_limited(secured_client):
+    """L. Reset requests are rate limited so the form cannot be used to spam a mailbox."""
+    statuses = []
+    token = csrf_from(secured_client, "/forgot-password")
+    for _ in range(9):
+        response = secured_client.post(
+            "/forgot-password",
+            data={"email": "a@example.com", "_csrf_token": token},
+        )
+        statuses.append(response.status_code)
+    assert 429 in statuses
