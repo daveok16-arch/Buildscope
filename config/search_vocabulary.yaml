@@ -1,0 +1,82 @@
+# Search vocabulary: synonyms and abbreviations.
+#
+# A contractor searching this product types trade shorthand — "ahu", "rtu", "vav", "split
+# system" — while the permit text the sources publish spells the same equipment out in full,
+# or the other way around. Without a vocabulary the two never meet and a query that should
+# find work returns nothing.
+#
+# This is configuration, not code. Adding a trade means adding its groups under `trades`, not
+# editing the search engine. Two rules this file follows, both asserted by tests:
+#
+#   1. **A group is a set of equivalent terms.** Every term in a group means the same thing to
+#      a search, so a query naming any one of them is expanded to all of them. Do not put
+#      terms in one group that a searcher would consider different work.
+#   2. **Terms are matched whole.** A term is matched against the query as a whole word or
+#      phrase, never as a substring, so "ems" does not fire on "items".
+#
+# A query term that is not in this file is passed through unchanged, so the vocabulary can only
+# widen a search, never silently narrow or redirect one.
+
+version: 1
+
+# Equivalences that apply to every trade.
+groups:
+  - id: air_handling_unit
+    label: "Air handling unit"
+    terms: ["ahu", "air handler", "air handling unit", "air handling units", "air-handling unit"]
+
+  - id: rooftop_unit
+    label: "Rooftop / packaged unit"
+    terms: ["rtu", "rtus", "rooftop unit", "rooftop units", "roof top unit", "packaged unit"]
+
+  - id: variable_air_volume
+    label: "Variable air volume"
+    terms: ["vav", "variable air volume", "variable-air-volume"]
+
+  - id: variable_refrigerant
+    label: "Variable refrigerant flow"
+    terms: ["vrf", "vrv", "variable refrigerant flow", "variable refrigerant volume"]
+
+  - id: split_system
+    label: "Split system"
+    terms: ["split system", "split-system", "mini split", "mini-split"]
+
+  - id: chilled_water
+    label: "Chilled water"
+    terms: ["chiller", "chillers", "chilled water"]
+
+  - id: cooling_tower
+    label: "Cooling tower / condenser water"
+    terms: ["cooling tower", "cooling towers", "condenser water"]
+
+  - id: fan_coil
+    label: "Fan coil unit"
+    terms: ["fcu", "fan coil", "fan coil unit"]
+
+  - id: building_automation
+    label: "Building automation / controls"
+    terms: ["bms", "ems", "ddc", "building management system", "energy management system", "direct digital control"]
+
+  - id: ductwork
+    label: "Ductwork"
+    terms: ["ductwork", "duct work", "ducting"]
+
+  - id: heat_pump
+    label: "Heat pump"
+    terms: ["heat pump", "heat pumps"]
+
+  - id: boiler
+    label: "Boiler"
+    terms: ["boiler", "boilers"]
+
+  - id: exhaust
+    label: "Exhaust"
+    terms: ["exhaust", "exhaust fan", "exhaust fans"]
+
+# Per-trade additions, merged with the global groups above. A trade that introduces its own
+# equipment adds a group here rather than touching the engine.
+trades:
+  commercial_hvac:
+    - id: mechanical
+      label: "Mechanical / HVAC (trade synonym)"
+      terms: ["mechanical", "hvac", "mechanical scope", "mechanical work"]

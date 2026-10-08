@@ -16,8 +16,11 @@ the source of truth.
 from __future__ import annotations
 
 import logging
+import re
+from collections.abc import Sequence
 from datetime import datetime, timezone
 
+from .config import VocabularyGroup
 from .db import Database
 
 log = logging.getLogger(__name__)
@@ -100,17 +103,106 @@ def index_count(db: Database) -> int:
     return int(db.conn.execute("SELECT COUNT(*) FROM project_search").fetchone()[0])
 
 
-def quote_for_fts(text: str) -> str:
-    """Turn user input into a safe FTS5 query string.
+#: A word is a run of letters, digits and interior apostrophes. FTS5's unicode61 tokenizer
+#: folds case and splits on everything else, so this mirrors it closely enough to match the
+#: same text; the apostrophe is kept so a term is not split mid-word.
+_WORD_RE = re.compile(r"[a-z0-9']+")
+
+
+def tokenize_query(text: str) -> list[str]:
+    """The words of a query, lower-cased to match the vocabulary's keys."""
+    return _WORD_RE.findall((text or "").lower())
+
+
+def expand_terms(
+    text: str, vocabulary: Sequence[VocabularyGroup] | None = None
+) -> list[list[str]]:
+    """Group a query's words into alternative-sets, expanding known terms to their synonyms.
+
+    Returns a list of groups in query order. A plain word is its own single-member group; a
+    word that names a configured term expands to every equivalent term in that term's group,
+    and the words of a matched multi-word synonym are consumed so the phrase is not also
+    searched as unrelated words.
+
+    Alternatives are whole *phrases*, not loose words: expanding "hvac" to the mechanical
+    group must not also search "scope" and "work" just because "mechanical scope" contains
+    them. Longest terms are matched first so "air handling unit" wins over "air".
+    """
+    tokens = tokenize_query(text)
+    if not tokens:
+        return []
+
+    groups = list(vocabulary or ())
+    index: dict[str, VocabularyGroup] = {}
+    for group in groups:
+        for term in group.terms:
+            index.setdefault(term, group)
+    # Longest phrase first, so a multi-word synonym is preferred over a shorter overlapping one.
+    known = sorted(index, key=lambda t: (-len(tokenize_query(t)), t))
+
+    expanded: list[list[str]] = []
+    i = 0
+    while i < len(tokens):
+        matched = False
+        for term in known:
+            term_tokens = tokenize_query(term)
+            if term_tokens and tokens[i:i + len(term_tokens)] == term_tokens:
+                expanded.append(list(index[term].terms))
+                i += len(term_tokens)
+                matched = True
+                break
+        if not matched:
+            expanded.append([tokens[i]])
+            i += 1
+    return expanded
+
+
+def _phrase_clause(phrase: str) -> str:
+    """One FTS5 clause for a word or phrase, prefix-matched on its final token."""
+    words = tokenize_query(phrase)
+    if not words:
+        return ""
+    if len(words) == 1:
+        return f'"{words[0]}"*'
+    return f'"{" ".join(words)}"*'
+
+
+def quote_for_fts(
+    text: str, vocabulary: Sequence[VocabularyGroup] | None = None
+) -> str:
+    """Turn user input into a safe FTS5 query string, expanding configured synonyms.
 
     User input is not valid FTS5 syntax on its own: an unbalanced quote or a bare ``AND``
-    raises an OperationalError, which would surface as a 500. Each whitespace-separated term
-    is therefore quoted and prefix-matched, so "ross ave" becomes ``"ross"* "ave"*``.
+    raises an OperationalError, which would surface as a 500. Every term is quoted, so the
+    result is always well-formed, and terms are prefix-matched so "ross" finds "ROSS AVE".
+
+    A term whose group has more than one equivalent becomes an OR-group, so ``ahu`` also finds
+    ``air handling unit``::
+
+        ahu replacement -> ("ahu"* OR "air handler"* OR "air handling unit"*) AND "replacement"*
+
+    Expansion only ever *widens* a search — the matched term stays in its own OR-group — so a
+    query that worked before the vocabulary existed returns at least the same results.
 
     This is a safety and ergonomics measure, not a security boundary: the value is still bound
     as a query parameter.
     """
-    terms = [t for t in text.replace('"', " ").split() if t]
-    if not terms:
-        return ""
-    return " ".join(f'"{term}"*' for term in terms)
+    clauses: list[str] = []
+    for alternatives in expand_terms(text, vocabulary):
+        # Two spellings that tokenize the same way ("split-system" and "split system") are one
+        # clause, not two, so the expansion stays readable and the OR-list has no dead entries.
+        seen: set[tuple[str, ...]] = set()
+        phrases: list[str] = []
+        for phrase in alternatives:
+            key = tuple(tokenize_query(phrase))
+            if key and key not in seen:
+                seen.add(key)
+                phrases.append(phrase)
+        if not phrases:
+            continue
+        if len(phrases) == 1:
+            clauses.append(_phrase_clause(phrases[0]))
+        else:
+            ors = " OR ".join(c for c in (_phrase_clause(p) for p in phrases) if c)
+            clauses.append(f"({ors})")
+    return " AND ".join(clauses)

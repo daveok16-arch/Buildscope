@@ -14,10 +14,10 @@ operations view describes the current dataset rather than accumulating stale com
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date
 from typing import Any
 
-from .dates import VERDICT_FUTURE_IMPLAUSIBLE, validate_date
+from .dates import VERDICT_ANCIENT, VERDICT_FUTURE_IMPLAUSIBLE, validate_date
 from .db import Database
 
 #: Issue severities, ordered worst first for display.
@@ -25,14 +25,16 @@ SEVERITY_HIGH = "HIGH"
 SEVERITY_MEDIUM = "MEDIUM"
 SEVERITY_LOW = "LOW"
 
-#: A permit dated further into the future than this is almost certainly a data error rather
-#: than a scheduled submission, and a contractor reading it would be misled.
+#: Retained for reference: the original flat tolerance, which the semantic model replaced. A
+#: future *occurrence* date is implausible the moment it is observed, so it is now flagged
+#: regardless of distance rather than only beyond this window.
 FUTURE_DATE_TOLERANCE_DAYS = 365
 
 #: Issue types, as a controlled vocabulary so the operations view and the tests agree.
 MISSING_ADDRESS = "missing_address"
 MISSING_PERMIT_DATE = "missing_permit_date"
 FUTURE_PERMIT_DATE = "future_permit_date"
+ANCIENT_PERMIT_DATE = "ancient_permit_date"
 NON_POSITIVE_VALUE = "non_positive_value"
 UNMATCHED_SOURCE = "unmatched_source"
 PROJECT_WITHOUT_EVIDENCE = "project_without_evidence"
@@ -48,7 +50,6 @@ def detect_quality_issues(db: Database, permits: list[Any]) -> int:
     db.clear_quality_issues()
     count = 0
     today = date.today()
-    horizon = today + timedelta(days=FUTURE_DATE_TOLERANCE_DAYS)
 
     for permit in permits:
         source_id = getattr(permit, "source_id", None)
@@ -67,24 +68,33 @@ def detect_quality_issues(db: Database, permits: list[Any]) -> int:
                 source_id=source_id,
             )
             count += 1
-        elif permit.permit_date > horizon:
-            # The tolerance window is retained so the same rows are still flagged, but the
-            # message now comes from the semantic model, which states *why* the date is
-            # implausible: an occurrence date cannot be observed before it happens.
+        else:
+            # The semantic model decides whether the value is a problem. A permit date records
+            # something that has already happened, so *any* future value is implausible — the
+            # old flat +365-day tolerance let a near-future date through unflagged, which is
+            # exactly the value that makes a project look current when it is not.
             verdict = validate_date("permit_date", permit.permit_date, observed=today)
-            db.record_quality_issue(
-                FUTURE_PERMIT_DATE, SEVERITY_MEDIUM,
-                f"Permit {number} is dated {permit.permit_date}, which is beyond a plausible "
-                f"submission window. {verdict.reason}",
-                source_id=source_id,
-            )
-            count += 1
+            if verdict.verdict == VERDICT_FUTURE_IMPLAUSIBLE:
+                db.record_quality_issue(
+                    FUTURE_PERMIT_DATE, SEVERITY_MEDIUM,
+                    f"Permit {number} is dated {permit.permit_date}, which is later than the "
+                    f"observation date. {verdict.reason}",
+                    source_id=source_id,
+                )
+                count += 1
+            elif verdict.verdict == VERDICT_ANCIENT:
+                db.record_quality_issue(
+                    ANCIENT_PERMIT_DATE, SEVERITY_LOW,
+                    f"Permit {number} is dated {permit.permit_date}. {verdict.reason}",
+                    source_id=source_id,
+                )
+                count += 1
 
         # A source date is the moment the record was published. It shares the occurrence
         # semantics of a permit date, so a future source date is checked the same way rather
         # than being left unflagged.
         source_date = getattr(permit, "source_date", None)
-        if source_date is not None and source_date > today:
+        if source_date is not None:
             verdict = validate_date("source_date", source_date, observed=today)
             if verdict.verdict == VERDICT_FUTURE_IMPLAUSIBLE:
                 db.record_quality_issue(
@@ -138,14 +148,15 @@ def detect_quality_issues(db: Database, permits: list[Any]) -> int:
     from .config import active_trade
 
     trade = active_trade()
-    field = (trade.discovery or {}).get("evidence_field")
-    values = (trade.discovery or {}).get("evidence_values") or []
+    discovery = trade.discovery or {}
+    field = discovery.get("evidence_field")
+    values = discovery.get("evidence_values") or []
     # Only meaningful while discovery is evidence-gated. On the commercial base a discoverable
     # project without trade evidence is expected and is labelled "Trade not verified" on every
-    # listing, so flagging it would report the intended behaviour as a defect.
-    if (trade.discovery or {}).get("discover_commercial_base"):
-        return
-    if field and values and field.isidentifier():
+    # listing, so flagging it would report the intended behaviour as a defect. This guard must
+    # skip only this final check: returning from the function here skipped the commit below and
+    # silently discarded every finding recorded above.
+    if not discovery.get("discover_commercial_base") and field and values and field.isidentifier():
         placeholders = ",".join("?" for _ in values)
         rows = db.conn.execute(
             f"""
@@ -165,5 +176,9 @@ def detect_quality_issues(db: Database, permits: list[Any]) -> int:
             )
             count += 1
 
+    # Persist before returning on every path. The caller (`assemble_and_classify`) commits the
+    # assembly transaction *before* this runs, so without this commit the findings live only in
+    # the writer's connection and every reader — /admin/data, `flask report-quality` — sees an
+    # empty table and reports "no open issues" no matter what is wrong with the data.
     db.conn.commit()
     return count

@@ -86,6 +86,12 @@ These are enforced by tests, not by convention. Breaking one fails the suite.
 * `app/analytics_funnel.py` — landing events. Records a page *kind*, never a URL or identity.
 * `config/keywords.yaml` — keyword-to-page map. One primary keyword per page (asserted by test).
   Curated `landing_pages` cities are indexable; city x trade combinations are gated.
+* `config/search_vocabulary.yaml` — search synonyms and abbreviations. A group is a set of
+  equivalent terms (`ahu` = `air handling unit`); a query naming any one expands to the whole
+  group, so a contractor's shorthand finds the sources' spelled-out text. Per-trade groups live
+  under `trades:`. Expansion only ever widens a search — the literal term is always retained —
+  and a term claimed by two groups is rejected by test, so the map stays deterministic. Adding
+  a trade's equipment is a config edit, not a code edit.
 * Schema lives in two strings in `db.py`: `SCHEMA` (intelligence) and `APP_SCHEMA`
   (application). `alert_event` is created by `_ensure_alert_event` so a legacy table can be
   rebuilt first. Column additions go through `_migrate_app_tables`.

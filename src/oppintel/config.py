@@ -383,6 +383,80 @@ class KeywordMap:
         return [k for page in self.pages for k in page.keywords]
 
 
+# --- search vocabulary --------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class VocabularyGroup:
+    """A set of terms a search treats as equivalent, e.g. ``ahu`` and ``air handling unit``."""
+
+    id: str
+    label: str
+    terms: tuple[str, ...]
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> VocabularyGroup:
+        return cls(
+            id=str(data.get("id") or ""),
+            label=str(data.get("label") or ""),
+            terms=tuple(str(t).strip().lower() for t in data.get("terms") or [] if str(t).strip()),
+        )
+
+
+@dataclass(frozen=True)
+class SearchVocabulary:
+    """Query terms mapped to their equivalents, loaded from configuration.
+
+    Global groups apply everywhere; per-trade groups add the trade's own equipment names.
+    A term appears in at most one effective group (validated by ``conflicts``), so expansion
+    is deterministic rather than depending on dict ordering.
+    """
+
+    version: int
+    groups: tuple[VocabularyGroup, ...] = ()
+    trade_groups: dict[str, tuple[VocabularyGroup, ...]] = field(default_factory=dict)
+
+    def for_trade(self, trade_id: str | None) -> tuple[VocabularyGroup, ...]:
+        """The effective groups for a trade: the global groups plus that trade's additions."""
+        return self.groups + tuple(self.trade_groups.get(trade_id or "", ()))
+
+    def term_index(self, trade_id: str | None = None) -> dict[str, VocabularyGroup]:
+        """Map every known term to the group it belongs to, for one trade."""
+        index: dict[str, VocabularyGroup] = {}
+        for group in self.for_trade(trade_id):
+            for term in group.terms:
+                index.setdefault(term, group)
+        return index
+
+    def conflicts(self, trade_id: str | None = None) -> dict[str, list[str]]:
+        """Terms claimed by more than one group, with the competing group ids.
+
+        A term in two groups would expand ambiguously, so this is asserted empty by the tests
+        rather than left to a silent first-wins.
+        """
+        by_term: dict[str, list[str]] = {}
+        for group in self.for_trade(trade_id):
+            for term in group.terms:
+                by_term.setdefault(term, []).append(group.id)
+        return {term: ids for term, ids in by_term.items() if len(ids) > 1}
+
+
+@lru_cache(maxsize=1)
+def load_search_vocabulary(path: Path | None = None) -> SearchVocabulary:
+    """Load the search synonym/abbreviation map. Cached, like every other configuration file."""
+    path = path or (CONFIG_DIR / "search_vocabulary.yaml")
+    raw = yaml.safe_load(path.read_text()) or {}
+    trade_groups = {
+        str(trade_id): tuple(VocabularyGroup.from_dict(g) for g in groups or [])
+        for trade_id, groups in (raw.get("trades") or {}).items()
+    }
+    return SearchVocabulary(
+        version=int(raw.get("version") or 1),
+        groups=tuple(VocabularyGroup.from_dict(g) for g in raw.get("groups") or []),
+        trade_groups=trade_groups,
+    )
+
+
 @lru_cache(maxsize=1)
 def load_keyword_map(path: Path | None = None) -> KeywordMap:
     """Load the keyword-to-page map.

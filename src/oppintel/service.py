@@ -26,7 +26,13 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Iterable
 
-from .config import MarketConfig, TradeConfig, load_sources, type_slug
+from .config import (
+    MarketConfig,
+    TradeConfig,
+    load_search_vocabulary,
+    load_sources,
+    type_slug,
+)
 from .db import Database
 from .eligibility import evaluate
 from .grouping import building_key, group_projects, sibling_info_for
@@ -389,8 +395,13 @@ class OpportunityService:
         return " AND ".join(clauses), params
 
     def _search_ids(self, term: str) -> list[int] | None:
-        """Project ids matching a free-text term, or None when no term was given."""
-        query = quote_for_fts(term)
+        """Project ids matching a free-text term, or None when no term was given.
+
+        The term is expanded through the active trade's configured vocabulary, so a search for
+        "ahu" also finds "air handling unit". Expansion only widens the match.
+        """
+        vocabulary = load_search_vocabulary().for_trade(self.trade.id)
+        query = quote_for_fts(term, vocabulary)
         if not query:
             return None
         try:
