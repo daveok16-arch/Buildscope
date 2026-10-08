@@ -1789,6 +1789,7 @@ def _system_health(db: Database) -> dict[str, Any]:
     an operator never reads a plausible-looking number that nothing produced.
     """
     from .alerts import AlertService
+    from ..monitoring import monitoring_report
 
     def scalar(sql: str, params: tuple = ()) -> int:
         return int(db.conn.execute(sql, params).fetchone()[0])
@@ -1815,8 +1816,10 @@ def _system_health(db: Database) -> dict[str, Any]:
         by_severity[issue["severity"]] = by_severity.get(issue["severity"], 0) + 1
 
     alert_summary = AlertService(db).summary()
+    monitoring = monitoring_report(db)
 
     return {
+        "monitoring": monitoring,
         "sources": runs,
         "sources_failing": len(failing),
         "runs_recorded": scalar("SELECT COUNT(*) FROM ingest_run"),

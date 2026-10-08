@@ -468,7 +468,9 @@ CREATE TABLE IF NOT EXISTS analytics_event (
 );
 
 CREATE INDEX IF NOT EXISTS idx_analytics_event ON analytics_event(event_name, created_at);
-CREATE INDEX IF NOT EXISTS idx_analytics_query ON analytics_event(event_name, query_text);
+-- `idx_analytics_query` is created after the application-table migration, not here: an existing
+-- database predates the `query_text` column, and an index statement naming a column that has not
+-- been added yet fails the whole schema script. See `_ensure_analytics_indexes`.
 
 -- Full-text index over the searchable project text. A separate table rather than a virtual
 -- column on `project`, so the intelligence schema stays untouched and the index can be
@@ -539,7 +541,24 @@ class Database:
         self.conn.executescript(APP_SCHEMA)
         self._migrate_app_tables()
         self._ensure_alert_event()
+        self._ensure_analytics_indexes()
         self.conn.commit()
+
+    def _ensure_analytics_indexes(self) -> None:
+        """Indexes over analytics columns that a migration may have just added.
+
+        The schema script cannot declare these: on an existing database the column does not
+        exist until `_migrate_app_tables` adds it, and an index naming an unknown column aborts
+        the whole script. Declaring them after the migration keeps both paths — fresh and
+        upgraded — on the same index set.
+        """
+        if not self._table_exists("analytics_event"):
+            return
+        if "query_text" in self._columns("analytics_event"):
+            self.conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_analytics_query "
+                "ON analytics_event(event_name, query_text)"
+            )
 
     def _ensure_alert_event(self) -> None:
         """Create the alert table in its current shape.

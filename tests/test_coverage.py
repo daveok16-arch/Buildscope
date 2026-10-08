@@ -185,3 +185,32 @@ def test_freshness_window_is_consistent_with_classifier():
     from oppintel.config import active_trade
 
     assert int(active_trade().scoring.get("recent_permit_days", 180)) == FRESHNESS_WINDOW_DAYS
+
+
+def test_future_permit_does_not_set_the_coverage_boundary(empty_db):
+    """A permit dated after the observation date is a defect, not the newest record held.
+
+    Coverage must not report a future date as its latest record, and must not let such a row
+    keep a stale market looking fresh.
+    """
+    # A real, current permit 200 days back — older than the freshness window.
+    _insert_permit(empty_db, city="Fort Worth", permit_date=date(2026, 3, 21))
+    cov = market_coverage(empty_db, _market("dfw"), today=TODAY)
+    assert cov.records == 1
+    assert cov.latest_record_date == "2026-03-21"
+    assert cov.state == STATE_RECORDS_HELD  # stale: outside the freshness window
+
+    # Add a permit dated in the future. It must not become the latest record, and must not
+    # promote the stale market to "current".
+    _insert_permit(empty_db, city="Fort Worth", permit_date=date(2026, 12, 19))
+    cov = market_coverage(empty_db, _market("dfw"), today=TODAY)
+    assert cov.latest_record_date == "2026-03-21"
+    assert cov.state == STATE_RECORDS_HELD
+
+
+def test_future_only_market_has_no_latest_record_date(empty_db):
+    """If every dated permit is in the future, the market has no usable coverage boundary."""
+    _insert_permit(empty_db, city="Fort Worth", permit_date=date(2026, 12, 19))
+    cov = market_coverage(empty_db, _market("dfw"), today=TODAY)
+    assert cov.latest_record_date is None
+    assert cov.state == STATE_RECORDS_HELD

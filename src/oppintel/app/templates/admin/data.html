@@ -104,6 +104,27 @@
     {{ quality_report }}
   </div>
 
+  <h2 style="margin-top:30px">Monitoring integrity</h2>
+  {% if health.monitoring.healthy %}
+  <p class="muted small">All monitoring invariants hold: every change was considered, no duplicates, source links agree.</p>
+  {% else %}
+  <div class="notice notice-action">
+    <h4>{{ health.monitoring.findings | length }} monitoring finding(s)</h4>
+    <ul>
+      {% for f in health.monitoring.findings %}
+      <li><strong>{{ f.issue }}</strong> ({{ f.severity }}, {{ f.count }}): {{ f.detail }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+  <div class="stat-strip">
+    <div class="stat"><span class="stat-value">{{ health.monitoring.volume.notifiable }}</span><span class="stat-label">Notifiable changes ({{ health.monitoring.window_days }}d)</span></div>
+    <div class="stat"><span class="stat-value">{{ health.monitoring.volume.routine }}</span><span class="stat-label">Routine corrections</span></div>
+    <div class="stat"><span class="stat-value">{{ health.monitoring.watches.watches }}</span><span class="stat-label">Watches</span></div>
+    <div class="stat"><span class="stat-value">{{ health.monitoring.stranded_changes | length }}</span><span class="stat-label">Stranded changes</span></div>
+    <div class="stat"><span class="stat-value">{{ health.monitoring.duplicate_changes | length }}</span><span class="stat-label">Duplicate changes</span></div>
+  </div>
+
   <h2 style="margin-top:30px">Monitoring and alerts</h2>
   <div class="stat-strip">
     <div class="stat"><span class="stat-value">{{ health.changes_total }}</span><span class="stat-label">Changes recorded</span></div>

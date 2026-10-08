@@ -179,12 +179,18 @@ def _market_source_ids(market: MarketConfig, sources: dict[str, SourceConfig]) -
     return matched
 
 
-def _market_records(db: Any, market: MarketConfig) -> dict[str, Any]:
+def _market_records(db: Any, market: MarketConfig, *, observed: date) -> dict[str, Any]:
     """Records held for a market, from stored permits and projects.
 
     A market is matched by the cities it configures, because that is the only reliable join
     between a geographic market and a permit row. A market whose sources publish no city is
     matched by its sources instead.
+
+    `latest_permit_date` deliberately excludes permits dated after the observation date. Such a
+    permit is a filing that has not happened yet — `quality.py` flags it as a defect — so letting
+    it set the coverage boundary would report a future date as the newest record held and, worse,
+    keep a stale market looking fresh. Coverage must be computed from records that describe
+    something that has already occurred.
     """
     city_names = [c.name for c in market.cities]
     permit_count = 0
@@ -193,10 +199,11 @@ def _market_records(db: Any, market: MarketConfig) -> dict[str, Any]:
         placeholders = ",".join("?" for _ in city_names)
         row = db.conn.execute(
             f"""
-            SELECT COUNT(*) AS n, MAX(permit_date) AS latest
+            SELECT COUNT(*) AS n,
+                   MAX(CASE WHEN permit_date <= ? THEN permit_date END) AS latest
               FROM permit WHERE city IN ({placeholders})
             """,
-            city_names,
+            [observed.isoformat(), *city_names],
         ).fetchone()
         permit_count = int(row["n"] or 0)
         latest_permit = row["latest"]
@@ -294,7 +301,7 @@ def market_coverage(db: Any, market: MarketConfig, *, today: date | None = None)
             )
         )
 
-    held = _market_records(db, market)
+    held = _market_records(db, market, observed=today)
     notes: list[str] = []
 
     # A market whose sources have no implemented connector is a configuration without an
