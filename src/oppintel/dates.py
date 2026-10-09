@@ -205,6 +205,22 @@ def parse_iso_date(value: object) -> date | None:
         return None
 
 
+def usable_occurrence_sql(alias: str = "", *, placeholder: str = "?") -> str:
+    """A SQL predicate that keeps only a *usable* occurrence date: missing, or not in the future.
+
+    A permit dated after the observation day cannot describe a filing that has already happened,
+    so it must not be allowed to set a "newest permit" boundary, sort to the top of a
+    most-recent list, or fill a freshness banner. Every such query needs the same guard, so it
+    is written once here rather than re-derived per query and drifting.
+
+    The observation day is bound as a parameter (``placeholder``) by the caller, so the caller
+    controls "today" and a test can pin it. A NULL date passes the guard: an absent date is an
+    honest gap, and SQL ``MAX``/``ORDER BY`` already ignore it.
+    """
+    column = f"{alias}.permit_date" if alias else "permit_date"
+    return f"({column} IS NULL OR {column} <= {placeholder})"
+
+
 def occurrence_is_future(value: object, *, observed: date | None = None) -> bool:
     """True when a stored occurrence date (a permit/filing date) is after the observation day.
 

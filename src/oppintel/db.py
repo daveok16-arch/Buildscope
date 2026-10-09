@@ -1274,14 +1274,15 @@ class Database:
         row = self.conn.execute(
             """
             SELECT MIN(permit_date) AS earliest,
-                   MAX(permit_date) AS latest,
+                   MAX(CASE WHEN permit_date IS NULL OR permit_date <= ? THEN permit_date END)
+                       AS latest,
                    COUNT(*) AS records,
                    SUM(CASE WHEN is_commercial = 1 THEN 1 ELSE 0 END) AS commercial,
                    SUM(CASE WHEN LOWER(COALESCE(permit_type,'')) LIKE '%mechanical%'
                             THEN 1 ELSE 0 END) AS mechanical
               FROM permit WHERE source_id = ?
             """,
-            (source_id,),
+            (datetime.now(timezone.utc).date().isoformat(), source_id),
         ).fetchone()
 
         now = datetime.now(timezone.utc).isoformat()

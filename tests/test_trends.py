@@ -273,3 +273,19 @@ def test_trends_api_returns_definitions_with_values(client):
     for m in payload["metrics"]:
         assert m["definition"]
         assert "value" in m
+
+
+def test_ingestion_window_newest_permit_excludes_future_dates(tmp_path):
+    """The "records span" end date must not be a future-dated permit.
+
+    A permit dated after today is a quality defect, and reporting it as the newest record held
+    would state a filing date that cannot exist. The window reports the newest *usable* permit
+    date instead.
+    """
+    db = _db(tmp_path, [
+        _permit("PAST", date(2026, 10, 5)),
+        _permit("FUTURE", date(2026, 12, 19)),
+    ])
+    report = build_trend_report(db, window="30d", today=date(2026, 10, 7))
+    assert report.ingestion_window["newest_permit_date"] == "2026-10-05"
+    db.close()

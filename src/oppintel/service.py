@@ -54,10 +54,35 @@ DISCOVERABLE_PROCUREMENT = (CONFIRMED_OPEN, EVIDENCE_FOUND, NOT_VERIFIED)
 
 #: Sort options exposed to the public. Deliberately factual orderings only: there is no
 #: "best opportunity" sort, because that would be an invented judgement.
+#
+#: "Most recent permit" orders by the most recent *usable* permit date: a permit dated after
+#: today is a defect (see `dates.usable_occurrence_sql`) and must not sort to the top as if it
+#: were the newest filing. `date('now')` is SQLite's UTC day, matching the observation day the
+#: rest of the pipeline uses, and keeps the order expression free of bound parameters so the
+#: sort stays a static, testable string.
+_SORT_DATE = "CASE WHEN p.permit_date <= date('now') THEN p.permit_date END"
+
+
+def _recent_order(alias: str = "p") -> str:
+    """An ORDER BY that ranks projects by their most recent *usable* permit date.
+
+    A permit dated after today is a defect and must not rank as the newest filing, so it is
+    excluded from the ordering expression (it sorts last, after real dates). The id breaks ties
+    deterministically.
+    """
+    date_expr = (
+        f"CASE WHEN {alias}.permit_date <= date('now') THEN {alias}.permit_date END"
+    )
+    return f"{date_expr} DESC NULLS LAST, {alias}.id"
+
+
 SORT_OPTIONS = {
-    "recent": ("Most recent permit", "p.permit_date DESC NULLS LAST, p.id"),
+    "recent": ("Most recent permit", _recent_order("p")),
     "updated": ("Recently updated", "p.updated_at DESC, p.id"),
-    "status": ("Project status", "p.project_status ASC, p.permit_date DESC NULLS LAST, p.id"),
+    "status": (
+        "Project status",
+        f"p.project_status ASC, {_recent_order('p')}",
+    ),
 }
 
 DEFAULT_SORT = "recent"
@@ -678,9 +703,9 @@ class OpportunityService:
                AND p.id <> ?
                AND p.classification IN (?, ?)
                AND p.procurement_status IN (?, ?, ?)
-             ORDER BY p.permit_date DESC NULLS LAST, p.id
+             ORDER BY {order}
              LIMIT ?
-            """,
+            """.format(order=_recent_order("p")),
             (project.get("city"), project["id"])
             + PUBLIC_CLASSIFICATIONS + DISCOVERABLE_PROCUREMENT + (limit,),
         ).fetchall()
@@ -1319,7 +1344,7 @@ class OpportunityService:
               FROM project p
               LEFT JOIN project_slug s ON s.project_id = p.id
              WHERE {where}
-             ORDER BY p.permit_date DESC NULLS LAST, p.id
+             ORDER BY {_recent_order("p")}
              LIMIT ?
             """,
             tuple(params) + (limit,),
@@ -1411,11 +1436,11 @@ class OpportunityService:
         filter, so a project cannot slip through by being listed here.
         """
         rows = self.db.conn.execute(
-            """
+            f"""
             SELECT id FROM project p
              WHERE classification IN (?, ?)
                AND procurement_status IN (?, ?, ?)
-             ORDER BY permit_date DESC NULLS LAST, id DESC
+             ORDER BY {_recent_order("p")}
              LIMIT ?
             """,
             PUBLIC_CLASSIFICATIONS + DISCOVERABLE_PROCUREMENT + (limit,),

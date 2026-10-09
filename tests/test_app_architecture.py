@@ -102,6 +102,19 @@ def test_market_city_slug_round_trips():
     assert market.city_name("fort-worth") == "Fort Worth"
 
 
+def test_market_city_slug_resolves_declared_aliases():
+    """A source's alternative spelling resolves to the configured city, not a phantom one.
+
+    "Mckinney" is a real spelling a source publishes; without the alias it becomes an excluded
+    city and the jurisdiction is undercounted.
+    """
+    market = active_market()
+    assert market.city_slug("Mckinney") == "mckinney"
+    assert market.city_slug("MCKINNEY") == "mckinney"
+    # An undeclared spelling is still not guessed.
+    assert market.city_slug("McKinny") is None
+
+
 def test_unknown_slug_lookups_return_none():
     assert market_by_slug("atlantis") is None
     assert trade_by_slug("roofing") is None

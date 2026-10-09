@@ -51,14 +51,34 @@ class SourceConfig:
 
 @dataclass
 class CityConfig:
-    """A city inside a market. `slug` addresses it in URLs; `name` matches source values."""
+    """A city inside a market. `slug` addresses it in URLs; `name` matches source values.
+
+    `aliases` are alternative spellings the sources publish for the same city (for example
+    "Mckinney" for "McKinney"). They are configuration, not code, so a new source spelling is a
+    config edit. Matching stays exact (case-insensitive) against the name or an alias: no fuzzy
+    matching, because a wrong merge is worse than a separate row.
+    """
 
     slug: str
     name: str
+    aliases: list[str] = field(default_factory=list)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> CityConfig:
-        return cls(slug=str(data["slug"]), name=str(data["name"]))
+        return cls(
+            slug=str(data["slug"]),
+            name=str(data["name"]),
+            aliases=[str(a) for a in data.get("aliases") or []],
+        )
+
+    def matches(self, value: str | None) -> bool:
+        """True when a source's city value is this city, by name or a declared alias."""
+        if not value:
+            return False
+        wanted = value.strip().lower()
+        return wanted == self.name.strip().lower() or any(
+            wanted == a.strip().lower() for a in self.aliases
+        )
 
 
 @dataclass
@@ -99,12 +119,11 @@ class MarketConfig:
         return [c.name for c in self.cities]
 
     def city_slug(self, name: str | None) -> str | None:
-        """Reverse lookup: city name to URL slug."""
+        """Reverse lookup: a source's city value to its URL slug, honouring aliases."""
         if not name:
             return None
-        wanted = name.strip().lower()
         for city in self.cities:
-            if city.name.lower() == wanted:
+            if city.matches(name):
                 return city.slug
         return None
 

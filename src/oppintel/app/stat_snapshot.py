@@ -121,13 +121,17 @@ def compute_metrics(db: Database, market: MarketConfig, trade: TradeConfig) -> d
 
     # Active jurisdictions: restricted to the market's configured cities so an out-of-market
     # city name in the data ("Nevada") cannot inflate the count. Any such city is reported
-    # separately rather than hidden.
+    # separately rather than hidden. Declared aliases (a source spelling such as "Mckinney" for
+    # "McKinney") count as the configured city, so a real jurisdiction is not lost to spelling.
     configured = list(market.city_names)
-    placeholders = ",".join("?" for _ in configured) or "NULL"
+    accepted = list(configured)
+    for city in market.cities:
+        accepted.extend(city.aliases)
+    placeholders = ",".join("?" for _ in accepted) or "NULL"
     in_market = scalar(
         f"SELECT COUNT(DISTINCT p.city) FROM project p "
         f"WHERE {public_where} AND p.city IN ({placeholders})",
-        (*public_params, *configured),
+        (*public_params, *accepted),
     )
     all_public_cities = [
         r[0]
@@ -137,8 +141,10 @@ def compute_metrics(db: Database, market: MarketConfig, trade: TradeConfig) -> d
         ).fetchall()
         if r[0]
     ]
-    configured_lower = {c.strip().lower() for c in configured}
-    excluded_cities = sorted(c for c in all_public_cities if c.strip().lower() not in configured_lower)
+    accepted_lower = {c.strip().lower() for c in accepted}
+    excluded_cities = sorted(
+        c for c in all_public_cities if c.strip().lower() not in accepted_lower
+    )
 
     # Records. `linked_permits` is every permit attached to a project; `permit_records` is the
     # subset attached to a public project — the canonical public "record".

@@ -261,7 +261,7 @@ def _coverage_notes(db: Database) -> list[dict]:
         return []
 
 
-def _ingestion_window(db: Database, *, trade: str) -> dict:
+def _ingestion_window(db: Database, *, trade: str, today: date) -> dict:
     """When the database actually collected this trade's records, and from what span of dates.
 
     Reported alongside the metrics so a reader can tell a change in observed records from a
@@ -269,9 +269,11 @@ def _ingestion_window(db: Database, *, trade: str) -> dict:
     """
     row = db.conn.execute(
         "SELECT MIN(p.created_at) AS first_seen, MAX(p.updated_at) AS last_seen, "
-        "MIN(p.permit_date) AS oldest_permit, MAX(p.permit_date) AS newest_permit "
+        "MIN(p.permit_date) AS oldest_permit, "
+        f"MAX(CASE WHEN {_VALID_DATE} AND p.permit_date <= ? THEN p.permit_date END) "
+        "AS newest_permit "
         "FROM project p WHERE p.trade = ?",
-        (trade,),
+        (today.isoformat(), trade),
     ).fetchone()
     if row is None:
         return {}
@@ -580,7 +582,7 @@ def build_trend_report(
         coverage=_coverage_notes(db),
         malformed_dates=malformed,
         generated_at=datetime.now(timezone.utc).isoformat(),
-        ingestion_window=_ingestion_window(db, trade=trade),
+        ingestion_window=_ingestion_window(db, trade=trade, today=reference_day),
         notes=[n for n in notes if n],
     )
 
