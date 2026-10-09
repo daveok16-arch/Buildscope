@@ -27,7 +27,7 @@ import html as html_module
 import logging
 import re
 import time
-from datetime import date, datetime
+from datetime import date
 from html.parser import HTMLParser
 from typing import Any, Iterator
 
