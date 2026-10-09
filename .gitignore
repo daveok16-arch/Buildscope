@@ -26,6 +26,7 @@ data/*.db-wal
 data/*.log
 data/*.out
 data/*.pid
+data/*.writelock
 data/*.json
 data/raw/
 !data/.gitkeep

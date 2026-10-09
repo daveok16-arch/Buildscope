@@ -1753,6 +1753,10 @@ def create_app(config: AppConfig | None = None) -> Flask:
     # protects is already registered, and before the first request either way.
     install_security(app, enabled=cfg.csrf_enabled)
 
+    # Repair a missing/stale stats snapshot once, at boot, outside the request path: a deploy
+    # that adds a canonical metric must not make the first visitor's GET perform the write.
+    _heal_stat_snapshots_on_startup(cfg)
+
     _register_cli(app, cfg)
     return app
 
@@ -1764,20 +1768,56 @@ def _refresh_stat_snapshots(db: Database) -> dict[str, Any]:
     """Recompute and store the public headline statistics for every active market+trade.
 
     Called at the end of a refresh (``build-search-index`` is the last pipeline step) so one
-    snapshot covers a whole refresh cycle. Idempotent: re-running with unchanged data writes
-    the same numbers with a new ``computed_at``.
+    snapshot covers a whole refresh cycle. Runs under the single-writer lock so it cannot race
+    a concurrent ingest, and is idempotent: re-running with unchanged data writes the same
+    numbers with a new ``computed_at``.
     """
     from .stat_snapshot import write_snapshot
+    from oppintel.locks import writer_lock
 
     written: dict[str, Any] = {}
-    for market in load_markets().values():
-        if not market.active:
-            continue
-        for trade in _trade_map().values():
-            if not trade.active:
+    with writer_lock(db.path):
+        for market in load_markets().values():
+            if not market.active:
                 continue
-            written[f"{market.id}:{trade.id}"] = write_snapshot(db, market, trade)
+            for trade in _trade_map().values():
+                if not trade.active:
+                    continue
+                written[f"{market.id}:{trade.id}"] = write_snapshot(db, market, trade)
     return written
+
+
+def _heal_stat_snapshots_on_startup(cfg: AppConfig) -> None:
+    """Repair a missing or stale stat snapshot at boot, outside the request path.
+
+    A deploy that adds a canonical metric leaves the stored snapshot (written by the previous
+    code) missing that key. Healing here — once, under the writer lock — means no visitor's
+    page load has to write. Never fatal: a locked or read-only database must not stop the app
+    from serving, so a failure is logged and the read path recomputes without persisting.
+    """
+    from .stat_snapshot import heal_snapshot
+    from oppintel.locks import writer_lock
+
+    try:
+        db = Database(cfg.database_path)
+    except Exception as exc:  # pragma: no cover - defensive
+        log.warning("startup snapshot heal skipped: %s", exc)
+        return
+    try:
+        db.init_schema()
+        db.init_app_schema()
+        with writer_lock(cfg.database_path, timeout=60):
+            for market in load_markets().values():
+                if not market.active:
+                    continue
+                for trade in _trade_map().values():
+                    if not trade.active:
+                        continue
+                    heal_snapshot(db, market, trade)
+    except Exception as exc:  # pragma: no cover - a locked DB must not stop startup
+        log.warning("startup snapshot heal skipped: %s", exc)
+    finally:
+        db.close()
 
 
 def _service(

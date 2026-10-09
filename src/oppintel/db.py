@@ -712,6 +712,12 @@ class Database:
         # must be waited out rather than surfaced as "database is locked". 30s covers a long
         # assembly commit; the driver default of 5s does not.
         self.conn.execute("PRAGMA busy_timeout = 30000")
+        # NORMAL is the safe pairing with WAL: a commit is durable across an application crash
+        # (only an OS/power loss can lose the last transaction) and it avoids an fsync per
+        # commit, which is what keeps a short web write fast while a long refresh holds the lock.
+        # A single writer means a checkpoint cannot race another writer, so the default
+        # autocheckpoint (1000 pages) is left in place.
+        self.conn.execute("PRAGMA synchronous = NORMAL")
 
     def close(self) -> None:
         self.conn.close()

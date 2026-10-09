@@ -142,6 +142,10 @@ class Metric:
     #: One short line naming what population and period the value counts, shown next to the
     #: figure so no two cards can be read as comparable when they are not.
     basis: str = ""
+    #: An optional second figure shown under the value, as ``(label, value)``. Used where a
+    #: headline population contains a stricter sub-population a reader would otherwise assume
+    #: the headline already restricts to (e.g. observed projects vs the discoverable subset).
+    secondary: tuple[str, int] | None = None
 
     @property
     def delta(self) -> int | None:
@@ -360,12 +364,30 @@ def build_trend_report(
     projects_now = _count(db, cur_sql, cur_params)
     projects_prev = _count(db, prev_sql, prev_params) if comparison_available else None
 
+    # The discoverable subset of the same window: the home page's "Public projects" population
+    # (classified HIGH/MEDIUM and not closed), dated in this period. Reported under the headline
+    # so a reader does not assume "all observed projects" already means "public".
+    public_here_sql, public_here_params = _project_metric_sql(
+        "COUNT(DISTINCT p.id)", period=period, trade=trade, today=reference_day
+    )
+    public_here = _count(
+        db,
+        public_here_sql.replace(
+            "WHERE p.trade = ? ",
+            "WHERE p.trade = ? AND p.classification IN ('HIGH','MEDIUM') "
+            "AND p.procurement_status <> 'Closed' ",
+        ),
+        public_here_params,
+    )
+
     projects_observed = Metric(
         key="projects_observed",
         label="New commercial projects",
         definition=(
             "Distinct assembled projects whose permit date falls inside the period. One project "
-            "is counted once however many permits it carries."
+            "is counted once however many permits it carries. This is every observed project, "
+            "whatever its classification or procurement status; the discoverable subset is "
+            "shown separately below."
         ),
         value=projects_now,
         previous=projects_prev,
@@ -375,9 +397,10 @@ def build_trend_report(
         cumulative=period.is_all_time,
         windows=_OCCURRENCE_WINDOWS,
         basis=(
-            "Distinct projects with a permit dated in this period, regardless of "
+            "All observed projects with a permit dated in this period, regardless of "
             f"classification or procurement status ({period_text})."
         ),
+        secondary=("of which public", public_here),
     )
 
     # 2. Permits with a permit date in the window. A project count and a permit count are not

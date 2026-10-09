@@ -58,11 +58,11 @@ METRIC_DEFINITIONS: dict[str, tuple[str, str]] = {
         "discoverable.",
     ),
     "active_jurisdictions": (
-        "Cities with public projects",
+        "Cities with at least one public project",
         "Distinct in-market cities that hold at least one public project. Exact rule: "
         "COUNT(DISTINCT city) over public projects whose city is a configured market city "
-        "(an alias spelling counts as its configured city). Out-of-market city names are "
-        "reported separately, never counted.",
+        "(an alias spelling counts as its configured city). City names not declared for the "
+        "market are reported separately in `out_of_market_cities`, never counted.",
     ),
     "configured_jurisdictions": (
         "Configured cities",
@@ -149,7 +149,11 @@ def compute_metrics(db: Database, market: MarketConfig, trade: TradeConfig) -> d
         if r[0]
     ]
     accepted_lower = {c.strip().lower() for c in accepted}
-    excluded_cities = sorted(
+    # Cities that hold a public project but are not declared for this market. `out_of_market_*`
+    # names what the list is: a configured city is *in* the market; a city seen in the data but
+    # not declared is *out of* it. The earlier `jurisdictions_excluded_*` name was ambiguous
+    # about which side of that line it described.
+    out_of_market_cities = sorted(
         c for c in all_public_cities if c.strip().lower() not in accepted_lower
     )
 
@@ -225,8 +229,11 @@ def compute_metrics(db: Database, market: MarketConfig, trade: TradeConfig) -> d
         "with_mechanical": with_mechanical,
         "cities": in_market,
         # Reconciliation reporting.
-        "jurisdictions_excluded": excluded_cities,
-        "jurisdictions_excluded_count": len(excluded_cities),
+        "out_of_market_cities": out_of_market_cities,
+        "out_of_market_cities_count": len(out_of_market_cities),
+        # Back-compat alias for the previous, ambiguous name. Same value, never recomputed.
+        "jurisdictions_excluded": out_of_market_cities,
+        "jurisdictions_excluded_count": len(out_of_market_cities),
         # Ingest funnel.
         "funnel": funnel,
         "last_observed": last_observed,
@@ -277,13 +284,16 @@ def _table_exists(db: Database, name: str) -> bool:
 
 
 def read_snapshot(
-    db: Database, market: MarketConfig, trade: TradeConfig, *, refresh_if_missing: bool = True
+    db: Database, market: MarketConfig, trade: TradeConfig
 ) -> dict[str, Any]:
-    """Return the current snapshot for market+trade.
+    """Return the current snapshot for market+trade. **Never writes.**
 
-    If no snapshot exists yet (a fresh database between ``init-app`` and the first refresh, or
-    a test that did not seed one) the metrics are computed and stored on demand, so no page
-    has to fall back to its own count. Callers therefore always read from this module.
+    This is the read path and it runs inside a page request, so it must not open a write
+    transaction: a write here would take the database write lock during a GET, competing with
+    the refresh loop, and (before this change) meant a page load could persist a row. When the
+    stored row is absent or is missing a canonical metric key, the values are *computed* and
+    returned without being stored. Persisting happens out of the request path, at application
+    startup and at the end of each refresh cycle, via :func:`heal_snapshot`.
     """
     import json
 
@@ -298,9 +308,9 @@ def read_snapshot(
         (market.id, trade.id),
     ).fetchone()
     if row is None:
-        if not refresh_if_missing:
-            return {}
-        return write_snapshot(db, market, trade)
+        # No stored row yet (a fresh database before the startup heal, or a test that did not
+        # seed one). Return a complete canonical set so every surface agrees, without storing.
+        return compute_metrics(db, market, trade)
 
     try:
         metrics = json.loads(row["metrics"])
@@ -310,18 +320,47 @@ def read_snapshot(
 
     # A stored snapshot is not automatically current: when a canonical metric is added (or
     # changes meaning) the rows written by the previous code are missing the new key, and a
-    # reader would serve `None` for a figure every other surface publishes. Recompute and
-    # rewrite whenever a canonical key is absent, so a deployed upgrade heals itself on the
-    # first read instead of waiting for the next refresh. Read-only callers that must not
-    # write (`refresh_if_missing=False`) get the recomputed values without persisting.
+    # reader would serve `None` for a figure every other surface publishes. Recompute so the
+    # reader always sees a complete set of figures; the row itself is healed out of the request
+    # path (see `heal_snapshot`), so a GET never writes.
     if any(key not in metrics for key in METRIC_DEFINITIONS):
-        if not refresh_if_missing:
-            return compute_metrics(db, market, trade)
-        return write_snapshot(db, market, trade)
+        return compute_metrics(db, market, trade)
 
     metrics["computed_at"] = row["computed_at"]
     metrics["last_observed"] = row["last_observed"] or metrics.get("last_observed")
     return metrics
+
+
+def _snapshot_is_current(db: Database, market: MarketConfig, trade: TradeConfig) -> bool:
+    """True when a stored row exists and carries every canonical metric key."""
+    import json
+
+    if not _table_exists(db, "market_stat_snapshot"):
+        return False
+    row = db.conn.execute(
+        "SELECT metrics FROM market_stat_snapshot WHERE market_id = ? AND trade_id = ?",
+        (market.id, trade.id),
+    ).fetchone()
+    if row is None:
+        return False
+    try:
+        metrics = json.loads(row["metrics"])
+    except (TypeError, ValueError):
+        return False
+    return all(key in metrics for key in METRIC_DEFINITIONS)
+
+
+def heal_snapshot(db: Database, market: MarketConfig, trade: TradeConfig) -> dict[str, Any]:
+    """Recompute and persist a snapshot only when it is missing or stale.
+
+    Called out of the request path — at application startup and at the end of each refresh
+    cycle — so a deployed upgrade that adds a canonical metric repairs the stored row without a
+    visitor's page load doing the write. Idempotent: a current row is returned unchanged, so a
+    restart does not churn ``computed_at``.
+    """
+    if _snapshot_is_current(db, market, trade):
+        return read_snapshot(db, market, trade)
+    return write_snapshot(db, market, trade)
 
 
 def metric_label(key: str) -> str:

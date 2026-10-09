@@ -105,8 +105,15 @@ exist on a Free instance and the start is the one way to break the service.
 **One-time full initial seed (Render shell).** The refresh loop is bounded (`MAX_PAGES`,
 default 3), so a fresh instance re-collects only the newest pages and the assembled dataset
 stays small. To fill it once, after the first boot, open a Render shell on the running service
-and run a deeper backfill against the mounted database. Run the steps **in this order** — each
-consumes what the previous one produced:
+and run a deeper backfill against the mounted database.
+
+**Pause the refresh loop first.** The seed and the refresh loop must not overlap. The refresh
+job holds a single-writer file lock (`src/oppintel/locks.py`) for its whole cycle, so a seed
+started mid-cycle waits rather than corrupting the file — but the clean way is to pause the
+loop: in the Render dashboard set `REFRESH_SECONDS` to a large value (e.g. `604800`) and save;
+the current cycle finishes, then the loop sleeps. Set it back to `21600` when the seed is done.
+
+Run the steps **in this order** — each consumes what the previous one produced:
 
 ```bash
 # 0. Confirm the shell sees the same database the web process serves.
@@ -132,11 +139,19 @@ PYTHONPATH=src python -m oppintel.cli stats
 curl -s "$BASE_URL/api/statistics" | python -m json.tool | head -20
 ```
 
-Expected duration: an unbounded `ingest` (no `--max-pages`) reaches each connector's 200-page
-ceiling; Fort Worth ArcGIS alone is 200k+ records and takes more than 13 minutes, so budget
-15–30 minutes for the full seed. The pipeline commits every 250 permits, so an interrupted run
-leaves a consistent partial dataset and re-running is idempotent (raw records are keyed by
-content hash). Do not schedule an unbounded `ingest`; leave the recurring refresh bounded.
+Expected duration (measured on the audit sandbox, Python 3.13, wired network — expect it to vary
+on Render): an unbounded `ingest` (no `--max-pages`) reaches each connector's 200-page ceiling;
+Fort Worth ArcGIS alone is 200k+ records and takes more than 13 minutes. Budget 15–30 minutes for
+the full seed. The pipeline commits every 250 permits, so an interrupted run leaves a consistent
+partial dataset and re-running is idempotent (raw records are keyed by content hash). Do not
+schedule an unbounded `ingest`; leave the recurring refresh bounded.
+
+**Rate limiting and retries.** The default page cap is gentle on the public sources. Every
+connector enforces a minimum gap of `min_seconds_between_requests` (1.0s) between requests,
+retries transient HTTP failures (`429/500/502/503/504`) up to `max_retries` (3) with exponential
+backoff (1s, 2s, 4s), uses a 60s timeout, and identifies itself with a descriptive
+`User-Agent` (`config/sources.yaml`, `src/oppintel/connectors/base.py`). A deeper seed is slower
+but still polite: the limiter is per-request, not per-page.
 
 **Confirm the snapshot refreshed.** The stored snapshot (`market_stat_snapshot`) is the single
 source every headline figure reads. A successful seed changes two things in `/api/statistics`:

@@ -50,7 +50,7 @@ import os
 db = Database(os.environ["OPPINTEL_DB"])
 rows = db.conn.execute(
     """
-    SELECT c.detected_at, p.name AS project, c.field_name,
+    SELECT c.detected_at, p.project_name AS project, c.field_name,
            c.previous_value, c.current_value, c.change_kind
       FROM project_change c JOIN project p ON p.id = c.project_id
      WHERE c.change_kind <> 'new_project'
@@ -90,6 +90,22 @@ PY
 
 **Expected:** at least one source with `passes >= 2`. A single pass cannot, by definition,
 produce a difference — it only produces first observations.
+
+Also read the last time any stored project row changed, which is the freshness bound every page
+shows. If it is older than the refresh interval, the loop is not writing:
+
+```bash
+python - <<'PY'
+from oppintel.db import Database
+import os
+db = Database(os.environ["OPPINTEL_DB"])
+row = db.conn.execute(
+    "SELECT MAX(updated_at) AS last_observed, COUNT(*) AS projects FROM project"
+).fetchone()
+print("last_observed:", row["last_observed"], "projects:", row["projects"])
+db.close()
+PY
+```
 
 ## 4. Confirm the refresh loop is running
 

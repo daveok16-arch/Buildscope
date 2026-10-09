@@ -93,7 +93,7 @@
 {% else %}
   {% with heading = "No alerts",
           message = "Alerts appear when a project you watch changes. Nothing has changed yet.",
-          suggestions = ["Watch opportunities you care about to receive alerts about them.",
+          suggestions = ["Watch opportunities you care about to get in-app alerts about them.",
                          "Alerts are driven by recorded changes, so they are never invented."],
           reset_url = url_for('watching') %}
     {% include "partials/empty_state.html" %}

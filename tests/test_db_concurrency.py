@@ -9,6 +9,7 @@ concurrent readers against a real writer — no mocks.
 from __future__ import annotations
 
 import threading
+import time
 
 from oppintel.db import Database
 
@@ -18,8 +19,13 @@ def test_database_enables_wal_and_a_busy_timeout(tmp_path):
     db.init_schema()
     mode = db.conn.execute("PRAGMA journal_mode").fetchone()[0]
     timeout = db.conn.execute("PRAGMA busy_timeout").fetchone()[0]
+    sync = db.conn.execute("PRAGMA synchronous").fetchone()[0]
+    fk = db.conn.execute("PRAGMA foreign_keys").fetchone()[0]
     assert mode.lower() == "wal"
     assert timeout >= 30000
+    # NORMAL (1) pairs with WAL: durable across an app crash, no fsync per commit.
+    assert sync == 1
+    assert fk == 1
     db.close()
 
 
@@ -71,3 +77,136 @@ def test_concurrent_readers_survive_a_writer(tmp_path):
         t.join(timeout=30)
 
     assert not errors, errors
+
+
+def test_writer_lock_is_exclusive_across_threads(tmp_path):
+    """A second pipeline writer waits for the first rather than starting a duplicate pass."""
+    from oppintel.locks import writer_lock
+
+    path = tmp_path / "locked.db"
+    events: list[str] = []
+    started = threading.Event()
+
+    def first() -> None:
+        with writer_lock(path, timeout=5):
+            events.append("first-in")
+            started.set()
+            time.sleep(0.4)
+            events.append("first-out")
+
+    def second() -> None:
+        started.wait()
+        with writer_lock(path, timeout=5):
+            events.append("second-in")
+
+    t1 = threading.Thread(target=first)
+    t2 = threading.Thread(target=second)
+    t1.start(); t2.start()
+    t1.join(timeout=10); t2.join(timeout=10)
+
+    # The second writer must not enter before the first leaves.
+    assert events.index("second-in") > events.index("first-out"), events
+
+
+def test_writer_lock_is_reentrant_in_one_thread(tmp_path):
+    """A nested acquire (Pipeline.run -> assemble_and_classify) does not deadlock."""
+    from oppintel.locks import writer_lock
+
+    path = tmp_path / "reentrant.db"
+    with writer_lock(path, timeout=5):
+        with writer_lock(path, timeout=5) as inner:
+            assert inner is True  # held, not blocked
+
+
+def test_concurrent_readers_and_web_writes_against_an_ingest_writer(tmp_path):
+    """D1 soak: readers + short web-style writes survive a long writer with zero lock errors.
+
+    Runs for ~60s against a real on-disk database. The ingest writer holds the write lock for
+    a long stretch; readers and the short web writes must wait it out, never raise
+    "database is locked".
+    """
+    path = tmp_path / "soak.db"
+    db = Database(path)
+    db.init_schema()
+    db.init_app_schema()
+    db.conn.execute(
+        "INSERT INTO source (id, name, kind, market_coverage, updated_at) "
+        "VALUES ('s1', 'Source', 'arcgis', 'DFW', '2026-10-09T00:00:00+00:00')"
+    )
+    db.conn.commit()
+    db.close()
+
+    errors: list[str] = []
+    stop = threading.Event()
+    ingest_writes = [0]
+    web_writes = [0]
+    reads = [0]
+    DURATION = 60.0
+
+    def ingest_writer() -> None:
+        writer = Database(path)
+        try:
+            end = time.monotonic() + DURATION
+            i = 0
+            while time.monotonic() < end:
+                # One long transaction that mirrors an assembly commit.
+                writer.conn.execute("BEGIN")
+                for _ in range(25):
+                    writer.conn.execute(
+                        "INSERT INTO permit (source_id, natural_key, permit_number, "
+                        "updated_at) VALUES ('s1', ?, ?, '2026-10-09T00:00:00+00:00')",
+                        (f"k{i}", f"P{i}"),
+                    )
+                    i += 1
+                writer.conn.commit()
+                ingest_writes[0] += 1
+        except Exception as exc:  # pragma: no cover - only on a locking failure
+            errors.append(f"ingest: {exc!r}")
+        finally:
+            writer.close()
+
+    def reader() -> None:
+        conn = Database(path)
+        try:
+            while not stop.is_set():
+                conn.conn.execute("SELECT COUNT(*) FROM permit").fetchone()
+                reads[0] += 1
+                time.sleep(0.01)
+        except Exception as exc:  # pragma: no cover
+            errors.append(f"reader: {exc!r}")
+        finally:
+            conn.close()
+
+    def web_write() -> None:
+        conn = Database(path)
+        try:
+            n = 0
+            while not stop.is_set():
+                conn.conn.execute(
+                    "INSERT INTO analytics_event (event_name, created_at) VALUES ('soak', ?)",
+                    (f"2026-10-09T00:00:{n % 60:02d}+00:00",),
+                )
+                conn.conn.commit()
+                web_writes[0] += 1
+                n += 1
+                time.sleep(0.05)
+        except Exception as exc:  # pragma: no cover
+            errors.append(f"web: {exc!r}")
+        finally:
+            conn.close()
+
+    threads = [threading.Thread(target=ingest_writer)]
+    threads += [threading.Thread(target=reader) for _ in range(3)]
+    threads += [threading.Thread(target=web_write) for _ in range(2)]
+    for t in threads:
+        t.start()
+    time.sleep(DURATION)
+    stop.set()
+    for t in threads:
+        t.join(timeout=30)
+
+    assert not errors, errors
+    # The workload actually ran (a green test with zero work would prove nothing).
+    assert ingest_writes[0] > 0 and reads[0] > 0 and web_writes[0] > 0, (
+        ingest_writes[0], reads[0], web_writes[0]
+    )

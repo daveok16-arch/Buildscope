@@ -8,7 +8,7 @@ print('configured cities (name -> aliases):', [(c.name, list(c.aliases)) for c i
 print()
 
 public = ("p.classification IN ('HIGH','MEDIUM') "
-          "AND p.procurement_status IN ('CONFIRMED_OPEN','EVIDENCE_FOUND','NOT_VERIFIED')")
+          "AND p.procurement_status IN ('Confirmed open','Evidence found, status unclear','Not verified')")
 
 print('DISTINCT public-project cities (all, by raw city value):')
 rows = d.conn.execute(

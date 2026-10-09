@@ -25,6 +25,7 @@ from .config import CONFIG_DIR, SourceConfig, active_trade, load_sources, load_t
 from .connectors import build_connector, connector_ids
 from .db import Database
 from .discrepancy import find_discrepancies, mark_disputed
+from .locks import writer_lock
 from .procurement import procurement_status
 from .models import Permit, RawPermit, normalize_address, utcnow
 
@@ -166,6 +167,10 @@ class Pipeline:
 
     def assemble_and_classify(self) -> PipelineReport:
         """Cluster stored permits into projects, classify them, and persist."""
+        with writer_lock(self.db.path):
+            return self._assemble_and_classify_locked()
+
+    def _assemble_and_classify_locked(self) -> PipelineReport:
         report = PipelineReport()
         permits_with_ids = self.db.load_permits_for_assembly()
         permits = [p for p, _ in permits_with_ids]
@@ -296,6 +301,18 @@ class Pipeline:
     # --- convenience ----------------------------------------------------------
 
     def run(
+        self,
+        source_ids: list[str] | None = None,
+        *,
+        since: date | None = None,
+        max_pages: int | None = None,
+    ) -> PipelineReport:
+        # The whole ingest+assemble pass holds the single-writer lock, so a refresh, a CLI
+        # ingest and a one-time seed cannot overlap and duplicate the same source crawl.
+        with writer_lock(self.db.path):
+            return self._run_locked(source_ids, since=since, max_pages=max_pages)
+
+    def _run_locked(
         self,
         source_ids: list[str] | None = None,
         *,
