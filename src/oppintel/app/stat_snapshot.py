@@ -58,9 +58,16 @@ METRIC_DEFINITIONS: dict[str, tuple[str, str]] = {
         "discoverable.",
     ),
     "active_jurisdictions": (
-        "Active jurisdictions",
-        "Distinct in-market cities that hold at least one public project, computed from the "
-        "data rather than configuration.",
+        "Cities with public projects",
+        "Distinct in-market cities that hold at least one public project. Exact rule: "
+        "COUNT(DISTINCT city) over public projects whose city is a configured market city "
+        "(an alias spelling counts as its configured city). Out-of-market city names are "
+        "reported separately, never counted.",
+    ),
+    "configured_jurisdictions": (
+        "Configured cities",
+        "Cities declared for the market in config/markets.yaml. This is configuration intent, "
+        "not observed data, and is always >= the public count.",
     ),
 }
 
@@ -204,6 +211,7 @@ def compute_metrics(db: Database, market: MarketConfig, trade: TradeConfig) -> d
         "permit_records": permit_records,
         "linked_permits": linked_permits,
         "active_jurisdictions": in_market,
+        "configured_jurisdictions": len(configured),
         # Supporting / compatibility keys.
         "projects_total": projects_total,
         "high": high,

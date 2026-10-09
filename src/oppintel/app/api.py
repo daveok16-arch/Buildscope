@@ -289,6 +289,7 @@ def trends() -> Any:
                     "key": m.key,
                     "label": m.label,
                     "definition": m.definition,
+                    "basis": m.basis,
                     "value": m.value,
                     "previous": m.previous,
                     "comparison_available": m.comparison_available,

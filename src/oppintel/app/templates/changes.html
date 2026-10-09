@@ -3,8 +3,8 @@
 {% block hero %}
 <section class="hero hero-compact">
   <div class="wrap">
-    <p class="crumb"><a href="{{ url_for('home') }}">Home</a> · Continuous Monitoring</p>
-    <div class="hero-tagline-kicker">Continuous Audit Log</div>
+    <p class="crumb"><a href="{{ url_for('home') }}">Home</a> · Change Feed</p>
+    <div class="hero-tagline-kicker">Change Audit Log</div>
     <h1>Detected Project Changes</h1>
     <p class="lede">
       Records entering the system and real differences detected between consecutive collection
@@ -34,14 +34,22 @@
         </div>
       </div>
       <div class="notice" style="margin-top:16px; font-size:0.85rem">
-        <strong>Zero-False-Positive Guarantee:</strong>
-        A pipeline re-run with unchanged data produces zero events. The timeline fills only when the municipal record itself moves.
+        <strong>No fabricated events:</strong>
+        A pipeline re-run over unchanged data produces no events. A change appears only when the
+        municipal record itself differs from the value we last stored.
       </div>
     </div>
   </aside>
 
   {# Main Results #}
   <div class="feed-results-area">
+    {% if freshness and freshness.real_diff_count == 0 %}
+    <div class="notice" style="margin-bottom:16px">
+      <strong>Collection began {{ freshness.first_observed_display }}.</strong>
+      Every entry below is a first observation — a record entering the system. Differences
+      between collection passes appear after later runs; none have been recorded yet.
+    </div>
+    {% endif %}
     <div class="results-header-bar">
       <div>
         {% set n_first = breakdown.get('new_project', 0) %}

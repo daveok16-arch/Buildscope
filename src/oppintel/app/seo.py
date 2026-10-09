@@ -83,6 +83,7 @@ class SeoBuilder:
     def home(self, stats: dict[str, Any]) -> Seo:
         count = stats.get("projects_public", 0)
         mechanical = stats.get("with_mechanical", 0)
+        jurisdictions = stats.get("active_jurisdictions", 0)
         # Distinct from the market+trade landing page ("... Opportunities"), because two
         # indexable pages sharing a title compete with each other in search results.
         title = (
@@ -90,10 +91,10 @@ class SeoBuilder:
             f"Commercial {self.trade.short_label or self.trade.label}"
         )
         description = (
-            f"Search {count:,} active commercial construction projects across "
-            f"{self.market.name} with documented mechanical evidence "
-            f"({mechanical:,} with mechanical or HVAC permits). Built from public City permit "
-            f"records, with every fact linked to its source."
+            f"Search {count:,} commercial construction projects across "
+            f"{jurisdictions} {self.market.short_name} cities with public projects, including "
+            f"{mechanical:,} with documented mechanical or HVAC permits. Built from public City "
+            f"permit records, with every fact linked to its source."
         )
         return Seo(
             title=title,

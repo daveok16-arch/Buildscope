@@ -34,8 +34,8 @@
     <span class="stat-label">Tier 1 Mechanical Permits</span>
   </div>
   <div class="stat">
-    <span class="stat-value">{{ "{:,}".format(stats.cities) }}</span>
-    <span class="stat-label">Active Municipalities</span>
+    <span class="stat-value">{{ "{:,}".format(stats.active_jurisdictions) }}</span>
+    <span class="stat-label">Cities with public projects</span>
   </div>
   <div class="stat">
     <span class="stat-value">{{ "{:,}".format(stats.permit_records) }}</span>
@@ -142,9 +142,9 @@
 
     {# Recent Audit Highlights #}
     <div class="detail-panel" style="margin-top:24px">
-      <div class="section-kicker">Continuous Audit</div>
+      <div class="section-kicker">Record Audit</div>
       <h2>Recent Market Movement</h2>
-      <p class="small muted">Latest detected differences across the market.</p>
+      <p class="small muted">Latest recorded differences across the market. First observations are labelled separately.</p>
 
       {% if recent_changes %}
         <ul class="why-list" style="margin-top:12px">

@@ -60,6 +60,23 @@ def test_home_and_api_and_healthz_report_the_same_project_count(app_db, client):
     assert health["projects"] == api["projects_total"]
 
 
+def test_jurisdiction_count_is_identical_on_every_surface(app_db, client):
+    """'Cities with public projects' is one number on home, /api/statistics, /markets, meta and /healthz."""
+    api = client.get("/api/statistics").get_json()["statistics"]
+    jurisdictions = api["active_jurisdictions"]
+
+    home = client.get("/").get_data(as_text=True)
+    health = client.get("/healthz").get_json()
+    markets = client.get("/markets").get_data(as_text=True)
+
+    # The home meta description and the home stat strip both carry the same figure.
+    assert f"{jurisdictions} " in home  # e.g. "15 Dallas–Fort Worth cities with public projects"
+    assert health["cities_with_public_projects"] == jurisdictions
+    assert f"{jurisdictions} cities with public projects" in markets
+    # The configured count is configuration intent, never smaller than the observed count.
+    assert api["configured_jurisdictions"] >= jurisdictions
+
+
 def test_snapshot_is_reused_rather_than_recomputed(app_db, client):
     """Two reads return the same computed_at: the second did not recompute."""
     first = client.get("/api/statistics").get_json()["statistics"]["computed_at"]

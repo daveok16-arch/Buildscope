@@ -70,6 +70,7 @@
     <div class="stat" style="flex:1 1 260px; min-width:240px">
       <span class="stat-value">{{ "{:,}".format(m.value) }}</span>
       <span class="stat-label">{{ m.label }}{% if m.cumulative %} <span class="muted small">(total held)</span>{% endif %}</span>
+      {% if m.basis %}<p class="small muted" style="margin-top:8px; line-height:1.45"><strong>Counts:</strong> {{ m.basis }}</p>{% endif %}
       <p class="small muted" style="margin-top:8px; line-height:1.45">{{ m.definition }}</p>
       {% if m.cumulative %}
         <p class="small muted" style="margin-top:6px">Cumulative total over the whole dataset — not a period trend.</p>

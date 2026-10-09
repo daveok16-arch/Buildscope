@@ -289,3 +289,25 @@ def test_ingestion_window_newest_permit_excludes_future_dates(tmp_path):
     report = build_trend_report(db, window="30d", today=date(2026, 10, 7))
     assert report.ingestion_window["newest_permit_date"] == "2026-10-05"
     db.close()
+
+
+def test_every_metric_carries_a_basis_line(tmp_path):
+    """Each card must name the population and period it counts, so two cards cannot be read
+    as comparable when they are not (the source of the 'new projects vs public projects'
+    confusion)."""
+    db = _db(tmp_path, [])
+    report = build_trend_report(db, window="30d", today=date(2026, 10, 7))
+    for m in report.metrics:
+        assert m.basis, f"{m.key} has no basis line"
+        assert "period" in m.basis or "time" in m.basis
+    db.close()
+
+
+def test_new_projects_basis_says_it_ignores_classification(tmp_path):
+    """'New commercial projects' is a window count over permit dates, not the home 'public
+    projects' figure. The basis line must say so explicitly."""
+    db = _db(tmp_path, [])
+    report = build_trend_report(db, window="30d", today=date(2026, 10, 7))
+    basis = report.metric_index["projects_observed"].basis
+    assert "regardless of classification" in basis
+    db.close()

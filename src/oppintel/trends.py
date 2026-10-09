@@ -139,6 +139,9 @@ class Metric:
     #: The window options this metric is meaningful for. Occurrence metrics (a change, a first
     #: observation) are only meaningful inside a period and are absent from "all".
     windows: tuple[str, ...] = ()
+    #: One short line naming what population and period the value counts, shown next to the
+    #: figure so no two cards can be read as comparable when they are not.
+    basis: str = ""
 
     @property
     def delta(self) -> int | None:
@@ -309,6 +312,16 @@ def build_trend_report(
     previous = period.previous()
     reference_day = (today or datetime.now(timezone.utc).date())
 
+    # One short line per card names the population and the period, so two cards that are not
+    # comparable cannot be read as if they were (e.g. "new projects" is a window over permit
+    # dates; "public projects" on the home page is an all-time count of a different population).
+    if period.is_all_time:
+        period_text = "all time"
+    else:
+        period_text = (
+            f"{period.start.isoformat()} to {(period.end - timedelta(days=1)).isoformat()}"
+        )
+
     # --- comparability -------------------------------------------------------
     first_seen_row = db.conn.execute(
         "SELECT MIN(p.created_at) AS first_seen FROM project p WHERE p.trade = ?", (trade,)
@@ -361,6 +374,10 @@ def build_trend_report(
         excluded_future=_future_excluded(db, trade=trade, today=reference_day),
         cumulative=period.is_all_time,
         windows=_OCCURRENCE_WINDOWS,
+        basis=(
+            "Distinct projects with a permit dated in this period, regardless of "
+            f"classification or procurement status ({period_text})."
+        ),
     )
 
     # 2. Permits with a permit date in the window. A project count and a permit count are not
@@ -400,6 +417,10 @@ def build_trend_report(
         comparison_note=comparison_note,
         cumulative=period.is_all_time,
         windows=_OCCURRENCE_WINDOWS,
+        basis=(
+            "Permit rows linked to a project of this trade, dated in this period "
+            f"({period_text})."
+        ),
     )
 
     # 3. Projects carrying a classified trade relationship, dated in the window. This is
@@ -440,6 +461,10 @@ def build_trend_report(
         comparison_note=comparison_note,
         cumulative=period.is_all_time,
         windows=_OCCURRENCE_WINDOWS,
+        basis=(
+            "Distinct projects with a classified trade relationship, dated in this period "
+            f"({period_text})."
+        ),
     )
 
     # 4. Projects changed *after* first being observed, in the window. `new_project` is the
@@ -479,6 +504,10 @@ def build_trend_report(
         comparison_note=comparison_note,
         cumulative=period.is_all_time,
         windows=_OCCURRENCE_WINDOWS,
+        basis=(
+            "Distinct previously-known projects whose stored value changed in this period "
+            f"({period_text}); first appearances are excluded."
+        ),
     )
 
     # 5. Projects first observed (ingested) in the window. This measures BuildScope's data
@@ -513,6 +542,10 @@ def build_trend_report(
         comparison_note=comparison_note,
         cumulative=period.is_all_time,
         windows=_OCCURRENCE_WINDOWS,
+        basis=(
+            "Distinct projects first ingested by BuildScope in this period "
+            f"({period_text})."
+        ),
     )
 
     # 6. Projects with strong (tier 1 or 2) mechanical evidence, dated in the window.
@@ -549,6 +582,10 @@ def build_trend_report(
         comparison_note=comparison_note,
         cumulative=period.is_all_time,
         windows=_ALL_WINDOWS,
+        basis=(
+            "Distinct projects with a tier 1 or 2 mechanical evidence record, dated in this "
+            f"period ({period_text})."
+        ),
     )
 
     malformed = _malformed_date_count(db, trade)
@@ -558,6 +595,10 @@ def build_trend_report(
         "permit volume of any city.",
         "A project count, a permit count, a trade-evidence count and a change count are "
         "different measurements of the same records and are never added together.",
+        "\"New commercial projects\" here counts every stored project with a permit dated in "
+        "the window, whatever its classification. The home page's \"Public projects\" figure is "
+        "an all-time count of classified, discoverable projects — a different population over a "
+        "different period, so the two are not expected to be equal.",
     ]
     if malformed:
         notes.append(

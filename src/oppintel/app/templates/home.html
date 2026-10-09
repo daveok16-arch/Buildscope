@@ -12,7 +12,7 @@
 
     <p class="lede">
       BuildScope turns public municipal construction filings and permit records into structured commercial intelligence.
-      Discover active projects, verify mechanical scope from official documents, and track continuous permit revisions before jobs reach public bidding.
+      Discover active projects, verify mechanical scope from official documents, and watch the record for differences we detect between collection runs.
     </p>
 
     <form class="hero-search-box" method="get" action="{{ url_for('opportunities') }}" role="search">
@@ -52,7 +52,7 @@
       </div>
       <div class="evidence-stat-item">
         <span class="evidence-stat-num">{{ "{:,}".format(stats.active_jurisdictions) }}</span>
-        <span class="evidence-stat-label">Active jurisdictions</span>
+        <span class="evidence-stat-label">Cities with public projects</span>
       </div>
       <div class="evidence-stat-item">
         <span class="evidence-stat-num">{{ "{:,}".format(stats.permit_records) }}</span>
@@ -63,7 +63,7 @@
       {% set defs = stat_definitions or {} %}
       <span title="{{ defs.get('public_projects', '') }}">Public projects</span>,
       <span title="{{ defs.get('projects_with_mechanical_evidence', '') }}">mechanical evidence</span>,
-      <span title="{{ defs.get('active_jurisdictions', '') }}">active jurisdictions</span> and
+      <span title="{{ defs.get('active_jurisdictions', '') }}">cities with public projects</span> and
       <span title="{{ defs.get('permit_records', '') }}">permit records</span> — computed from
       public records{% if stats.computed_at %}, as of {{ stats.computed_at[:16].replace('T', ' ') }} UTC{% endif %}.
     </p>
@@ -113,7 +113,7 @@
       <div class="evidence-chain-card">
         <div class="chain-step-num">Step 05</div>
         <div class="chain-step-title">Contractor Action</div>
-        <div class="chain-step-body">Watch the record, receive continuous revision alerts, and pursue before the project bids.</div>
+        <div class="chain-step-body">Watch the record and receive an alert when a later collection run detects a difference.</div>
       </div>
     </div>
   </div>
@@ -138,7 +138,7 @@
         <h4 style="color:var(--gold-600)">01. Discover</h4>
         <h3>Early Project Visibility</h3>
         <p class="small muted">
-          Identify major commercial capital developments, tenant additions, and facility expansions months before general contractors issue subcontract invitations.
+          Identify major commercial capital developments, tenant additions, and facility expansions from the permit record — often months before general contractors issue subcontract invitations.
         </p>
       </div>
 
@@ -152,9 +152,11 @@
 
       <div class="detail-panel" style="padding:22px 20px">
         <h4 style="color:var(--gold-600)">03. Watch</h4>
-        <h3>Continuous Revision Tracking</h3>
+        <h3>Change Tracking</h3>
         <p class="small muted">
-          Automated collection runs detect real differences in scope, valuation amendments, and status transitions without false alerts.
+          Collection runs record every permit we observe and flag differences between runs in
+          scope, valuation and status. We report only the differences the records actually show;
+          a re-run over unchanged data produces no events.
         </p>
       </div>
 
@@ -212,7 +214,7 @@
       <div class="detail-panel">
         <h3>Active Geographic Market: {{ market.name }}</h3>
         <p class="muted">
-          Continuous coverage across Dallas, Fort Worth, and Collin County municipalities (Frisco, Plano, McKinney, Allen, Celina, Wylie).
+          Coverage across Dallas, Fort Worth, and Collin County municipalities (Frisco, Plano, McKinney, Allen, Celina, Wylie).
         </p>
         <div class="badge-row" style="margin:14px 0">
           <span class="badge badge-high">Active: {{ market.short_name }}</span>

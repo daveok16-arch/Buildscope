@@ -214,3 +214,27 @@ def test_future_only_market_has_no_latest_record_date(empty_db):
     cov = market_coverage(empty_db, _market("dfw"), today=TODAY)
     assert cov.latest_record_date is None
     assert cov.state == STATE_RECORDS_HELD
+
+
+def test_stored_source_coverage_excludes_a_future_latest_date(empty_db):
+    """The persisted per-source `latest_date` must not be a future filing.
+
+    `coverage.market_coverage` already excludes a future permit from the market boundary, but the
+    freshness banner and `/admin/data` read `source_coverage.latest_date`, which is written by
+    `Database.record_source_coverage`. That writer must apply the same guard, or a single
+    future-dated permit keeps a stale source looking current on every surface that reads it.
+    """
+    from datetime import datetime, timezone
+
+    _insert_permit(empty_db, city="Fort Worth", permit_date=date(2026, 9, 30))
+    _insert_permit(empty_db, city="Fort Worth", permit_date=date(2026, 12, 19))
+    empty_db.record_source_coverage(
+        "fort_worth_permits", retrieval_date=datetime.now(timezone.utc)
+    )
+    row = empty_db.conn.execute(
+        "SELECT latest_date, record_count FROM source_coverage WHERE source_id = 'fort_worth_permits'"
+    ).fetchone()
+    assert row["latest_date"] == "2026-09-30"
+    # The future permit is still held and counted; only the boundary excludes it.
+    assert row["record_count"] == 2
+

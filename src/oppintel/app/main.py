@@ -972,6 +972,7 @@ def create_app(config: AppConfig | None = None) -> Flask:
             limit=page_size, days=days, offset=(page - 1) * page_size
         )
         total_pages = max((total + page_size - 1) // page_size, 1)
+        freshness = g.service.data_freshness()
         return render_template(
             "changes.html",
             changes=recent_changes,
@@ -981,10 +982,12 @@ def create_app(config: AppConfig | None = None) -> Flask:
             page=page,
             page_size=page_size,
             total_pages=total_pages,
-            page_title=f"Continuous Market Audit — Detected Project Changes in {g.market.short_name}",
+            freshness=freshness,
+            page_title=f"Market Change Audit — Detected Project Changes in {g.market.short_name}",
             seo=g.seo_builder.simple(
-                "Continuous Market Audit",
-                "Live audit log of detected differences across commercial construction and permit records.",
+                "Market Change Audit",
+                "Audit log of differences detected between collection runs across commercial "
+                "construction and permit records.",
             ),
         )
 
@@ -1137,6 +1140,8 @@ def create_app(config: AppConfig | None = None) -> Flask:
             }
             payload["projects"] = row["projects"]
             payload["permits"] = row["permits"]
+            # The public jurisdiction count, so the probe and the pages agree on the same word.
+            payload["cities_with_public_projects"] = metrics.get("active_jurisdictions", 0)
             # Coverage state is reported so an operator can distinguish "the process is up" from
             # "the market is actually served". Counts only; never project content.
             try:

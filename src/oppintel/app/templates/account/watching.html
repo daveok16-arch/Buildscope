@@ -60,7 +60,7 @@
     {% with heading = "You are not watching any opportunities yet",
             message = "Watching asks the system to notify you when a project's record changes. It is separate from saving, which only bookmarks a project.",
             suggestions = ["Open an opportunity from the feed and choose Watch.",
-                           "Your watched projects appear here and drive your real-time alerts."],
+                           "Your watched projects appear here and drive your in-app alerts."],
             reset_url = url_for('opportunities') %}
       {% include "partials/empty_state.html" %}
     {% endwith %}

@@ -1021,9 +1021,20 @@ class OpportunityService:
             "SELECT MAX(retrieval_date) AS latest, MAX(updated_at) AS updated FROM source_coverage"
         ).fetchone()
         latest = row["latest"] if row else None
+        first_observed = self.db.conn.execute(
+            "SELECT MIN(created_at) FROM project"
+        ).fetchone()[0]
+        # A real difference is a change between collection runs, not a record's first
+        # appearance. The /changes page states this count so an empty feed is explained.
+        diff_row = self.db.conn.execute(
+            "SELECT COUNT(*) FROM project_change WHERE change_kind <> 'new_project'"
+        ).fetchone()
         return {
             "retrieval_date": latest,
             "display": self.format_month(latest),
+            "first_observed": first_observed,
+            "first_observed_display": self.format_month(first_observed[:10] if first_observed else None),
+            "real_diff_count": int(diff_row[0] or 0),
             "sources": self.db.conn.execute(
                 """
                 SELECT s.name, c.earliest_date, c.latest_date, c.retrieval_date,

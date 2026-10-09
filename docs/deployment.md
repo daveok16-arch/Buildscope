@@ -102,6 +102,32 @@ exist on a Free instance and the start is the one way to break the service.
    `403`. The level is granted only by this command: no web route can set it, so no request can
    escalate its own privileges. Revoke with `revoke-admin`.
 
+**One-time full initial seed (Render shell).** The refresh loop is bounded (`MAX_PAGES`,
+default 3), so a fresh instance re-collects only the newest pages and the assembled dataset
+stays small. To fill it once, after the first boot, open a Render shell on the running service
+and run a bounded-but-deeper backfill against the mounted database:
+
+```bash
+# 1. Ingest more of each source's history. 25 pages/source is a few minutes per source and
+#    reaches well past the newest permits; it does not touch the 200k-record ceiling.
+PYTHONPATH=src python -m oppintel.cli ingest --max-pages 25
+
+# 2. Rebuild the derived tables and the search index from what was collected.
+PYTHONPATH=src python -m oppintel.cli assemble
+PYTHONPATH=src flask --app oppintel.app.wsgi build-search-index
+PYTHONPATH=src flask --app oppintel.app.wsgi monitor
+
+# 3. Confirm the snapshot moved (counts are per-table, printed by the command).
+PYTHONPATH=src python -m oppintel.cli stats
+```
+
+Expected duration: roughly 5–15 minutes for `--max-pages 25` across the DFW sources; the
+pipeline commits every 250 permits, so an interrupted run leaves a consistent partial dataset
+and re-running is idempotent (raw records are keyed by content hash). Use `--full` only for a
+one-time historical backfill: Fort Worth ArcGIS alone is 200k+ records and takes more than 13
+minutes. Do not schedule `--full`; leave the recurring refresh bounded. After the seed,
+`/healthz` reports `"status":"ok"` and the home page counts a larger snapshot than before.
+
 **Schema migration.** The application tables are created with `IF NOT EXISTS` statements, so
 `init-app` is additive and idempotent against a database that already holds ingested data. It
 never alters or drops an intelligence table.

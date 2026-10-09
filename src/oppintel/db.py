@@ -703,10 +703,15 @@ class Database:
     def __init__(self, path: str | Path):
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.conn = sqlite3.connect(str(self.path))
+        self.conn = sqlite3.connect(str(self.path), timeout=30.0)
         self.conn.row_factory = sqlite3.Row
         self.conn.execute("PRAGMA foreign_keys = ON")
         self.conn.execute("PRAGMA journal_mode = WAL")
+        # WAL lets readers proceed during a write, but two writers still serialize. The refresh
+        # thread writes while web requests may write (watch, save, notes, migrations), so a lock
+        # must be waited out rather than surfaced as "database is locked". 30s covers a long
+        # assembly commit; the driver default of 5s does not.
+        self.conn.execute("PRAGMA busy_timeout = 30000")
 
     def close(self) -> None:
         self.conn.close()

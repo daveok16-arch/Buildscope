@@ -45,8 +45,12 @@ def test_health_discloses_no_project_content(client):
     body = client.get("/healthz").get_data(as_text=True)
     payload = json.loads(body)
     # The payload is a closed set: a new key must be added here deliberately, so an accidental
-    # field that carries content cannot slip into the probe unnoticed.
-    assert set(payload) == {"status", "database", "projects", "permits", "coverage"}
+    # field that carries content cannot slip into the probe unnoticed. `cities_with_public_projects`
+    # is a jurisdiction count (the same figure the home page publishes), not project content.
+    assert set(payload) == {
+        "status", "database", "projects", "permits", "coverage",
+        "cities_with_public_projects",
+    }
     # Coverage reports counts and state only, never a record.
     coverage = payload["coverage"]
     assert {"markets_configured", "markets_serving", "markets"} <= set(coverage)
