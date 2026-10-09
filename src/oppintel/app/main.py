@@ -91,7 +91,23 @@ def _load_firebase_config() -> dict[str, Any] | None:
     browser by design and only identifies the project. It is used server-side solely to call
     the Identity Toolkit lookup endpoint, which is what validates a token; it cannot mint a
     session on its own.
+
+    The configuration is injected per deployment rather than committed. Precedence:
+
+    1. ``FIREBASE_CONFIG_JSON`` — the JSON object inline, for hosts that inject secrets as
+       environment values and cannot mount a file.
+    2. ``FIREBASE_CONFIG_PATH`` — a path to a JSON file.
+    3. ``firebase-applet-config.json`` in the working directory or the repository root, for
+       local development only. The file is git-ignored, so a checkout never carries the key.
     """
+    inline = os.environ.get("FIREBASE_CONFIG_JSON")
+    if inline:
+        try:
+            parsed = json.loads(inline)
+            if isinstance(parsed, dict):
+                return parsed
+        except Exception:
+            log.warning("FIREBASE_CONFIG_JSON is set but is not valid JSON; ignoring it.")
     candidates = [
         os.environ.get("FIREBASE_CONFIG_PATH"),
         "firebase-applet-config.json",

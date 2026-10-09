@@ -354,3 +354,18 @@ These are enforced by tests, not by convention. Breaking one fails the suite.
   `content_linkedin.html`. `discover_candidates` ranks by stored signals and lists every reason;
   closed projects are never proposed. Tests: `tests/test_linkedin.py`.
 
+## Firebase web config is injected, never committed
+
+* `firebase-applet-config.json` holds a Firebase web `apiKey` (an `AIza...` value). It is public
+  client configuration, but an unrestricted key in a public repository is still a finding, so the
+  file is git-ignored and untracked. `_load_firebase_config` reads, in order:
+  `FIREBASE_CONFIG_JSON` (inline JSON) -> `FIREBASE_CONFIG_PATH` (file) -> a local
+  `firebase-applet-config.json` (dev only). `firebase-applet-config.example.json` shows the shape.
+* `tests/test_firebase_config.py` fails if the file is tracked again, if any committed file
+  contains an `AIza...` key, or if the injection precedence regresses. If you must rotate the
+  key: Firebase Console -> Project settings -> Web API key. Do not rotate `oAuthClientId` without
+  updating Firebase Authorized Domains, or Google sign-in breaks.
+* The key already appears in this repository's history. Removing it from the tree does not remove
+  it from history; rotate it in the Firebase console and, if the history must be scrubbed, filter
+  the repository separately.
+

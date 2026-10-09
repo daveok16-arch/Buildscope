@@ -29,3 +29,7 @@ data/*.pid
 data/*.json
 data/raw/
 !data/.gitkeep
+
+# Firebase web config contains a project API key. Inject it per-deployment via
+# FIREBASE_CONFIG_PATH (or FIREBASE_CONFIG_JSON) instead of committing it.
+firebase-applet-config.json
