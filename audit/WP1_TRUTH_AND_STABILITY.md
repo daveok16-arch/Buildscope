@@ -84,10 +84,11 @@ time, or record a `duplicate_permit` quality finding — a decision for the Dire
 
 The live site's headline totals differed because each surface ran its own live `COUNT(*)`
 against a dataset the refresh loop was mutating, and the Render Free plan has **no persistent
-disk**, so every deploy rebuilt the database — so a screenshot and a live fetch were answers
-about two different datasets. Fixes: one stored snapshot (`market_stat_snapshot`, written once
-per refresh, read by every surface) and a documented requirement that counts are only stable on
-a paid plan with the disk mounted (`render.yaml`, `docs/deployment.md`).
+disk**, so every deploy rebuilt the database — a screenshot and a live fetch were answers about
+two different datasets. Fixes: one stored snapshot (`market_stat_snapshot`, written once per
+refresh, read by every surface) and a persistent Render disk shipped enabled in `render.yaml`
+(`plan: starter`, disk mounted at `/var/data`, `OPPINTEL_DB` pointing at it) so counts are stable
+across deploys. See `docs/deployment.md` and `audit/WP1_1_CLOSEOUT.md`.
 
 ## Determinism
 

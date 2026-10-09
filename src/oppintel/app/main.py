@@ -967,6 +967,7 @@ def create_app(config: AppConfig | None = None) -> Flask:
         page = max(_safe_int(request.args.get("page"), 1), 1)
         page_size = 25
         total = g.service.recent_changes_count(days=days)
+        breakdown = g.service.recent_changes_breakdown(days=days)
         recent_changes = g.service.recent_changes(
             limit=page_size, days=days, offset=(page - 1) * page_size
         )
@@ -976,6 +977,7 @@ def create_app(config: AppConfig | None = None) -> Flask:
             changes=recent_changes,
             days=days,
             total=total,
+            breakdown=breakdown,
             page=page,
             page_size=page_size,
             total_pages=total_pages,

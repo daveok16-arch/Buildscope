@@ -7,8 +7,9 @@
     <div class="hero-tagline-kicker">Continuous Audit Log</div>
     <h1>Detected Project Changes</h1>
     <p class="lede">
-      Real differences detected between consecutive collection passes across {{ market.name }}.
-      Every entry represents a verified change in permit status, mechanical evidence, declared valuation, or project scope.
+      Records entering the system and real differences detected between consecutive collection
+      passes across {{ market.name }}. A first observation is labelled as such; only a difference
+      between two passes is a detected change.
     </p>
   </div>
 </section>
@@ -43,11 +44,14 @@
   <div class="feed-results-area">
     <div class="results-header-bar">
       <div>
-        <h2>{{ "{:,}".format(total) }} Differences Detected in Last {{ days }} Days</h2>
+        {% set n_first = breakdown.get('new_project', 0) %}
+        {% set n_diff = total - n_first %}
+        <h2>{{ "{:,}".format(total) }} Change-feed Entries in Last {{ days }} Days</h2>
         <p class="results-count-sub">
+          {{ "{:,}".format(n_first) }} are first observations (a record entering the system, not a
+          change) and {{ "{:,}".format(n_diff) }} are detected differences between passes.
           Showing {{ changes | length }} of {{ "{:,}".format(total) }}
-          (page {{ page }} of {{ total_pages }}). Continuous change detection tracking status
-          transitions, scope additions, and valuation updates.
+          (page {{ page }} of {{ total_pages }}).
         </p>
       </div>
     </div>

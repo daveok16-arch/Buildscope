@@ -138,10 +138,11 @@ These are enforced by tests, not by convention. Breaking one fails the suite.
   disk mounted at `/var/data` and `OPPINTEL_DATA_DIR` pointing at it, a deploy replaces the code,
   not the data. Without one — the Free plan has none — every deploy starts from an empty database
   and the refresh loop has to refill it.
-* **Never hardcode the mount path as a default.** The blueprint ships `plan: free` with the disk
-  block commented out, because a Blueprint that declares a disk on a Free instance does not apply
-  at all. `ops/start.sh` therefore defaults `OPPINTEL_DATA_DIR` to the checkout's `data/`, which
-  is always writable, and fails with a named error if an explicitly configured path is not.
+* **The blueprint ships `plan: starter` with the disk attached**, because a Blueprint that
+  declares a disk on a Free instance does not apply at all, so the disk and a paid plan go
+  together. To run without a disk, remove the `disk` block and both `OPPINTEL_*` variables and set
+  `plan: free`. `ops/start.sh` defaults `OPPINTEL_DATA_DIR` to the checkout's `data/`, which is
+  always writable, and fails with a named error if an explicitly configured path is not.
 * **One instance only.** A Render disk attaches to a single instance, and a second instance
   would run a second refresh loop against the same file. Scaling out means moving the database to
   a networked store first, not adding instances.
@@ -215,9 +216,10 @@ These are enforced by tests, not by convention. Breaking one fails the suite.
 * The data sources are public and unauthenticated, so a fresh instance self-seeds: the first
   refresh (`ingest → assemble → build-search-index → monitor`) took a fresh empty data dir to ~1,780
   projects in ~90s. `/healthz` reports `"status":"empty"` (HTTP 200) while filling, then `"ok"`.
-* The Free plan has no disk, so the database is rebuilt on each deploy; the dataset only persists on
-  a paid plan with the disk block uncommented. Leave `OPPINTEL_DATA_DIR` unset without a disk —
-  pointing it at `/var/data` with no disk attached is the one way to break the start.
+* The blueprint ships `plan: starter` with the disk attached, so the dataset persists across
+  deploys. To run without a disk (Free), remove the `disk` block and both `OPPINTEL_*` variables
+  and set `plan: free` — pointing `OPPINTEL_DATA_DIR` at `/var/data` with no disk attached is the
+  one way to break the start.
 * Python is pinned with `.python-version` (`3.13`) rather than a `PYTHON_VERSION` env var: Render
   accepts an unqualified minor version in the file but requires a fully-qualified patch in the var.
 * The repository is committed on branch `main` (163 files, ~1.8 MB of source). `vendor/python/` and

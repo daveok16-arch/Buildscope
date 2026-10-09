@@ -1408,6 +1408,28 @@ class OpportunityService:
         ).fetchone()
         return int(row["n"] or 0)
 
+    def recent_changes_breakdown(self, *, days: int = 30) -> dict[str, int]:
+        """Counts by `change_kind` over the same public filter as `recent_changes_count`.
+
+        The feed must not describe a first observation as a detected difference: `new_project`
+        is the moment a record entered the system, not a difference between two passes. The
+        breakdown lets the page say so honestly instead of summing both into "changes".
+        """
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+        rows = self.db.conn.execute(
+            """
+            SELECT c.change_kind AS kind, COUNT(*) AS n
+              FROM project_change c
+              JOIN project p ON p.id = c.project_id
+             WHERE c.detected_at >= ?
+               AND p.classification IN (?, ?)
+               AND p.procurement_status IN (?, ?, ?)
+             GROUP BY c.change_kind
+            """,
+            (cutoff,) + PUBLIC_CLASSIFICATIONS + DISCOVERABLE_PROCUREMENT,
+        ).fetchall()
+        return {r["kind"]: int(r["n"]) for r in rows}
+
     def changed_project_ids(self, *, limit: int = 20, days: int = 30) -> list[int]:
         """Distinct project ids with a recent change, most recently changed first."""
         cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
