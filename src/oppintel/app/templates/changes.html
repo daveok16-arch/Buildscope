@@ -50,6 +50,13 @@
       between collection passes appear after later runs; none have been recorded yet.
     </div>
     {% endif %}
+    <div class="notice" style="margin-bottom:16px">
+      <strong>What we record.</strong>
+      We record every permit we observe and flag differences between collection runs. Each entry
+      is either a first observation (the record entering our system) or a real difference between
+      two passes. The table below shows, for each entry, the value we stored before and the value
+      the record shows now.
+    </div>
     <div class="results-header-bar">
       <div>
         {% set n_first = breakdown.get('new_project', 0) %}
@@ -65,6 +72,42 @@
     </div>
 
     {% if changes %}
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Detected changes">
+        <table class="data-table change-table">
+          <caption class="sr-only">Detected changes with before and after values</caption>
+          <thead>
+            <tr>
+              <th scope="col">Detected</th>
+              <th scope="col">Project</th>
+              <th scope="col">Kind</th>
+              <th scope="col">Field</th>
+              <th scope="col">Before</th>
+              <th scope="col">After</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in changes %}
+            <tr>
+              <td class="nowrap">{{ c.detected_at[:10] if c.detected_at else 'Recent' }}</td>
+              <td>
+                {% if c.slug %}
+                  <a href="{{ url_for('opportunity_detail', slug=c.slug) }}">{{ c.project_name or c.address or 'Commercial Project' }}</a>
+                {% else %}
+                  {{ c.project_name or c.address or 'Commercial Project' }}
+                {% endif %}
+                {% if c.city %}<div class="small muted">{{ c.city }}</div>{% endif %}
+              </td>
+              <td><span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">{{ c.change_kind | replace('_', ' ') }}</span></td>
+              <td>{{ c.field_name or c.summary or '—' }}</td>
+              <td>{% if c.previous_value %}<del>{{ c.previous_value }}</del>{% else %}<span class="muted">Not previously recorded</span>{% endif %}</td>
+              <td>{% if c.current_value %}<span style="color:var(--signal-high-text); font-weight:600">{{ c.current_value }}</span>{% else %}<span class="muted">—</span>{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="margin-top:28px">Entries as a timeline</h3>
       <div class="detail-panel" style="padding:20px 24px">
         <ol class="timeline" style="margin:0">
           {% for c in changes %}

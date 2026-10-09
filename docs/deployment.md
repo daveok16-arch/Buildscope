@@ -105,28 +105,45 @@ exist on a Free instance and the start is the one way to break the service.
 **One-time full initial seed (Render shell).** The refresh loop is bounded (`MAX_PAGES`,
 default 3), so a fresh instance re-collects only the newest pages and the assembled dataset
 stays small. To fill it once, after the first boot, open a Render shell on the running service
-and run a bounded-but-deeper backfill against the mounted database:
+and run a deeper backfill against the mounted database. Run the steps **in this order** — each
+consumes what the previous one produced:
 
 ```bash
-# 1. Ingest more of each source's history. 25 pages/source is a few minutes per source and
-#    reaches well past the newest permits; it does not touch the 200k-record ceiling.
-PYTHONPATH=src python -m oppintel.cli ingest --max-pages 25
+# 0. Confirm the shell sees the same database the web process serves.
+export PYTHONPATH=src
+export OPPINTEL_DB="${OPPINTEL_DB:-/var/data/oppintel.db}"
+ls -la "$OPPINTEL_DB"
 
-# 2. Rebuild the derived tables and the search index from what was collected.
+# 1. Ingest. Omit --max-pages to use each connector's own default cap (200 pages/source),
+#    rather than the automation's MAX_PAGES=3. This is the deeper seed.
+PYTHONPATH=src python -m oppintel.cli ingest
+
+# 2. Assemble permits into projects, classify, and diff against the prior snapshot.
 PYTHONPATH=src python -m oppintel.cli assemble
+
+# 3. Rebuild the search index (this also refreshes the stored stat snapshot).
 PYTHONPATH=src flask --app oppintel.app.wsgi build-search-index
+
+# 4. Raise alerts from any detected changes.
 PYTHONPATH=src flask --app oppintel.app.wsgi monitor
 
-# 3. Confirm the snapshot moved (counts are per-table, printed by the command).
+# 5. Confirm the snapshot actually moved: read the same figures the pages read.
 PYTHONPATH=src python -m oppintel.cli stats
+curl -s "$BASE_URL/api/statistics" | python -m json.tool | head -20
 ```
 
-Expected duration: roughly 5–15 minutes for `--max-pages 25` across the DFW sources; the
-pipeline commits every 250 permits, so an interrupted run leaves a consistent partial dataset
-and re-running is idempotent (raw records are keyed by content hash). Use `--full` only for a
-one-time historical backfill: Fort Worth ArcGIS alone is 200k+ records and takes more than 13
-minutes. Do not schedule `--full`; leave the recurring refresh bounded. After the seed,
-`/healthz` reports `"status":"ok"` and the home page counts a larger snapshot than before.
+Expected duration: an unbounded `ingest` (no `--max-pages`) reaches each connector's 200-page
+ceiling; Fort Worth ArcGIS alone is 200k+ records and takes more than 13 minutes, so budget
+15–30 minutes for the full seed. The pipeline commits every 250 permits, so an interrupted run
+leaves a consistent partial dataset and re-running is idempotent (raw records are keyed by
+content hash). Do not schedule an unbounded `ingest`; leave the recurring refresh bounded.
+
+**Confirm the snapshot refreshed.** The stored snapshot (`market_stat_snapshot`) is the single
+source every headline figure reads. A successful seed changes two things in `/api/statistics`:
+the counts (`public_projects`, `permit_records`) rise, and `statistics.computed_at` advances to
+the time step 3 ran. If `computed_at` is unchanged, `build-search-index` did not run against the
+same `OPPINTEL_DB` — check step 0. `/healthz` should report `"status":"ok"`, and the home page
+should show the larger counts.
 
 **Schema migration.** The application tables are created with `IF NOT EXISTS` statements, so
 `init-app` is additive and idempotent against a database that already holds ingested data. It

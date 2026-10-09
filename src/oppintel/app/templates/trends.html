@@ -122,7 +122,8 @@
       A market listed in configuration is not a market with data. These are the actual coverage
       states, so two markets with unequal coverage are never compared as if they were equal.
     </p>
-    <table class="table" style="width:100%; margin-top:10px">
+    <div class="table-scroll" style="margin-top:10px" tabindex="0" role="region" aria-label="Source coverage by market">
+    <table class="table" style="width:100%">
       <thead>
         <tr><th>Market</th><th>Coverage state</th><th>Records</th><th>Latest record</th></tr>
       </thead>
@@ -137,6 +138,7 @@
         {% endfor %}
       </tbody>
     </table>
+    </div>
   </div>
 
   {# Ingestion window: distinguishes observed-change from published-change #}

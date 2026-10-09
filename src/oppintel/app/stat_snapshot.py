@@ -307,6 +307,18 @@ def read_snapshot(
     except (TypeError, ValueError):
         metrics = compute_metrics(db, market, trade)
     metrics = dict(metrics)
+
+    # A stored snapshot is not automatically current: when a canonical metric is added (or
+    # changes meaning) the rows written by the previous code are missing the new key, and a
+    # reader would serve `None` for a figure every other surface publishes. Recompute and
+    # rewrite whenever a canonical key is absent, so a deployed upgrade heals itself on the
+    # first read instead of waiting for the next refresh. Read-only callers that must not
+    # write (`refresh_if_missing=False`) get the recomputed values without persisting.
+    if any(key not in metrics for key in METRIC_DEFINITIONS):
+        if not refresh_if_missing:
+            return compute_metrics(db, market, trade)
+        return write_snapshot(db, market, trade)
+
     metrics["computed_at"] = row["computed_at"]
     metrics["last_observed"] = row["last_observed"] or metrics.get("last_observed")
     return metrics

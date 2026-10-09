@@ -84,6 +84,74 @@ def test_snapshot_is_reused_rather_than_recomputed(app_db, client):
     assert first == second
 
 
+def test_read_snapshot_heals_a_row_missing_a_new_canonical_key(app_db, client):
+    """A snapshot written before a metric existed is recomputed on read, not served incomplete.
+
+    Deploying a new canonical metric must not leave the live snapshot (written by the previous
+    code) serving `None` for it. The first read after the upgrade rewrites the row.
+    """
+    client.get("/")  # ensure a snapshot exists
+    db = Database(app_db.config["APP_CONFIG"].database_path)
+    try:
+        market, trade = active_market(), active_trade()
+        # Simulate the pre-upgrade row: drop a canonical key from the stored JSON.
+        row = db.conn.execute(
+            "SELECT metrics FROM market_stat_snapshot WHERE market_id = ? AND trade_id = ?",
+            (market.id, trade.id),
+        ).fetchone()
+        stored = json.loads(row["metrics"])
+        stored.pop("configured_jurisdictions", None)
+        db.conn.execute(
+            "UPDATE market_stat_snapshot SET metrics = ? WHERE market_id = ? AND trade_id = ?",
+            (json.dumps(stored), market.id, trade.id),
+        )
+        db.conn.commit()
+
+        metrics = read_snapshot(db, market, trade)
+        assert "configured_jurisdictions" in metrics
+        # The healing read persisted, so the next reader sees the key without recomputing.
+        healed = json.loads(
+            db.conn.execute(
+                "SELECT metrics FROM market_stat_snapshot WHERE market_id = ? AND trade_id = ?",
+                (market.id, trade.id),
+            ).fetchone()["metrics"]
+        )
+        assert "configured_jurisdictions" in healed
+    finally:
+        db.close()
+
+
+def test_read_snapshot_without_write_returns_computed_values(app_db, client):
+    """A read-only caller never writes, even when the row is missing a canonical key."""
+    client.get("/")
+    db = Database(app_db.config["APP_CONFIG"].database_path)
+    try:
+        market, trade = active_market(), active_trade()
+        row = db.conn.execute(
+            "SELECT metrics FROM market_stat_snapshot WHERE market_id = ? AND trade_id = ?",
+            (market.id, trade.id),
+        ).fetchone()
+        stored = json.loads(row["metrics"])
+        stored.pop("configured_jurisdictions", None)
+        db.conn.execute(
+            "UPDATE market_stat_snapshot SET metrics = ? WHERE market_id = ? AND trade_id = ?",
+            (json.dumps(stored), market.id, trade.id),
+        )
+        db.conn.commit()
+
+        metrics = read_snapshot(db, market, trade, refresh_if_missing=False)
+        assert "configured_jurisdictions" in metrics
+        still_stored = json.loads(
+            db.conn.execute(
+                "SELECT metrics FROM market_stat_snapshot WHERE market_id = ? AND trade_id = ?",
+                (market.id, trade.id),
+            ).fetchone()["metrics"]
+        )
+        assert "configured_jurisdictions" not in still_stored
+    finally:
+        db.close()
+
+
 def test_records_count_is_the_public_linked_permits(fixture_db):
     """'Permit records' is the canonical public count, not every ingested row."""
     market, trade = active_market(), active_trade()
