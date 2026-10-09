@@ -42,6 +42,8 @@ The shell scripts copy the database themselves and use `/tmp/a5*` working direct
 | `a5c.sh` | First boot, empty disk vs already-populated disk | `bash audit/scripts/a5c.sh` |
 | `a5d.sh` | Start against an explicitly configured `OPPINTEL_DB` path | `bash audit/scripts/a5d.sh` |
 | `c1_jurisdiction.py` | Prints the configured city list, the observed in-market count and the excluded out-of-market city, so the 19/15/14/18 figures can be told apart | `PYTHONPATH="vendor/python:src" python audit/scripts/c1_jurisdiction.py` |
+| `wp1_d1_soak.py` | Runs concurrent readers and web writes against an ingest writer for 60s and reports lock errors (D1) | `PYTHONPATH="vendor/python:src" python audit/scripts/wp1_d1_soak.py` |
+| `wp1_d5_trends.py` | Trends vs the public feed: last-30-day counts by classification/procurement, the gate for non-public rows, 10 samples, and the public permit-date month spread (D5) | `PYTHONPATH="vendor/python:src" python audit/scripts/wp1_d5_trends.py` |
 
 ## WP2 UI verification scripts
 

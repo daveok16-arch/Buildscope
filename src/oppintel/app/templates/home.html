@@ -52,7 +52,7 @@
       </div>
       <div class="evidence-stat-item">
         <span class="evidence-stat-num">{{ "{:,}".format(stats.active_jurisdictions) }}</span>
-        <span class="evidence-stat-label">Cities with public projects</span>
+        <span class="evidence-stat-label">Cities with at least one public project</span>
       </div>
       <div class="evidence-stat-item">
         <span class="evidence-stat-num">{{ "{:,}".format(stats.permit_records) }}</span>
@@ -63,7 +63,7 @@
       {% set defs = stat_definitions or {} %}
       <span title="{{ defs.get('public_projects', '') }}">Public projects</span>,
       <span title="{{ defs.get('projects_with_mechanical_evidence', '') }}">mechanical evidence</span>,
-      <span title="{{ defs.get('active_jurisdictions', '') }}">cities with public projects</span> and
+      <span title="{{ defs.get('active_jurisdictions', '') }}">cities with at least one public project</span> and
       <span title="{{ defs.get('permit_records', '') }}">permit records</span> — computed from
       public records{% if stats.computed_at %}, as of {{ stats.computed_at[:16].replace('T', ' ') }} UTC{% endif %}.
     </p>
@@ -113,7 +113,7 @@
       <div class="evidence-chain-card">
         <div class="chain-step-num">Step 05</div>
         <div class="chain-step-title">Contractor Action</div>
-        <div class="chain-step-body">Watch the record and receive an alert when a later collection run detects a difference.</div>
+        <div class="chain-step-body">Watch the record and get an in-app alert when a later collection run detects a difference.</div>
       </div>
     </div>
   </div>
@@ -164,7 +164,9 @@
         <p class="panel-eyebrow" style="color:var(--gold-600)">04. Pursue</p>
         <h3>Pursuit Pipeline Management</h3>
         <p class="small muted">
-          Organize opportunities into qualification stages, attach private notes, and coordinate team business development from a unified workspace.
+          Organize opportunities into qualification stages, attach private notes, and keep a
+          per-account pursuit workspace. Stages and notes are the account's own labels, kept
+          separate from the source's stated status.
         </p>
       </div>
     </div>

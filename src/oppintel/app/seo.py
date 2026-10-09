@@ -92,9 +92,9 @@ class SeoBuilder:
         )
         description = (
             f"Search {count:,} commercial construction projects across "
-            f"{jurisdictions} {self.market.short_name} cities with public projects, including "
-            f"{mechanical:,} with documented mechanical or HVAC permits. Built from public City "
-            f"permit records, with every fact linked to its source."
+            f"{jurisdictions} {self.market.short_name} cities with at least one public project, "
+            f"including {mechanical:,} with documented mechanical or HVAC permits. Built from "
+            f"public City permit records, with every fact linked to its source."
         )
         return Seo(
             title=title,

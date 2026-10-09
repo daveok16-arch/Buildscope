@@ -12,6 +12,7 @@ import json
 from oppintel.app.stat_snapshot import (
     METRIC_DEFINITIONS,
     compute_metrics,
+    heal_snapshot,
     read_snapshot,
     write_snapshot,
 )
@@ -41,10 +42,71 @@ def test_snapshot_table_is_created_by_the_app_schema(app_db):
     assert row is not None, "APP_SCHEMA must declare the stats snapshot table"
 
 
-def test_homepage_populates_the_snapshot(app_db, client):
-    """A read is never a 500 on a fresh database: the row is written on first read."""
-    client.get("/")
+def test_app_startup_populates_the_snapshot(app_db):
+    """The startup heal creates the row, so a read is never a 500 on a fresh database."""
     assert _snapshot_row(app_db) is not None
+
+
+def test_request_never_writes_the_snapshot(app_db, client):
+    """D2: a page request must not persist a snapshot row, even on a fresh database.
+
+    The heal moved out of the request path, so a GET computes values (never 500) but the row
+    is only created by startup / refresh, which run under the writer lock.
+    """
+    db = Database(app_db.config["APP_CONFIG"].database_path)
+    try:
+        market, trade = active_market(), active_trade()
+        db.conn.execute(
+            "DELETE FROM market_stat_snapshot WHERE market_id = ? AND trade_id = ?",
+            (market.id, trade.id),
+        )
+        db.conn.commit()
+        # A request renders the figures from a computed fallback, without storing anything.
+        body = client.get("/").get_data(as_text=True)
+        assert body  # 200 with content
+        assert _snapshot_row(app_db) is None, "a GET must not create the snapshot row"
+    finally:
+        db.close()
+
+
+def test_startup_heal_writes_the_snapshot_outside_requests(tmp_path):
+    """D2: the startup heal creates/repairs the row with no request involved."""
+    from tests.conftest_app import build_database
+
+    db_path = tmp_path / "heal.db"
+    db = build_database(db_path)
+    db.close()
+
+    # Seed a snapshot, then simulate a pre-upgrade row missing a canonical key.
+    db = Database(db_path)
+    market, trade = active_market(), active_trade()
+    write_snapshot(db, market, trade)
+    stored = json.loads(
+        db.conn.execute(
+            "SELECT metrics FROM market_stat_snapshot WHERE market_id=? AND trade_id=?",
+            (market.id, trade.id),
+        ).fetchone()["metrics"]
+    )
+    stored.pop("configured_jurisdictions", None)
+    db.conn.execute(
+        "UPDATE market_stat_snapshot SET metrics=? WHERE market_id=? AND trade_id=?",
+        (json.dumps(stored), market.id, trade.id),
+    )
+    db.conn.commit()
+    db.close()
+
+    from oppintel.app.config import AppConfig
+    from oppintel.app.main import create_app
+
+    create_app(AppConfig(database_path=db_path, secret_key="k", debug=True))
+
+    healed = json.loads(
+        Database(db_path).conn.execute(
+            "SELECT metrics FROM market_stat_snapshot WHERE market_id=? AND trade_id=?",
+            (market.id, trade.id),
+        ).fetchone()["metrics"]
+    )
+    assert "configured_jurisdictions" in healed
 
 
 def test_home_and_api_and_healthz_report_the_same_project_count(app_db, client):
@@ -61,7 +123,7 @@ def test_home_and_api_and_healthz_report_the_same_project_count(app_db, client):
 
 
 def test_jurisdiction_count_is_identical_on_every_surface(app_db, client):
-    """'Cities with public projects' is one number on home, /api/statistics, /markets, meta and /healthz."""
+    """'Cities with at least one public project' is one number on home, /markets, /api, meta and /healthz."""
     api = client.get("/api/statistics").get_json()["statistics"]
     jurisdictions = api["active_jurisdictions"]
 
@@ -70,9 +132,9 @@ def test_jurisdiction_count_is_identical_on_every_surface(app_db, client):
     markets = client.get("/markets").get_data(as_text=True)
 
     # The home meta description and the home stat strip both carry the same figure.
-    assert f"{jurisdictions} " in home  # e.g. "15 Dallas–Fort Worth cities with public projects"
+    assert f"{jurisdictions} " in home  # e.g. "15 Dallas–Fort Worth cities with at least one…"
     assert health["cities_with_public_projects"] == jurisdictions
-    assert f"{jurisdictions} cities with public projects" in markets
+    assert f"{jurisdictions} cities with at least one public project" in markets
     # The configured count is configuration intent, never smaller than the observed count.
     assert api["configured_jurisdictions"] >= jurisdictions
 
@@ -84,11 +146,11 @@ def test_snapshot_is_reused_rather_than_recomputed(app_db, client):
     assert first == second
 
 
-def test_read_snapshot_heals_a_row_missing_a_new_canonical_key(app_db, client):
-    """A snapshot written before a metric existed is recomputed on read, not served incomplete.
+def test_heal_snapshot_repairs_a_row_missing_a_new_canonical_key(app_db, client):
+    """A snapshot written before a metric existed is recomputed and rewritten out of band.
 
     Deploying a new canonical metric must not leave the live snapshot (written by the previous
-    code) serving `None` for it. The first read after the upgrade rewrites the row.
+    code) serving `None` for it. `heal_snapshot` (startup / refresh) rewrites the row.
     """
     client.get("/")  # ensure a snapshot exists
     db = Database(app_db.config["APP_CONFIG"].database_path)
@@ -107,9 +169,9 @@ def test_read_snapshot_heals_a_row_missing_a_new_canonical_key(app_db, client):
         )
         db.conn.commit()
 
-        metrics = read_snapshot(db, market, trade)
+        metrics = heal_snapshot(db, market, trade)
         assert "configured_jurisdictions" in metrics
-        # The healing read persisted, so the next reader sees the key without recomputing.
+        # The heal persisted, so the next reader sees the key without recomputing.
         healed = json.loads(
             db.conn.execute(
                 "SELECT metrics FROM market_stat_snapshot WHERE market_id = ? AND trade_id = ?",
@@ -121,8 +183,28 @@ def test_read_snapshot_heals_a_row_missing_a_new_canonical_key(app_db, client):
         db.close()
 
 
-def test_read_snapshot_without_write_returns_computed_values(app_db, client):
-    """A read-only caller never writes, even when the row is missing a canonical key."""
+def test_heal_snapshot_is_idempotent_when_current(app_db, client):
+    """A current row is not rewritten, so a restart does not churn `computed_at`."""
+    client.get("/")
+    db = Database(app_db.config["APP_CONFIG"].database_path)
+    try:
+        market, trade = active_market(), active_trade()
+        before = db.conn.execute(
+            "SELECT computed_at FROM market_stat_snapshot WHERE market_id=? AND trade_id=?",
+            (market.id, trade.id),
+        ).fetchone()["computed_at"]
+        heal_snapshot(db, market, trade)
+        after = db.conn.execute(
+            "SELECT computed_at FROM market_stat_snapshot WHERE market_id=? AND trade_id=?",
+            (market.id, trade.id),
+        ).fetchone()["computed_at"]
+        assert before == after
+    finally:
+        db.close()
+
+
+def test_read_snapshot_never_writes_even_when_a_key_is_missing(app_db, client):
+    """D2: the default read path is read-only, even when the row is missing a canonical key."""
     client.get("/")
     db = Database(app_db.config["APP_CONFIG"].database_path)
     try:
@@ -139,7 +221,7 @@ def test_read_snapshot_without_write_returns_computed_values(app_db, client):
         )
         db.conn.commit()
 
-        metrics = read_snapshot(db, market, trade, refresh_if_missing=False)
+        metrics = read_snapshot(db, market, trade)
         assert "configured_jurisdictions" in metrics
         still_stored = json.loads(
             db.conn.execute(
@@ -148,6 +230,61 @@ def test_read_snapshot_without_write_returns_computed_values(app_db, client):
             ).fetchone()["metrics"]
         )
         assert "configured_jurisdictions" not in still_stored
+    finally:
+        db.close()
+
+
+def test_parallel_requests_do_not_write_a_stale_snapshot(app_db):
+    """D2: N parallel page requests against a row missing a key write nothing and never 500."""
+    import threading
+
+    client = app_db.test_client()
+    db = Database(app_db.config["APP_CONFIG"].database_path)
+    try:
+        market, trade = active_market(), active_trade()
+        row = db.conn.execute(
+            "SELECT metrics FROM market_stat_snapshot WHERE market_id = ? AND trade_id = ?",
+            (market.id, trade.id),
+        ).fetchone()
+        stored = json.loads(row["metrics"])
+        stored.pop("configured_jurisdictions", None)
+        db.conn.execute(
+            "UPDATE market_stat_snapshot SET metrics = ? WHERE market_id = ? AND trade_id = ?",
+            (json.dumps(stored), market.id, trade.id),
+        )
+        db.conn.commit()
+    finally:
+        db.close()
+
+    errors: list[str] = []
+    paths = ["/", "/api/statistics", "/markets", "/healthz"]
+
+    def hit(i: int) -> None:
+        try:
+            resp = client.get(paths[i % len(paths)])
+            assert resp.status_code in (200, 302), resp.status_code
+        except Exception as exc:  # pragma: no cover
+            errors.append(repr(exc))
+
+    threads = [threading.Thread(target=hit, args=(i,)) for i in range(24)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(timeout=30)
+
+    assert not errors, errors
+    # The stored row still lacks the key: no request handler persisted a heal.
+    db = Database(app_db.config["APP_CONFIG"].database_path)
+    try:
+        stored_after = json.loads(
+            db.conn.execute(
+                "SELECT metrics FROM market_stat_snapshot WHERE market_id=? AND trade_id=?",
+                (market.id, trade.id),
+            ).fetchone()["metrics"]
+        )
+        assert "configured_jurisdictions" not in stored_after, (
+            "a request handler wrote the snapshot"
+        )
     finally:
         db.close()
 
@@ -169,8 +306,18 @@ def test_active_jurisdictions_counts_only_configured_cities(fixture_db):
         assert city  # sanity
     # Every counted city must be a configured one (the count is over configured names).
     assert metrics["active_jurisdictions"] <= len(market.city_names)
-    for excluded in metrics["jurisdictions_excluded"]:
-        assert excluded.lower() not in configured
+    for city in metrics["out_of_market_cities"]:
+        assert city.lower() not in configured
+
+
+def test_out_of_market_cities_rename_matches_the_old_alias(fixture_db):
+    """D4: the renamed key says which side of the market line it describes, and is the same value."""
+    market, trade = active_market(), active_trade()
+    metrics = compute_metrics(fixture_db, market, trade)
+    assert metrics["out_of_market_cities_count"] == len(metrics["out_of_market_cities"])
+    # Back-compat alias for the previous ambiguous name is the same list, never recomputed.
+    assert metrics["jurisdictions_excluded"] == metrics["out_of_market_cities"]
+    assert metrics["jurisdictions_excluded_count"] == metrics["out_of_market_cities_count"]
 
 
 def test_funnel_reconciles_landed_to_public(fixture_db):

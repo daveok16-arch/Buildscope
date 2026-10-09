@@ -25,12 +25,14 @@ BANNED_OVERCLAIMS: list[tuple[str, str]] = [
     ("zero-false-positive", "an outcome guarantee the pipeline cannot make"),
     ("zero false positive", "an outcome guarantee the pipeline cannot make"),
     ("without false alerts", "an outcome guarantee the pipeline cannot make"),
-    ("continuous revision", "collection is periodic, not continuous"),
-    ("continuous permit revision", "collection is periodic, not continuous"),
-    ("continuous monitoring", "collection is periodic, not continuous"),
+    ("continuous", "collection is periodic, not continuous"),
     ("months before general contractors", "an unsupported timing claim"),
     ("commands buildscope to monitor the parcel", "implies per-parcel continuous monitoring"),
     ("organize active pursuits with your team", "no multi-user pursuit coordination exists"),
+    ("coordinate team business development", "no multi-user pursuit coordination exists"),
+    ("teams can bookmark", "organization membership is not exposed in any web route"),
+    ("receive alerts", "delivery is not built; alerts are in-app and event-driven"),
+    ("receive an alert", "delivery is not built; alerts are in-app and event-driven"),
 ]
 
 

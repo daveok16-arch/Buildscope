@@ -41,6 +41,9 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SRC = REPO_ROOT / "src"
+sys.path.insert(0, str(SRC))
+
+from oppintel.locks import HELD_ENV, job_lock  # noqa: E402  (after SRC is on the path)
 
 #: Where runtime state lives — the database, the log and the schedule state file. `OPPINTEL_DATA_DIR`
 #: overrides it so a host with a mounted disk keeps state across a redeploy instead of writing into
@@ -110,7 +113,15 @@ def _env() -> dict:
     env["PYTHONPATH"] = str(SRC) + os.pathsep + env.get("PYTHONPATH", "")
     env.setdefault("SECRET_KEY", "dev-only-not-for-production")
     env.setdefault("OPPINTEL_DB", str(DATA_DIR / "oppintel.db"))
+    # The supervisor holds the job lock around the whole multi-step pass, so each child step
+    # must not try to take the same lock again (it would block against its own parent).
+    env[HELD_ENV] = "1"
     return env
+
+
+def _db_path() -> str:
+    """The database the pipeline steps write, resolved the same way `_env` resolves it."""
+    return os.environ.get("OPPINTEL_DB") or str(DATA_DIR / "oppintel.db")
 
 
 def run_step(label: str, args: list[str], timeout: int) -> bool:
@@ -178,10 +189,13 @@ def refresh_once(max_pages: int | None = None, *, grow: bool = False) -> dict:
     ]
 
     results: dict[str, bool] = {}
-    for label, args, timeout in steps:
-        results[label] = run_step(label, args, timeout)
-        if not results[label]:
-            break
+    # The whole multi-step pass holds the single-writer lock, so a refresh cannot overlap a
+    # manual seed or another refresh. Child steps inherit HELD_ENV and skip the lock.
+    with job_lock(_db_path()):
+        for label, args, timeout in steps:
+            results[label] = run_step(label, args, timeout)
+            if not results[label]:
+                break
 
     ok = all(results.values()) and len(results) == len(steps)
     if grow and max_pages is not None:

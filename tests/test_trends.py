@@ -311,3 +311,45 @@ def test_new_projects_basis_says_it_ignores_classification(tmp_path):
     basis = report.metric_index["projects_observed"].basis
     assert "regardless of classification" in basis
     db.close()
+
+
+def test_new_projects_card_reports_the_public_subset(tmp_path):
+    """D5: the 'new projects' card carries a second line naming the discoverable subset, so the
+    all-observed headline is not read as the public count."""
+    public = _permit("M1", date(2026, 9, 15), description="Mechanical remodel of spec suite")
+    non_public = Permit(
+        source_id="fort_worth_permits",
+        permit_number="N1",
+        natural_key="N1",
+        permit_type="Commercial Building Permit",
+        permit_subtype="commercial_building",
+        permit_date=date(2026, 9, 16),
+        status="Issued",
+        address="20 OTHER ST",
+        city="Fort Worth",
+        state="TX",
+        work_description="Tenant improvement with no mechanical work",
+        land_use="OFFICE BUILDING",
+        is_commercial=True,
+        job_value=500_000.0,
+        source_url="https://example.gov/N1",
+        source_date=date(2026, 9, 16),
+    )
+    db = _db(tmp_path, [public, non_public])
+    # The classifier is deliberately generous on a synthetic record, so force one project to a
+    # non-discoverable classification to guarantee a strict subset deterministically.
+    db.conn.execute(
+        "UPDATE project SET classification = 'NEEDS_VERIFICATION' "
+        "WHERE project_name = 'Tenant improvement with no mechanical work'"
+    )
+    db.conn.commit()
+
+    report = build_trend_report(db, window="30d", today=date(2026, 10, 7))
+    metric = report.metric_index["projects_observed"]
+    assert metric.value == 2
+    assert metric.secondary is not None
+    label, value = metric.secondary
+    assert label == "of which public"
+    assert value == 1  # only the mechanical project is discoverable
+    assert 0 < value < metric.value  # a strict subset, not the whole headline
+    db.close()
