@@ -153,7 +153,7 @@
         </div>
         <div>
           <dt>Filing date</dt>
-          <dd>{{ project.permit_date | nice_date }}</dd>
+          <dd>{{ project.permit_date | filing_date }}</dd>
         </div>
         <div>
           <dt>Current status</dt>
@@ -344,7 +344,7 @@
             <tr>
               <td>{{ p.permit_number }}</td>
               <td>{{ p.permit_type | or_na }}</td>
-              <td>{{ p.permit_date | nice_date }}</td>
+              <td>{{ p.permit_date | filing_date }}</td>
               <td>{{ p.status | or_na }}</td>
             </tr>
             {% endfor %}

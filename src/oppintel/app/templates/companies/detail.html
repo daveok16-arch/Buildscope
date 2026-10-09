@@ -91,7 +91,7 @@
                     <span class="badge badge-low" style="font-size:0.75rem">Commercial Base</span>
                   {% endif %}
                 </td>
-                <td>{{ p.permit_date or 'On file' }}</td>
+                <td>{{ p.permit_date | filing_date }}</td>
                 <td>{{ p.status or 'Issued' }}</td>
               </tr>
               {% endfor %}

@@ -60,6 +60,56 @@
         <p class="small muted">Verified projects populate the opportunity feed, dossiers, and customer reports. Automation diffs records between runs to detect changes and notify watched projects.</p>
       </article>
     </div>
+
+    {% if stats and stats.funnel %}
+    <div class="detail-panel" style="margin-top:24px">
+      <h3 style="margin-top:0">The ingest funnel, stated plainly</h3>
+      <p class="small muted">
+        The pipeline above is not a claim about volume; it is a description of what happens to a
+        record. These are the current counts, from the same stored snapshot every headline uses.
+        A raw permit that is never linked to an assembled project is counted as dropped rather
+        than hidden.
+      </p>
+      <div class="stat-strip" style="margin-top:14px; flex-wrap:wrap; gap:16px">
+        <div class="stat" style="flex:1 1 200px; min-width:180px">
+          <span class="stat-value">{{ "{:,}".format(stats.funnel.permits_landed) }}</span>
+          <span class="stat-label">Permits landed</span>
+        </div>
+        <div class="stat" style="flex:1 1 200px; min-width:180px">
+          <span class="stat-value">{{ "{:,}".format(stats.funnel.permits_linked) }}</span>
+          <span class="stat-label">Linked to a project</span>
+        </div>
+        <div class="stat" style="flex:1 1 200px; min-width:180px">
+          <span class="stat-value">{{ "{:,}".format(stats.funnel.permits_dropped) }}</span>
+          <span class="stat-label">Dropped (not assembled)</span>
+        </div>
+        <div class="stat" style="flex:1 1 200px; min-width:180px">
+          <span class="stat-value">{{ "{:,}".format(stats.funnel.public_projects) }}</span>
+          <span class="stat-label">Public projects</span>
+        </div>
+      </div>
+      {% if stats.funnel.by_source %}
+      <table class="table" style="width:100%; margin-top:16px">
+        <thead>
+          <tr><th>Source</th><th>Landed</th><th>Linked</th><th>Dropped</th></tr>
+        </thead>
+        <tbody>
+          {% for row in stats.funnel.by_source %}
+          <tr>
+            <td>{{ row.source_name }}</td>
+            <td>{{ "{:,}".format(row.landed) }}</td>
+            <td>{{ "{:,}".format(row.linked) }}</td>
+            <td>{{ "{:,}".format(row.dropped) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+      {% if stats.computed_at %}
+      <p class="small muted" style="margin-top:10px">As of {{ stats.computed_at }}.</p>
+      {% endif %}
+    </div>
+    {% endif %}
   </div>
 </section>
 

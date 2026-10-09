@@ -33,6 +33,7 @@ from .config import (
     load_sources,
     type_slug,
 )
+from .dates import occurrence_is_future
 from .db import Database
 from .eligibility import evaluate
 from .grouping import building_key, group_projects, sibling_info_for
@@ -499,6 +500,10 @@ class OpportunityService:
         project["has_mechanical_evidence"] = project.get("mechanical_evidence_tier") in (1, 2)
         project["last_verified_display"] = self.format_month(project.get("last_verified"))
         project["permit_date_display"] = self.format_date(project.get("permit_date"))
+        # A permit dated after today cannot describe a filing that has already happened. The
+        # value is preserved exactly (the source states it), but it is flagged so a template
+        # labels it "Unverified date" instead of presenting a future date as a filing date.
+        project["permit_date_is_future"] = occurrence_is_future(project.get("permit_date"))
         project["is_closed"] = project.get("procurement_status") == CLOSED
         project["building_key"] = building_key(project.get("address"), project.get("city"))
 

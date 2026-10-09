@@ -166,9 +166,19 @@ def compute_metrics(db: Database, market: MarketConfig, trade: TradeConfig) -> d
         "  LEFT JOIN project_permit pp ON pp.permit_id = pm.id"
         " GROUP BY pm.source_id ORDER BY pm.source_id"
     ).fetchall()
+    # A source id is a config key, not a name a reader recognises; resolve the publisher name so
+    # a funnel row can say "Fort Worth Permits" rather than "fort_worth_permits". A source id
+    # with no config entry keeps its id (never hidden) so an unmatched source is visible.
+    from ..config import load_sources
+
+    try:
+        source_names = {sid: s.name for sid, s in load_sources().items()}
+    except Exception:
+        source_names = {}
     funnel["by_source"] = [
         {
             "source_id": r["source_id"],
+            "source_name": source_names.get(r["source_id"], r["source_id"] or "unknown"),
             "landed": int(r["landed"] or 0),
             "linked": int(r["linked"] or 0),
             "dropped": max(int(r["landed"] or 0) - int(r["linked"] or 0), 0),

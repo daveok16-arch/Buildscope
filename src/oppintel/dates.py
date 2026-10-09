@@ -185,3 +185,35 @@ def is_usable_occurrence(value: date | None, *, observed: date) -> bool:
     because a future date cannot describe a filing.
     """
     return value is not None and value <= observed
+
+
+def parse_iso_date(value: object) -> date | None:
+    """Parse a stored ISO date (``YYYY-MM-DD`` prefix) to a ``date``, or None.
+
+    Stored dates are ISO strings; only the date part is meaningful here. A value that is not a
+    well-formed calendar date returns None rather than raising, so a caller judging a stored
+    field never has to guess whether a malformed value is "old" or "future".
+    """
+    if value is None:
+        return None
+    text = str(value).strip()
+    if len(text) < 10:
+        return None
+    try:
+        return date.fromisoformat(text[:10])
+    except ValueError:
+        return None
+
+
+def occurrence_is_future(value: object, *, observed: date | None = None) -> bool:
+    """True when a stored occurrence date (a permit/filing date) is after the observation day.
+
+    A permit cannot be filed after the record describing it was observed, so a future value is
+    unverifiable as a filing rather than simply "new". A missing or malformed value is not
+    future (it is an honest gap or a separate defect), so the caller must test for absence
+    itself.
+    """
+    parsed = parse_iso_date(value)
+    if parsed is None:
+        return False
+    return parsed > (observed or date.today())

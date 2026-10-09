@@ -16,6 +16,8 @@ from oppintel.dates import (
     VERDICT_FUTURE_PLAUSIBLE,
     VERDICT_OK,
     is_usable_occurrence,
+    occurrence_is_future,
+    parse_iso_date,
     semantic_kind,
     validate_date,
 )
@@ -96,3 +98,24 @@ def test_is_usable_occurrence():
     assert is_usable_occurrence(OBSERVED, observed=OBSERVED)
     assert not is_usable_occurrence(date(2027, 1, 1), observed=OBSERVED)
     assert not is_usable_occurrence(None, observed=OBSERVED)
+
+
+# --- stored-value helpers (read-time labelling) --------------------------------
+
+def test_parse_iso_date_handles_stored_strings():
+    assert parse_iso_date("2026-12-19") == date(2026, 12, 19)
+    assert parse_iso_date("2026-12-19T10:00:00Z") == date(2026, 12, 19)
+    assert parse_iso_date(None) is None
+    assert parse_iso_date("") is None
+    assert parse_iso_date("not-a-date") is None
+    # A partial value is malformed, not silently guessed.
+    assert parse_iso_date("2026-1") is None
+
+
+def test_occurrence_is_future_compares_against_today():
+    assert occurrence_is_future("2027-01-01", observed=OBSERVED)
+    assert not occurrence_is_future("2026-10-07", observed=OBSERVED)
+    assert not occurrence_is_future("2026-01-01", observed=OBSERVED)
+    # Absence and malformed values are not "future": they are a separate, honest gap/defect.
+    assert not occurrence_is_future(None, observed=OBSERVED)
+    assert not occurrence_is_future("not-a-date", observed=OBSERVED)

@@ -362,6 +362,23 @@ def create_app(config: AppConfig | None = None) -> Flask:
     def nice_date_filter(value: Any) -> str:
         return OpportunityService.format_date(value)
 
+    @app.template_filter("filing_date")
+    def filing_date_filter(value: Any) -> str:
+        """Render a permit/filing date, marking a future value as an unverified date.
+
+        A permit cannot be filed after the record observing it, so a future date is not
+        presented as a filing date. The source's value is still shown, labelled, rather than
+        hidden or corrected.
+        """
+        from ..dates import occurrence_is_future
+
+        if not value:
+            return "Not verified"
+        rendered = OpportunityService.format_date(value)
+        if occurrence_is_future(value):
+            return f"{rendered} (date unverified — after today)"
+        return rendered
+
     @app.template_filter("month_year")
     def month_year_filter(value: Any) -> str:
         return OpportunityService.format_month(value)
@@ -861,8 +878,13 @@ def create_app(config: AppConfig | None = None) -> Flask:
 
     @app.route("/how-it-works")
     def how_it_works() -> str:
+        # The ingest funnel is shown here so the "Collect -> Normalize -> Assemble" claim is
+        # accountable: the visitor sees how many raw permits landed, how many were linked to a
+        # project, and how many dropped. It reads the same stored snapshot as every headline.
+        stats = g.service.market_statistics()
         return render_template(
             "how_it_works.html",
+            stats=stats,
             page_title="How It Works",
             seo=g.seo_for_simple(
                 "How It Works",

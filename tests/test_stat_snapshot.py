@@ -93,6 +93,10 @@ def test_funnel_reconciles_landed_to_public(fixture_db):
     funnel = compute_metrics(fixture_db, market, trade)["funnel"]
     assert funnel["permits_landed"] == funnel["permits_linked"] + funnel["permits_dropped"]
     assert funnel["by_source"], "the funnel must break down by source"
+    # Each source row resolves a publisher name so the funnel is readable, never a config key.
+    for row in funnel["by_source"]:
+        assert row["source_name"]
+        assert row["landed"] == row["linked"] + row["dropped"]
 
 
 def test_write_snapshot_is_idempotent(fixture_db):
@@ -114,6 +118,14 @@ def test_every_canonical_metric_has_a_definition(fixture_db):
         assert key in metrics, key
         label, definition = METRIC_DEFINITIONS[key]
         assert label and definition
+
+
+def test_how_it_works_shows_the_ingest_funnel(client):
+    """The pipeline description is accountable: the funnel is on the page."""
+    body = client.get("/how-it-works").get_data(as_text=True)
+    assert "The ingest funnel, stated plainly" in body
+    assert "Permits landed" in body
+    assert "Dropped (not assembled)" in body
 
 
 def test_snapshot_json_round_trips(fixture_db):
