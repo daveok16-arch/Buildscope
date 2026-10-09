@@ -41,6 +41,32 @@ The shell scripts copy the database themselves and use `/tmp/a5*` working direct
 | `a5b.sh` | Same, printing each run's headline figures for comparison | `bash audit/scripts/a5b.sh` |
 | `a5c.sh` | First boot, empty disk vs already-populated disk | `bash audit/scripts/a5c.sh` |
 | `a5d.sh` | Start against an explicitly configured `OPPINTEL_DB` path | `bash audit/scripts/a5d.sh` |
+| `c1_jurisdiction.py` | Prints the configured city list, the observed in-market count and the excluded out-of-market city, so the 19/15/14/18 figures can be told apart | `PYTHONPATH="vendor/python:src" python audit/scripts/c1_jurisdiction.py` |
+
+## WP2 UI verification scripts
+
+These need the app already running on `http://127.0.0.1:12000` (see the local run note in
+`AGENTS.md`) and Playwright + Chromium. They are read-only: they load pages and read the DOM.
+
+| Script | What it proves | How to run |
+| --- | --- | --- |
+| `wp2_overflow.py` | Horizontal-overflow check (`scrollWidth > innerWidth`) over the public routes at 390px | `python audit/scripts/wp2_overflow.py` |
+| `wp2_overflow2.py` | Same check over a wider route list | `python audit/scripts/wp2_overflow2.py` |
+| `wp2_tap_targets.py` | Lists interactive controls below 44px on the feed routes | `python audit/scripts/wp2_tap_targets.py` |
+| `wp2_tap_targets_routes.py` | 44px audit across every public route with touch emulation | `python audit/scripts/wp2_tap_targets_routes.py` |
+| `wp2_axe_all.py` | axe-core scan; prints only serious/critical violations | `python audit/scripts/wp2_axe_all.py` |
+| `wp2_axe_run.py` | axe-core scan with the full violation dump | `python audit/scripts/wp2_axe_run.py` |
+| `wp2_measure.py` | Layout probe: element widths/overflow at a given viewport | `python audit/scripts/wp2_measure.py` |
+| `wp2_header_probe.py` | Reports the computed style of the header controls at 390px | `python audit/scripts/wp2_header_probe.py` |
+| `wp2_drawer_focus.py` | Opens the mobile drawer and reports the focused element (focus-management check) | `python audit/scripts/wp2_drawer_focus.py` |
+| `wp2_screenshots.py` | Captures full-page screenshots to `audit/wp2/` at three viewports | `python audit/scripts/wp2_screenshots.py` |
+
+## WP1 render scripts
+
+| Script | What it proves | How to run |
+| --- | --- | --- |
+| `wp1_render_check.py` | Renders routes through the Flask test client against a DB copy and greps the HTML for a figure | `python audit/scripts/wp1_render_check.py <repo-root> <db-path>` |
+| `wp1_render_routes.py` | Renders the public routes and prints the headline figures each shows | `python audit/scripts/wp1_render_routes.py` |
 
 ## Notes
 
