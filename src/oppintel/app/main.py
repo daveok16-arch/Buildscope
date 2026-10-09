@@ -481,6 +481,20 @@ def create_app(config: AppConfig | None = None) -> Flask:
             session_id=getattr(g, "session_id", None),
             campaign=getattr(g, "campaign", None),
         )
+        # A search that returned nothing is the most actionable signal in the data, so it is
+        # recorded as its own event rather than only inferred from a result_count of zero. The
+        # event is written only when a query was actually typed, so a bare directory view does
+        # not masquerade as a zero-result search.
+        if raw_query and result.total == 0:
+            record_analytics(
+                g.db, "search_no_results",
+                market_id=g.market.id, trade_id=g.trade.id,
+                query_text=raw_query,
+                result_count=0,
+                filter_summary=_filter_summary(filters),
+                session_id=getattr(g, "session_id", None),
+                campaign=getattr(g, "campaign", None),
+            )
         # The directory is the product's main organic entry point, so a view of it is recorded
         # as a funnel landing.
         record_landing(g.db, LANDING_DIRECTORY, market_id=g.market.id, trade_id=g.trade.id)
@@ -918,6 +932,99 @@ def create_app(config: AppConfig | None = None) -> Flask:
             seo=g.seo_builder.simple(
                 "Continuous Market Audit",
                 "Live audit log of detected differences across commercial construction and permit records.",
+            ),
+        )
+
+    @app.route("/content/linkedin")
+    @_require_admin
+    def linkedin_content() -> Any:
+        """Operator view: proposed posts and the draft builder.
+
+        Internal on purpose. A draft is evidence-backed but still needs a human to edit, pick a
+        graphic, and decide whether the timing is right; it is not published from here.
+        """
+        from ..linkedin import FORMATS, FORMAT_IDS, discover_candidates
+
+        raw_format = (request.args.get("format") or "").strip()
+        project_id = _safe_int(request.args.get("project_id"), 0) or None
+        window = (request.args.get("window") or "30d").strip()
+        draft = None
+        draft_error = None
+        validation: list[str] = []
+
+        candidates = discover_candidates(g.db, trade=g.trade.id, limit=20)
+
+        if raw_format:
+            if raw_format not in FORMAT_IDS:
+                draft_error = f"Unknown format: {raw_format}"
+            else:
+                from ..linkedin import build_draft, validate_post
+
+                chosen_project = project_id
+                try:
+                    if raw_format in ("project_spotlight", "data_quality", "change_alert"):
+                        if chosen_project is None:
+                            if candidates:
+                                chosen_project = candidates[0].project_id
+                            else:
+                                raise ValueError("no candidate project is available")
+                        draft = build_draft(
+                            g.db, format=raw_format, project_id=chosen_project,
+                            window=window, trade=g.trade.id,
+                        )
+                    else:
+                        ids = [c.project_id for c in candidates[:10]]
+                        draft = build_draft(
+                            g.db, format=raw_format, project_ids=ids,
+                            window=window, trade=g.trade.id,
+                        )
+                    validation = validate_post(g.db, draft)
+                except ValueError as exc:
+                    draft_error = str(exc)
+
+        return render_template(
+            "content_linkedin.html",
+            formats=FORMATS,
+            candidates=candidates,
+            draft=draft,
+            draft_error=draft_error,
+            validation=validation,
+            active_format=raw_format,
+            active_project=project_id,
+            window=window,
+            page_title="LinkedIn Content Intelligence — Operator",
+        )
+
+    @app.route("/trends")
+    def trends_view() -> str:
+        """Trend Radar: defensible change in the records BuildScope actually holds.
+
+        Read-only and cheap: every figure is a count over the project, permit, change and
+        intelligence tables, using their existing indexes. The page states each metric's
+        definition and the source-coverage limits next to the figure, so a reader can tell an
+        observed change from a change in coverage.
+        """
+        from ..trends import (
+            WINDOWS, DEFAULT_WINDOW, WINDOW_DAYS, MIN_OBSERVATIONS_FOR_TREND,
+            build_trend_report, format_period,
+        )
+
+        requested = request.args.get("window") or DEFAULT_WINDOW
+        window = requested if requested in WINDOW_DAYS else DEFAULT_WINDOW
+        report = build_trend_report(g.db, window=window, trade=g.trade.id)
+        return render_template(
+            "trends.html",
+            report=report,
+            windows=[label for label, _days in WINDOWS],
+            active_window=window,
+            period_label=format_period(report.period),
+            previous_label=format_period(report.previous_period),
+            min_observations=MIN_OBSERVATIONS_FOR_TREND,
+            page_title=f"Trend Radar — Observed Construction Activity in {g.market.short_name}",
+            seo=g.seo_builder.simple(
+                "Trend Radar",
+                "Observed changes in commercial construction records across configured markets, "
+                "with each metric defined and source-coverage limits stated.",
             ),
         )
 

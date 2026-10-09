@@ -37,7 +37,7 @@ from .db import Database
 from .eligibility import evaluate
 from .grouping import building_key, group_projects, sibling_info_for
 from .procurement import CLOSED, EVIDENCE_FOUND, NOT_VERIFIED, CONFIRMED_OPEN
-from .search_index import quote_for_fts
+from .search_index import explain_matches, quote_for_fts
 
 #: Classifications the public site may show, in display order.
 PUBLIC_CLASSIFICATIONS = ("HIGH", "MEDIUM")
@@ -450,10 +450,42 @@ class OpportunityService:
         ).fetchall()
 
         items = self.annotate_viewer(self.annotate_siblings([self.decorate(dict(r)) for r in rows]))
+        if filters.q:
+            self.attach_search_reasons(items, filters.q)
         return OpportunityPage(
             items=items, total=total, page=filters.page, page_size=filters.page_size,
             filters=filters,
         )
+
+    def attach_search_reasons(self, items: list[dict[str, Any]], query: str) -> None:
+        """Attach, to each item, the reasons it matched the query.
+
+        The work-description text is read from the index in one query for the whole page rather
+        than per result, and the reasons are computed from the words the user typed (see
+        ``explain_matches``). A project whose words all matched only via the widened FTS
+        expression gets no reasons — which is honest, because no displayable field contains the
+        typed term — while the record still appears, because expansion only ever widens recall.
+        """
+        if not items:
+            return
+        ids = [int(item["id"]) for item in items if item.get("id") is not None]
+        descriptions: dict[int, str] = {}
+        if ids:
+            placeholders = ",".join("?" for _ in ids)
+            try:
+                for row in self.db.conn.execute(
+                    f"SELECT CAST(project_id AS INTEGER) AS pid, work_description "
+                    f"FROM project_search WHERE CAST(project_id AS INTEGER) IN ({placeholders})",
+                    ids,
+                ).fetchall():
+                    descriptions[int(row["pid"])] = row["work_description"]
+            except Exception:
+                # Reasons are presentation only; a failure here must not break the listing.
+                descriptions = {}
+        for item in items:
+            fields = dict(item)
+            fields["work_description"] = descriptions.get(int(item["id"]), "")
+            item["search_reasons"] = explain_matches(query, fields)
 
     def decorate(self, project: dict[str, Any]) -> dict[str, Any]:
         """Add presentation-only fields to a project row.

@@ -267,6 +267,46 @@ def statistics() -> Any:
     )
 
 
+@bp.route("/trends")
+def trends() -> Any:
+    """Trend Radar as JSON. Each metric carries its own definition, so the figure and its
+    meaning travel together and a consumer cannot report one without the other."""
+    from ..trends import WINDOW_DAYS, DEFAULT_WINDOW, build_trend_report, format_period
+
+    requested = request.args.get("window") or DEFAULT_WINDOW
+    window = requested if requested in WINDOW_DAYS else DEFAULT_WINDOW
+    report = build_trend_report(g.db, window=window, trade=g.trade.id)
+    return jsonify(
+        {
+            "market": {"id": g.market.id, "slug": g.market.slug, "name": g.market.name},
+            "trade": {"id": g.trade.id, "slug": g.trade.slug, "label": g.trade.label},
+            "window": report.window,
+            "period": format_period(report.period),
+            "previous_period": format_period(report.previous_period),
+            "insufficient_observations": report.insufficient,
+            "metrics": [
+                {
+                    "key": m.key,
+                    "label": m.label,
+                    "definition": m.definition,
+                    "value": m.value,
+                    "previous": m.previous,
+                    "comparison_available": m.comparison_available,
+                    "direction": m.direction,
+                    "change_ratio": m.change_ratio,
+                    "excluded_future": m.excluded_future,
+                }
+                for m in report.metrics
+            ],
+            "coverage": report.coverage,
+            "malformed_dates": report.malformed_dates,
+            "ingestion_window": report.ingestion_window,
+            "notes": report.notes,
+            "generated_at": report.generated_at,
+        }
+    )
+
+
 @bp.route("/saved")
 def list_saved() -> Any:
     """The signed-in user's saved opportunities.

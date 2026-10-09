@@ -73,6 +73,66 @@ groups:
     label: "Exhaust"
     terms: ["exhaust", "exhaust fan", "exhaust fans"]
 
+  - id: make_up_air
+    label: "Make-up air"
+    terms: ["make-up air", "make up air", "makeup air", "mua", "mau"]
+
+  - id: energy_recovery
+    label: "Energy recovery / ventilation"
+    terms: ["energy recovery", "erv", "hru", "heat recovery", "energy recovery ventilator"]
+
+  - id: unit_heater
+    label: "Unit heater"
+    terms: ["unit heater", "unit heaters", "gas heater"]
+
+  - id: humidification
+    label: "Humidification / dehumidification"
+    terms: ["humidifier", "humidification", "dehumidifier", "dehumidification"]
+
+  # Project-type wording. These groups describe the *kind of work*, not a trade: expanding a
+  # search for "build-out" to "tenant improvement" widens which records are found, and never
+  # asserts a trade. A group is deliberately not merged across different work, so "renovation"
+  # does not expand to "build-out" — a contractor treats those as different scopes.
+  - id: tenant_improvement
+    label: "Tenant improvement / build-out"
+    terms: ["tenant improvement", "tenant improvements", "tenant build-out", "tenant buildout",
+            "office build-out", "build-out", "buildout", "interior renovation",
+            "interior remodel", "finish out"]
+
+  - id: renovation
+    label: "Renovation / remodel"
+    terms: ["renovation", "renovations", "remodel", "remodeling", "interior renovation work"]
+
+  - id: new_construction
+    label: "New construction"
+    terms: ["new construction", "ground up", "ground-up", "new build", "new commercial"]
+
+  - id: addition
+    label: "Building addition"
+    terms: ["addition", "additions", "building addition", "commercial addition"]
+
+  - id: shell_core
+    label: "Shell / core and shell"
+    terms: ["core and shell", "core & shell", "shell building", "core-shell"]
+
+  # Trade-name shorthand that is not equipment. Kept as separate groups so a query naming one
+  # trade never expands to another: "electrical" must not find plumbing.
+  - id: electrical_trade
+    label: "Electrical (trade synonym)"
+    terms: ["power distribution", "switchgear", "switch gear", "panelboard", "panel board",
+            "service entrance", "low voltage", "transformer"]
+
+  - id: plumbing_trade
+    label: "Plumbing (trade synonym)"
+    terms: ["domestic water", "sanitary systems", "sanitary system", "water heater",
+            "gas piping", "backflow preventer", "sanitary sewer"]
+
+  # Metro naming. Only the combined metro abbreviation is a group: the individual city names
+  # are deliberately *not* interchangeable, so "dallas" never expands to "fort worth".
+  - id: dfw_metro
+    label: "Dallas–Fort Worth metro"
+    terms: ["dfw", "dallas-fort worth", "dallas fort worth", "metroplex"]
+
 # Per-trade additions, merged with the global groups above. A trade that introduces its own
 # equipment adds a group here rather than touching the engine.
 trades:

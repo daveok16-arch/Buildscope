@@ -85,6 +85,19 @@
     </div>
   {% endif %}
 
+  {# Search match reasons: why this row came back for the query the visitor typed. Distinct
+     from the account match reasons above — these describe the search, not the account. #}
+  {% if project.search_reasons %}
+    <div class="why-matches" style="margin-top:8px">
+      <p class="why-head">Matched search</p>
+      <ul>
+        {% for reason in project.search_reasons[:3] %}
+          <li><span class="muted small">{{ reason }}</span></li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
   {# 5. Card Foot & Actions #}
   <div class="card-foot">
     <div>

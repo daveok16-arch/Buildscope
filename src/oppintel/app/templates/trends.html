@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block hero %}
+<section class="hero hero-compact">
+  <div class="wrap">
+    <p class="crumb"><a href="{{ url_for('home') }}">Home</a> · Trend Radar</p>
+    <div class="hero-tagline-kicker">Observed Activity, Defined</div>
+    <h1>Trend Radar</h1>
+    <p class="lede">
+      What changed in the commercial construction records BuildScope actually holds, over the
+      period shown. Every figure is a count of stored rows. Each is defined below and kept
+      separate, because a project is not a permit, a permit is not verified trade scope, and a
+      detected change is not new construction.
+    </p>
+  </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="wrap" style="padding-top:24px; padding-bottom:56px">
+  {# Period selector #}
+  <div class="results-header-bar" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:12px">
+    <div>
+      <h2>Observation window: {{ period_label }}</h2>
+      <p class="results-count-sub">
+        Previous period for comparison: {{ previous_label }}
+        {% if not report.metric_index.projects_observed.comparison_available %}
+          (not available — see note)
+        {% endif %}
+      </p>
+    </div>
+    <div style="display:flex; gap:8px">
+      {% for w in windows %}
+        <a class="btn btn-small {{ 'btn-primary' if w == active_window else 'btn-outline' }}"
+           href="{{ url_for('trends_view', window=w) }}">Last {{ w }}</a>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if report.insufficient %}
+  <div class="notice" style="margin-top:20px">
+    <strong>Insufficient observations for a confident trend statement.</strong>
+    This window holds fewer than {{ min_observations }} new projects. The counts below are accurate but too
+    small to support a claim that activity rose or fell; treat them as raw observations.
+  </div>
+  {% endif %}
+
+  {% if not report.metric_index.projects_observed.comparison_available %}
+  <div class="notice" style="margin-top:20px">
+    <strong>No previous period to compare against.</strong>
+    BuildScope first observed this trade on
+    {{ report.ingestion_window.first_observed[:10] if report.ingestion_window.first_observed else 'an unrecorded date' }},
+    so no records predate the previous period. A "0" comparison would read as a decline and
+    would be false, so no comparison is shown.
+  </div>
+  {% endif %}
+
+  {# Metric cards #}
+  <div class="stat-strip" style="margin-top:24px; flex-wrap:wrap; gap:16px">
+    {% for m in report.metrics %}
+    <div class="stat" style="flex:1 1 260px; min-width:240px">
+      <span class="stat-value">{{ "{:,}".format(m.value) }}</span>
+      <span class="stat-label">{{ m.label }}</span>
+      <p class="small muted" style="margin-top:8px; line-height:1.45">{{ m.definition }}</p>
+      {% if m.comparison_available and m.previous is not none %}
+        <p class="small" style="margin-top:6px">
+          Previous period: {{ "{:,}".format(m.previous) }}
+          {% if m.direction == 'up' %}
+            · <span style="color:var(--gold-600,#a16207)">activity increased in observed records</span>
+          {% elif m.direction == 'down' %}
+            · activity decreased in observed records
+          {% else %}
+            · no change
+          {% endif %}
+        </p>
+      {% else %}
+        <p class="small muted" style="margin-top:6px">No comparison available.</p>
+      {% endif %}
+      {% if m.excluded_future %}
+        <p class="small muted" style="margin-top:4px">
+          {{ m.excluded_future }} record(s) excluded: dated after today.
+        </p>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  {# What the data can and cannot say #}
+  <div class="detail-panel" style="margin-top:28px; padding:20px 24px">
+    <h3 style="margin-top:0">How to read these figures</h3>
+    <ul style="line-height:1.6">
+      {% for note in report.notes %}
+        <li class="small">{{ note }}</li>
+      {% endfor %}
+      {% if report.malformed_dates == 0 %}
+        <li class="small">No record carries a malformed permit date in this trade.</li>
+      {% endif %}
+    </ul>
+    <p class="small muted">
+      "New commercial projects" counts permits dated inside the window; it does not mean a bid
+      is open, and it is not the city's total permit volume. Nothing here is projected or
+      seasonally adjusted.
+    </p>
+  </div>
+
+  {# Coverage limits #}
+  <div class="detail-panel" style="margin-top:20px; padding:20px 24px">
+    <h3 style="margin-top:0">Source coverage for each market</h3>
+    <p class="small muted">
+      A market listed in configuration is not a market with data. These are the actual coverage
+      states, so two markets with unequal coverage are never compared as if they were equal.
+    </p>
+    <table class="table" style="width:100%; margin-top:10px">
+      <thead>
+        <tr><th>Market</th><th>Coverage state</th><th>Records</th><th>Latest record</th></tr>
+      </thead>
+      <tbody>
+        {% for c in report.coverage %}
+        <tr>
+          <td>{{ c.market }}</td>
+          <td>{{ c.label }}</td>
+          <td>{{ "{:,}".format(c.records) if c.records is not none else '—' }}</td>
+          <td>{{ c.latest_date or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {# Ingestion window: distinguishes observed-change from published-change #}
+  <div class="detail-panel" style="margin-top:20px; padding:20px 24px">
+    <h3 style="margin-top:0">When this database observed its records</h3>
+    <p class="small">
+      First observed: {{ report.ingestion_window.first_observed or '—' }}<br>
+      Last observed: {{ report.ingestion_window.last_observed or '—' }}<br>
+      Permit dates held: {{ report.ingestion_window.oldest_permit_date or '—' }}
+      to {{ report.ingestion_window.newest_permit_date or '—' }}
+    </p>
+    <p class="small muted">
+      A rise in "new commercial projects" can reflect more permits being filed, or a deeper
+      collection pass reaching older filings. The two are different claims; this window is shown
+      so a reader can weigh them.
+    </p>
+  </div>
+
+  {# Next steps #}
+  <div style="margin-top:24px; display:flex; gap:12px; flex-wrap:wrap">
+    <a class="btn btn-primary" href="{{ url_for('opportunities') }}">Inspect the projects</a>
+    <a class="btn btn-outline" href="{{ url_for('changes_feed') }}">See detected changes</a>
+    <a class="btn btn-outline" href="{{ url_for('analytics_view') }}">Market analytics</a>
+  </div>
+</div>
+{% endblock %}

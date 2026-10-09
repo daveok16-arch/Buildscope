@@ -18,6 +18,7 @@ from __future__ import annotations
 import logging
 import re
 from collections.abc import Sequence
+from typing import Any
 from datetime import datetime, timezone
 
 from .config import VocabularyGroup
@@ -155,6 +156,60 @@ def expand_terms(
             expanded.append([tokens[i]])
             i += 1
     return expanded
+
+
+#: Human labels for the indexed fields, so a match reason names the field a user can see.
+_FIELD_LABELS: tuple[tuple[str, str], ...] = (
+    ("project_name", "Project name"),
+    ("address", "Address"),
+    ("permit_number", "Permit number"),
+    ("city", "City"),
+    ("project_type", "Project type"),
+    ("work_description", "Permit description"),
+    ("owner", "Owner"),
+)
+
+
+def normalize_query_text(text: str | None) -> str | None:
+    """Collapse a query to the form used for storage and comparison: trimmed, single-spaced.
+
+    Case is deliberately preserved here; the analytics queries lower-case when grouping. This
+    exists so two searches that differ only in whitespace are one stored term, not two.
+    """
+    if not text:
+        return None
+    collapsed = " ".join(str(text).split())
+    return collapsed or None
+
+
+def explain_matches(query: str | None, fields: dict[str, Any]) -> list[str]:
+    """The reasons a project matched a query, each grounded in a field that actually contains it.
+
+    A reason is a statement of fact about the record: the query word appears in this field. It
+    is generated from the words the *user typed*, matched as whole words, not from the widened
+    FTS expression — so a prefix coincidence (FTS ``"mechanical"*`` also matching
+    "mechanically") never becomes a displayed claim that the record mentions mechanical scope.
+
+    No field is invented: a reason is produced only for a field whose text contains the word,
+    and an empty list means "no word matched a displayable field", not "matched anyway".
+    """
+    tokens = tokenize_query(query or "")
+    if not tokens:
+        return []
+    reasons: list[str] = []
+    for field, label in _FIELD_LABELS:
+        value = fields.get(field)
+        if not value:
+            continue
+        words = set(tokenize_query(str(value)))
+        hits = [t for t in tokens if t in words]
+        if not hits:
+            continue
+        if field == "work_description":
+            reasons.append(f'Permit description mentions "{hits[0]}"')
+        else:
+            reasons.append(f'{label} matches "{hits[0]}"')
+    return reasons
 
 
 def _phrase_clause(phrase: str) -> str:

@@ -504,13 +504,20 @@ def test_no_page_emits_unsupported_structured_data_claims(client):
 
 
 def test_guides_are_not_identical_to_one_another(client):
-    """Guides must be genuinely distinct content, not one template with a swapped heading."""
+    """Guides must be genuinely distinct content, not one template with a swapped heading.
+
+    The signature is computed over the guide's own article body, not the whole page. The page
+    chrome is identical across guides by design, so including it only adds a constant offset and
+    can make two distinct guides collide when the header/footer wording shifts.
+    """
     from oppintel.app.content import GUIDES
 
     bodies = []
     for guide in GUIDES:
         body = client.get("/guides/" + guide["slug"]).get_data(as_text=True)
-        text = re.sub(r"<[^>]+>", " ", body)
+        match = re.search(r'<article class="prose">(.*?)</article>', body, re.S)
+        assert match, f"{guide['slug']} rendered no article body"
+        text = re.sub(r"<[^>]+>", " ", match.group(1))
         bodies.append(text)
     signatures = [len(set(" ".join(body.split())[:2000].split())) for body in bodies]
     assert len(signatures) == len(set(signatures)), "two guides share their body text"
