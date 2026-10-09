@@ -20,21 +20,28 @@
 {% block content %}
 <div class="wrap">
   {# Mobile Filter Expand Button #}
-  <div style="display:none; margin:16px 0 8px;" class="mobile-filter-bar">
-    <button type="button" class="btn btn-outline" id="mobile-filter-btn" style="width:100%; justify-content:space-between">
-      <span>
+  <div class="mobile-filter-bar">
+    <button type="button" class="btn btn-outline filter-toggle" id="mobile-filter-btn"
+            aria-expanded="false" aria-controls="filter-sidebar-panel">
+      <span class="filter-toggle-label">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px">
           <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
         </svg>
-        Filter Opportunities
+        Filters{% if active_filter_count %} ({{ active_filter_count }}){% endif %}
       </span>
       <span class="small muted">Adjust criteria &darr;</span>
     </button>
   </div>
 
+  <div class="filter-sheet-backdrop" id="filter-sheet-backdrop" hidden></div>
+
   <div class="feed-workspace-layout">
-    {# --- 1. Filter Sidebar --- #}
-    <aside class="filter-sidebar" id="filter-sidebar-panel">
+    {# --- 1. Filter Sidebar (a bottom sheet on mobile) --- #}
+    <aside class="filter-sidebar" id="filter-sidebar-panel" aria-label="Filter opportunities">
+      <div class="filter-sheet-handle" aria-hidden="true"></div>
+      <button type="button" class="btn btn-small btn-outline filter-sheet-close" id="filter-sheet-close">
+        Close filters
+      </button>
       <form method="get" action="{{ url_for('opportunities') }}">
         <div class="filter-sidebar-head">
           <h3>Filter Opportunities</h3>
@@ -87,15 +94,24 @@
             </select>
           </div>
 
-          <div class="field">
-            <label for="date_from">Permit Date From</label>
-            <input type="date" id="date_from" name="date_from" value="{{ filters.date_from or '' }}">
-          </div>
-
-          <div class="field">
-            <label for="date_to">Permit Date To</label>
-            <input type="date" id="date_to" name="date_to" value="{{ filters.date_to or '' }}">
-          </div>
+          <fieldset class="field date-range-field">
+            <legend>Permit Date Range</legend>
+            <div class="date-presets" role="group" aria-label="Permit date presets">
+              <a class="btn btn-small btn-outline" href="{{ url_for('opportunities', q=filters.q, city=filters.city, project_type=filters.project_type, classification=filters.classification, procurement_status=filters.procurement_status, date_from=date_presets.last_7, sort=filters.sort) }}">Last 7 days</a>
+              <a class="btn btn-small btn-outline" href="{{ url_for('opportunities', q=filters.q, city=filters.city, project_type=filters.project_type, classification=filters.classification, procurement_status=filters.procurement_status, date_from=date_presets.last_30, sort=filters.sort) }}">Last 30 days</a>
+              <a class="btn btn-small btn-outline" href="{{ url_for('opportunities', q=filters.q, city=filters.city, project_type=filters.project_type, classification=filters.classification, procurement_status=filters.procurement_status, date_from=date_presets.this_year, sort=filters.sort) }}">This year</a>
+            </div>
+            <div class="date-inputs">
+              <div class="date-input">
+                <label for="date_from">From</label>
+                <input type="date" id="date_from" name="date_from" value="{{ filters.date_from or '' }}">
+              </div>
+              <div class="date-input">
+                <label for="date_to">To</label>
+                <input type="date" id="date_to" name="date_to" value="{{ filters.date_to or '' }}">
+              </div>
+            </div>
+          </fieldset>
 
           <div class="field">
             <label for="sort">Sort Order</label>
@@ -212,12 +228,33 @@
 (function() {
   var btn = document.getElementById('mobile-filter-btn');
   var sidebar = document.getElementById('filter-sidebar-panel');
-  if (btn && sidebar) {
-    btn.addEventListener('click', function() {
-      var isHidden = window.getComputedStyle(sidebar).display === 'none';
-      sidebar.style.display = isHidden ? 'block' : 'none';
-    });
+  var backdrop = document.getElementById('filter-sheet-backdrop');
+  var closeBtn = document.getElementById('filter-sheet-close');
+  if (!btn || !sidebar) return;
+
+  function isOpen() { return document.body.classList.contains('filter-sheet-open'); }
+
+  function open() {
+    document.body.classList.add('filter-sheet-open');
+    btn.setAttribute('aria-expanded', 'true');
+    if (backdrop) backdrop.hidden = false;
+    var first = sidebar.querySelector('input, select, button, a');
+    if (first) first.focus();
   }
+
+  function close() {
+    document.body.classList.remove('filter-sheet-open');
+    btn.setAttribute('aria-expanded', 'false');
+    if (backdrop) backdrop.hidden = true;
+    btn.focus();
+  }
+
+  btn.addEventListener('click', function() { isOpen() ? close() : open(); });
+  if (closeBtn) closeBtn.addEventListener('click', close);
+  if (backdrop) backdrop.addEventListener('click', close);
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && isOpen()) close();
+  });
 })();
 </script>
 {% endblock %}

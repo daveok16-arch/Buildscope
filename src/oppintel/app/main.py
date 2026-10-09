@@ -13,7 +13,7 @@ import logging
 import os
 import secrets
 import urllib.request
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 import click
 from typing import Any
@@ -550,6 +550,8 @@ def create_app(config: AppConfig | None = None) -> Flask:
             project_types=g.service.available_project_types(),
             procurement_options=g.service.procurement_options(),
             sort_options=SORT_OPTIONS,
+            active_filter_count=_active_filter_count(filters),
+            date_presets=_date_presets(),
             page_title=(
                 f"{g.market.short_name} Commercial {g.trade.short_label} Opportunities"
             ),
@@ -937,6 +939,7 @@ def create_app(config: AppConfig | None = None) -> Flask:
             selected_role=role,
             q=q,
             selected_city=city,
+            active_filter_count=sum(bool(v) for v in (q, role, city)),
             cities=g.service.available_cities(),
             page_title=f"{g.market.short_name} Commercial Construction Companies & Stakeholders",
             seo=g.seo_builder.simple(
@@ -1971,6 +1974,42 @@ def _filter_summary(filters: OpportunityFilters) -> str | None:
     if filters.min_value or filters.max_value:
         names.append("value_range")
     return ",".join(sorted(names)) or None
+
+
+def _date_presets() -> dict[str, str]:
+    """Native date-input presets for the permit-date range.
+
+    Computed server-side so the preset links work with no JavaScript, and so each preset resolves
+    to a real calendar date the database can compare rather than a relative token.
+    """
+    today = date.today()
+    return {
+        "last_7": (today - timedelta(days=7)).isoformat(),
+        "last_30": (today - timedelta(days=30)).isoformat(),
+        "this_year": date(today.year, 1, 1).isoformat(),
+    }
+
+
+def _active_filter_count(filters: OpportunityFilters) -> int:
+    """How many deliberate filters a request applied.
+
+    Counts only narrowing choices the visitor made, so the mobile "Filters (n)" button reflects
+    the real state of the form. Sort and pagination are excluded because neither narrows results.
+    A permit-date range counts once even when both ends are set.
+    """
+    return sum(
+        [
+            bool(filters.q),
+            bool(filters.city),
+            bool(filters.project_type),
+            bool(filters.classification),
+            bool(filters.procurement_status),
+            bool(filters.date_from or filters.date_to),
+            bool(filters.mechanical_only),
+            bool(filters.include_unverified),
+            bool(filters.min_value or filters.max_value),
+        ]
+    )
 
 
 def _wants_json() -> bool:

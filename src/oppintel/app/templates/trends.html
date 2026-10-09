@@ -67,7 +67,7 @@
   {# Metric cards #}
   <div class="stat-strip" style="margin-top:24px; flex-wrap:wrap; gap:16px">
     {% for m in report.metrics if active_window in m.windows %}
-    <div class="stat" style="flex:1 1 260px; min-width:240px">
+    <div class="stat" style="flex:1 1 240px; min-width:0">
       <span class="stat-value">{{ "{:,}".format(m.value) }}</span>
       <span class="stat-label">{{ m.label }}{% if m.cumulative %} <span class="muted small">(total held)</span>{% endif %}</span>
       {% if m.secondary %}<p class="small" style="margin-top:6px"><strong>{{ m.secondary[0] }}:</strong> {{ "{:,}".format(m.secondary[1]) }}</p>{% endif %}

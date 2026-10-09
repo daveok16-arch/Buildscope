@@ -52,10 +52,14 @@ ROUTES = [
 ]
 
 #: Routes where the mobile feed/nav chrome is most at risk of regressing.
-TOUCH_ROUTES = ["/", "/opportunities", "/companies", "/changes", "/signin", "/signup"]
+TOUCH_ROUTES = ["/", "/opportunities", "/companies", "/trends", "/changes", "/signin", "/signup"]
 
 MOBILE = {"width": 390, "height": 844}
 DESKTOP = {"width": 1440, "height": 900}
+
+#: The widths the responsive layout must survive. 360 is the narrowest common phone,
+#: 820 the tablet breakpoint where the filter sidebar is still collapsed.
+OVERFLOW_VIEWPORTS = [360, 390, 430, 820, 1440]
 
 #: axe must be clean at both ends of the responsive range: the desktop header and
 #: the mobile drawer each only exist at one width, so a single viewport misses half.
@@ -116,16 +120,55 @@ def test_no_serious_or_critical_axe_violations(live_server, browser, route, view
         context.close()
 
 
+@pytest.mark.parametrize("width", OVERFLOW_VIEWPORTS)
 @pytest.mark.parametrize("route", ROUTES)
-def test_no_horizontal_overflow_at_mobile_width(live_server, browser, route):
-    context = browser.new_context(viewport=MOBILE)
+def test_no_horizontal_overflow(live_server, browser, route, width):
+    """No route may scroll horizontally at any supported width.
+
+    The offending elements are collected so a failure names the cause rather than
+    only reporting that the page is too wide.
+    """
+    context = browser.new_context(viewport={"width": width, "height": 900})
     try:
         page = context.new_page()
         page.goto(live_server + route, wait_until="networkidle")
-        overflow = page.evaluate(
-            "() => document.documentElement.scrollWidth > window.innerWidth"
+        offenders = page.evaluate(
+            """() => {
+              const inner = window.innerWidth;
+              const doc = document.documentElement;
+              if (doc.scrollWidth <= inner) return [];
+              const clipped = el => {
+                let n = el.parentElement;
+                while (n && n !== doc) {
+                  if (getComputedStyle(n).overflowX !== 'visible') return true;
+                  n = n.parentElement;
+                }
+                return false;
+              };
+              const out = [];
+              document.querySelectorAll('*').forEach(el => {
+                const cs = getComputedStyle(el);
+                // position:fixed elements (the off-canvas drawer) are outside the
+                // document flow and cannot widen scrollWidth; a clipped ancestor
+                // already absorbs the child. Neither is a real cause.
+                if (cs.position === 'fixed' || cs.visibility === 'hidden' || clipped(el)) return;
+                const r = el.getBoundingClientRect();
+                if (r.right > inner + 0.5 || r.left < -0.5) {
+                  out.push({
+                    tag: el.tagName.toLowerCase(),
+                    cls: (el.className || '').toString().slice(0, 50),
+                    left: Math.round(r.left),
+                    right: Math.round(r.right),
+                    w: Math.round(r.width),
+                  });
+                }
+              });
+              return out.slice(0, 8);
+            }"""
         )
-        assert not overflow, f"{route} scrolls horizontally at 390px"
+        assert offenders == [], (
+            f"{route} scrolls horizontally at {width}px; offenders={offenders}"
+        )
     finally:
         context.close()
 
@@ -205,6 +248,88 @@ def test_mobile_drawer_focus_and_aria(live_server, browser):
         assert closed["hidden"] == "true"
         assert closed["visibility"] == "hidden"
         assert closed["active"] == "mobile-menu-open-btn", "focus did not return to the trigger"
+    finally:
+        context.close()
+
+
+@pytest.mark.parametrize("route,panel", [
+    ("/opportunities", "filter-sidebar-panel"),
+    ("/companies", "company-filter-panel"),
+])
+def test_mobile_filter_sheet_opens_and_closes(live_server, browser, route, panel):
+    """The filter form is a bottom sheet on mobile: hidden until the "Filters"
+    button opens it, then pinned so results are not pushed below the form."""
+    context = browser.new_context(viewport=MOBILE, has_touch=True)
+    try:
+        page = context.new_page()
+        page.goto(live_server + route, wait_until="networkidle")
+
+        hidden = page.evaluate(
+            "p => getComputedStyle(document.getElementById(p)).display",
+            panel,
+        )
+        assert hidden == "none", f"{route}: filter panel visible before opening"
+
+        page.click("#mobile-filter-btn")
+        opened = page.evaluate(
+            """p => {
+              const el = document.getElementById(p);
+              const r = el.getBoundingClientRect();
+              return {
+                display: getComputedStyle(el).display,
+                position: getComputedStyle(el).position,
+                bottom: Math.round(window.innerHeight - r.bottom),
+                focusInside: el.contains(document.activeElement),
+                expanded: document.getElementById('mobile-filter-btn').getAttribute('aria-expanded'),
+                bodyOpen: document.body.classList.contains('filter-sheet-open'),
+              };
+            }""",
+            panel,
+        )
+        assert opened["display"] != "none", f"{route}: filter panel did not open"
+        assert opened["position"] == "fixed", f"{route}: filter panel is not a bottom sheet"
+        assert abs(opened["bottom"]) <= 2, f"{route}: filter panel not pinned to the bottom"
+        assert opened["expanded"] == "true"
+        assert opened["bodyOpen"]
+        assert opened["focusInside"], f"{route}: focus did not move into the sheet"
+
+        page.keyboard.press("Escape")
+        closed = page.evaluate(
+            """p => ({
+              display: getComputedStyle(document.getElementById(p)).display,
+              expanded: document.getElementById('mobile-filter-btn').getAttribute('aria-expanded'),
+              active: document.activeElement.id,
+            })""",
+            panel,
+        )
+        assert closed["display"] == "none", f"{route}: Escape did not close the sheet"
+        assert closed["expanded"] == "false"
+        assert closed["active"] == "mobile-filter-btn", f"{route}: focus did not return"
+    finally:
+        context.close()
+
+
+def test_filter_date_presets_and_native_inputs(live_server, browser):
+    """The permit-date filter offers native date inputs and one-click presets that
+    submit without JavaScript (they are ordinary links)."""
+    context = browser.new_context(viewport=MOBILE, has_touch=True)
+    try:
+        page = context.new_page()
+        page.goto(live_server + "/opportunities", wait_until="networkidle")
+        page.click("#mobile-filter-btn")
+
+        dates = page.eval_on_selector_all(
+            "input[type=date]", "els => els.map(e => e.id)"
+        )
+        assert set(dates) == {"date_from", "date_to"}, f"unexpected date inputs: {dates}"
+
+        presets = page.eval_on_selector_all(
+            ".date-presets a", "els => els.map(e => e.textContent.trim())"
+        )
+        assert presets == ["Last 7 days", "Last 30 days", "This year"], presets
+
+        href = page.get_attribute(".date-presets a", "href")
+        assert "date_from=" in href and "/opportunities?" in href, href
     finally:
         context.close()
 

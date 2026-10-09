@@ -822,6 +822,20 @@ body.drawer-open .mobile-drawer {
     padding-top: 10px;
     padding-bottom: 10px;
   }
+  /* The filter sheet's own controls are reachable by touch too, so they meet the
+     same 44px target rather than only the ones outside the collapsed panel. */
+  .filter-sidebar .field input,
+  .filter-sidebar .field select,
+  .filter-sidebar .date-input input {
+    min-height: 44px;
+  }
+  .filter-sidebar .checkline {
+    min-height: 44px;
+    align-items: center;
+  }
+  .filter-sidebar .checkline input {
+    margin-top: 0;
+  }
 }
 
 /* ==========================================================================
@@ -1004,7 +1018,7 @@ body.drawer-open .mobile-drawer {
 /* Operational KPI Strip inside Dashboard & Analytics */
 .stat-strip {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
   gap: 12px;
   margin: 0 0 28px;
 }
@@ -1559,6 +1573,77 @@ body.drawer-open .mobile-drawer {
   gap: 14px;
 }
 
+/* Mobile-only affordances. Hidden on desktop; the 860px query reveals them. */
+.mobile-filter-bar {
+  display: none;
+  margin: 16px 0 8px;
+}
+.filter-toggle {
+  width: 100%;
+  justify-content: space-between;
+}
+.filter-toggle-label {
+  display: inline-flex;
+  align-items: center;
+}
+.filter-sheet-handle {
+  display: none;
+  width: 40px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--slate-300);
+  margin: 0 auto 12px;
+}
+.filter-sheet-close {
+  display: none;
+  width: 100%;
+  margin-bottom: 12px;
+}
+.filter-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1190;
+  background: rgba(15, 23, 42, 0.5);
+}
+.filter-sheet-backdrop[hidden] {
+  display: none;
+}
+
+.date-range-field {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.date-range-field legend {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--slate-700);
+  letter-spacing: 0.02em;
+  padding: 0;
+  margin-bottom: 6px;
+}
+.date-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.date-inputs {
+  display: flex;
+  gap: 8px;
+}
+.date-input {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.date-input label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--slate-600);
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -1645,7 +1730,7 @@ body.drawer-open .mobile-drawer {
 
 .auth-grid {
   display: grid;
-  grid-template-columns: 1.15fr 0.95fr;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.95fr);
   gap: 56px;
   align-items: start;
 }
@@ -2029,6 +2114,7 @@ body.drawer-open .mobile-drawer {
 .auth-footer-links {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 20px;
 }
 
@@ -2044,7 +2130,7 @@ body.drawer-open .mobile-drawer {
 
 @media (max-width: 860px) {
   .auth-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 36px;
   }
   .auth-brand-col {
@@ -2450,6 +2536,27 @@ body.drawer-open .mobile-drawer {
   .filter-sidebar {
     display: none;
     position: static;
+  }
+  /* The filter panel is a bottom sheet on mobile: hidden until the "Filters"
+     button opens it, then pinned to the viewport so results are never pushed
+     below a long form. */
+  body.filter-sheet-open .filter-sidebar {
+    display: block;
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 1200;
+    max-height: 85vh;
+    overflow-y: auto;
+    border-radius: 16px 16px 0 0;
+    padding: 8px 20px 24px;
+    box-shadow: var(--shadow-lg);
+  }
+  body.filter-sheet-open {
+    overflow: hidden;
+  }
+  .filter-sheet-handle,
+  .filter-sheet-close {
+    display: block;
   }
   .evidence-strip {
     grid-template-columns: repeat(2, 1fr);

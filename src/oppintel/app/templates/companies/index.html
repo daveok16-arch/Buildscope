@@ -16,9 +16,28 @@
 
 {% block content %}
 <div class="wrap" style="padding-top:24px; padding-bottom:56px">
+  <div class="mobile-filter-bar">
+    <button type="button" class="btn btn-outline filter-toggle" id="mobile-filter-btn"
+            aria-expanded="false" aria-controls="company-filter-panel">
+      <span class="filter-toggle-label">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px">
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+        </svg>
+        Filters{% if active_filter_count %} ({{ active_filter_count }}){% endif %}
+      </span>
+      <span class="small muted">Adjust criteria &darr;</span>
+    </button>
+  </div>
+
+  <div class="filter-sheet-backdrop" id="filter-sheet-backdrop" hidden></div>
+
 <div class="feed-workspace-layout">
-  {# Filter Sidebar #}
-  <aside class="filter-sidebar">
+  {# Filter Sidebar (a bottom sheet on mobile) #}
+  <aside class="filter-sidebar" id="company-filter-panel" aria-label="Filter stakeholders">
+    <div class="filter-sheet-handle" aria-hidden="true"></div>
+    <button type="button" class="btn btn-small btn-outline filter-sheet-close" id="filter-sheet-close">
+      Close filters
+    </button>
     <form method="get" action="{{ url_for('companies_index') }}">
       <div class="filter-sidebar-head">
         <h3>Filter Stakeholders</h3>
@@ -125,4 +144,38 @@
   </div>
 </div>
 </div>
+
+<script>
+(function() {
+  var btn = document.getElementById('mobile-filter-btn');
+  var sidebar = document.getElementById('company-filter-panel');
+  var backdrop = document.getElementById('filter-sheet-backdrop');
+  var closeBtn = document.getElementById('filter-sheet-close');
+  if (!btn || !sidebar) return;
+
+  function isOpen() { return document.body.classList.contains('filter-sheet-open'); }
+
+  function open() {
+    document.body.classList.add('filter-sheet-open');
+    btn.setAttribute('aria-expanded', 'true');
+    if (backdrop) backdrop.hidden = false;
+    var first = sidebar.querySelector('input, select, button, a');
+    if (first) first.focus();
+  }
+
+  function close() {
+    document.body.classList.remove('filter-sheet-open');
+    btn.setAttribute('aria-expanded', 'false');
+    if (backdrop) backdrop.hidden = true;
+    btn.focus();
+  }
+
+  btn.addEventListener('click', function() { isOpen() ? close() : open(); });
+  if (closeBtn) closeBtn.addEventListener('click', close);
+  if (backdrop) backdrop.addEventListener('click', close);
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && isOpen()) close();
+  });
+})();
+</script>
 {% endblock %}
