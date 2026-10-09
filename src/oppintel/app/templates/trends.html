@@ -32,10 +32,19 @@
     <div style="display:flex; gap:8px">
       {% for w in windows %}
         <a class="btn btn-small {{ 'btn-primary' if w == active_window else 'btn-outline' }}"
-           href="{{ url_for('trends_view', window=w) }}">Last {{ w }}</a>
+           href="{{ url_for('trends_view', window=w) }}">{{ 'All time' if w == 'all' else 'Last ' ~ w }}</a>
       {% endfor %}
     </div>
   </div>
+
+  {% if active_window == 'all' %}
+  <div class="notice" style="margin-top:20px">
+    <strong>All time is a cumulative total, not a trend.</strong>
+    Occurrence figures below ("new projects", "permit records", "detected changes", "first
+    observed") are totals of everything held, not movement over a period. There is no previous
+    period to compare against. Switch to a trailing window to read change.
+  </div>
+  {% endif %}
 
   {% if report.insufficient %}
   <div class="notice" style="margin-top:20px">
@@ -57,12 +66,14 @@
 
   {# Metric cards #}
   <div class="stat-strip" style="margin-top:24px; flex-wrap:wrap; gap:16px">
-    {% for m in report.metrics %}
+    {% for m in report.metrics if active_window in m.windows %}
     <div class="stat" style="flex:1 1 260px; min-width:240px">
       <span class="stat-value">{{ "{:,}".format(m.value) }}</span>
-      <span class="stat-label">{{ m.label }}</span>
+      <span class="stat-label">{{ m.label }}{% if m.cumulative %} <span class="muted small">(total held)</span>{% endif %}</span>
       <p class="small muted" style="margin-top:8px; line-height:1.45">{{ m.definition }}</p>
-      {% if m.comparison_available and m.previous is not none %}
+      {% if m.cumulative %}
+        <p class="small muted" style="margin-top:6px">Cumulative total over the whole dataset — not a period trend.</p>
+      {% elif m.comparison_available and m.previous is not none %}
         <p class="small" style="margin-top:6px">
           Previous period: {{ "{:,}".format(m.previous) }}
           {% if m.direction == 'up' %}

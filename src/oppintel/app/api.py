@@ -295,6 +295,8 @@ def trends() -> Any:
                     "direction": m.direction,
                     "change_ratio": m.change_ratio,
                     "excluded_future": m.excluded_future,
+                    "cumulative": m.cumulative,
+                    "windows": list(m.windows),
                 }
                 for m in report.metrics
             ],

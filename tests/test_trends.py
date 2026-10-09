@@ -216,8 +216,34 @@ def test_malformed_date_is_excluded_and_counted(tmp_path):
 
 
 def test_window_days_are_the_documented_ones():
-    assert WINDOW_DAYS == {"7d": 7, "30d": 30, "90d": 90}
+    # `all` maps to 0: it is the whole dataset, not a trailing period. It was added so the
+    # page can show the dataset's own totals under an explicit "cumulative" label.
+    assert WINDOW_DAYS == {"7d": 7, "30d": 30, "90d": 90, "all": 0}
     assert MIN_OBSERVATIONS_FOR_TREND >= 1
+
+
+def test_all_time_window_covers_the_whole_dataset():
+    period = resolve_window("all", today=date(2026, 10, 7))
+    assert period.is_all_time is True
+    assert period.contains(date(2026, 10, 7))
+    assert period.contains(date(2019, 1, 1))
+    # No previous period exists for an all-time window.
+    assert period.previous().is_all_time is True
+    assert period.previous().days == 0
+
+
+def test_occurrence_metrics_are_cumulative_only_in_the_all_time_window(tmp_path):
+    db = _db(tmp_path, [_permit("A", date(2026, 10, 1))])
+    all_time = build_trend_report(db, window="all", today=date(2026, 10, 7))
+    assert all_time.metric_index["projects_observed"].cumulative is True
+    # Occurrence metrics declare they are only meaningful for a trailing period, so the page
+    # can hide them under "all" rather than show a period figure with no period.
+    assert "all" not in all_time.metric_index["projects_changed"].windows
+    # A stock metric (evidence held) is meaningful for every window including "all".
+    assert "all" in all_time.metric_index["projects_with_strong_evidence"].windows
+    ranged = build_trend_report(db, window="30d", today=date(2026, 10, 7))
+    assert ranged.metric_index["projects_observed"].cumulative is False
+    db.close()
 
 
 # --- HTTP ---------------------------------------------------------------------

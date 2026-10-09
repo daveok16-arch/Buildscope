@@ -43,8 +43,12 @@
   <div class="feed-results-area">
     <div class="results-header-bar">
       <div>
-        <h2>{{ changes | length }} Differences Detected in Last {{ days }} Days</h2>
-        <p class="results-count-sub">Continuous change detection tracking status transitions, scope additions, and valuation updates.</p>
+        <h2>{{ "{:,}".format(total) }} Differences Detected in Last {{ days }} Days</h2>
+        <p class="results-count-sub">
+          Showing {{ changes | length }} of {{ "{:,}".format(total) }}
+          (page {{ page }} of {{ total_pages }}). Continuous change detection tracking status
+          transitions, scope additions, and valuation updates.
+        </p>
       </div>
     </div>
 
@@ -96,6 +100,20 @@
           {% endfor %}
         </ol>
       </div>
+      {% if total_pages > 1 %}
+      <nav class="pagination" style="margin-top:20px; display:flex; gap:8px; align-items:center; flex-wrap:wrap"
+           aria-label="Change feed pages">
+        {% if page > 1 %}
+          <a class="btn btn-small btn-outline"
+             href="{{ url_for('changes_feed', days=days, page=page-1) }}">&larr; Newer</a>
+        {% endif %}
+        <span class="small muted">Page {{ page }} of {{ total_pages }}</span>
+        {% if page < total_pages %}
+          <a class="btn btn-small btn-outline"
+             href="{{ url_for('changes_feed', days=days, page=page+1) }}">Older &rarr;</a>
+        {% endif %}
+      </nav>
+      {% endif %}
     {% else %}
       {% with heading = "No changes detected in this window",
               message = "No qualifying changes were recorded in the selected timeframe.",

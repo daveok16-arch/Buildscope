@@ -942,11 +942,21 @@ def create_app(config: AppConfig | None = None) -> Flask:
     @app.route("/changes")
     def changes_feed() -> str:
         days = _safe_int(request.args.get("days"), 60)
-        recent_changes = g.service.recent_changes(limit=60, days=days)
+        page = max(_safe_int(request.args.get("page"), 1), 1)
+        page_size = 25
+        total = g.service.recent_changes_count(days=days)
+        recent_changes = g.service.recent_changes(
+            limit=page_size, days=days, offset=(page - 1) * page_size
+        )
+        total_pages = max((total + page_size - 1) // page_size, 1)
         return render_template(
             "changes.html",
             changes=recent_changes,
             days=days,
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
             page_title=f"Continuous Market Audit — Detected Project Changes in {g.market.short_name}",
             seo=g.seo_builder.simple(
                 "Continuous Market Audit",

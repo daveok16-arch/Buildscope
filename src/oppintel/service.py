@@ -1330,11 +1330,14 @@ class OpportunityService:
         """
         return self.db.changes_for_project(project_id, limit=limit)
 
-    def recent_changes(self, *, limit: int = 20, days: int = 30) -> list[dict[str, Any]]:
-        """Changes across all public projects in the recent window.
+    def recent_changes(
+        self, *, limit: int = 20, days: int = 30, offset: int = 0
+    ) -> list[dict[str, Any]]:
+        """Changes across all public projects in the recent window, newest first.
 
         Restricted to projects that are publicly discoverable, so the "recently updated"
-        section cannot surface a project the directory itself withholds.
+        section cannot surface a project the directory itself withholds. ``offset`` supports a
+        paged feed; the matching total is `recent_changes_count`.
         """
         cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
         rows = self.db.conn.execute(
@@ -1348,11 +1351,32 @@ class OpportunityService:
                AND p.classification IN (?, ?)
                AND p.procurement_status IN (?, ?, ?)
              ORDER BY c.id DESC
-             LIMIT ?
+             LIMIT ? OFFSET ?
             """,
-            (cutoff,) + PUBLIC_CLASSIFICATIONS + DISCOVERABLE_PROCUREMENT + (limit,),
+            (cutoff,) + PUBLIC_CLASSIFICATIONS + DISCOVERABLE_PROCUREMENT + (limit, offset),
         ).fetchall()
         return [dict(r) for r in rows]
+
+    def recent_changes_count(self, *, days: int = 30) -> int:
+        """How many changes match the public recent-changes filter.
+
+        The count applies the same public predicate as `recent_changes`, so a page's headline
+        ("N detected changes") is the size of the result set and not the size of one page. This
+        is what fixes the count that stopped at the page limit.
+        """
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+        row = self.db.conn.execute(
+            """
+            SELECT COUNT(*) AS n
+              FROM project_change c
+              JOIN project p ON p.id = c.project_id
+             WHERE c.detected_at >= ?
+               AND p.classification IN (?, ?)
+               AND p.procurement_status IN (?, ?, ?)
+            """,
+            (cutoff,) + PUBLIC_CLASSIFICATIONS + DISCOVERABLE_PROCUREMENT,
+        ).fetchone()
+        return int(row["n"] or 0)
 
     def changed_project_ids(self, *, limit: int = 20, days: int = 30) -> list[int]:
         """Distinct project ids with a recent change, most recently changed first."""

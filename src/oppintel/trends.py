@@ -31,24 +31,40 @@ from datetime import date, datetime, timedelta, timezone
 
 from .db import Database
 
+#: The label whose window is the whole dataset rather than a trailing period. An occurrence
+#: metric over "all" is a cumulative total ("records held"), not a trend, and is labelled so.
+ALL_TIME = "all"
+
 #: Named comparison windows, in days. Kept small and fixed so a metric means the same thing
-#: wherever it appears.
+#: wherever it appears. `all` has no day count: it means the entire stored dataset.
 WINDOWS: tuple[tuple[str, int], ...] = (
     ("7d", 7),
     ("30d", 30),
     ("90d", 90),
+    (ALL_TIME, 0),
 )
 
-#: Picking a window is a UI concern; this maps a label back to its day count.
+#: Picking a window is a UI concern; this maps a label back to its day count. `all` maps to 0.
 WINDOW_DAYS: dict[str, int] = {label: days for label, days in WINDOWS}
 
 DEFAULT_WINDOW = "30d"
+
+#: An early date that predates any permit a city could publish, used as the lower bound of the
+#: "all time" window. It is a sentinel, not a presented value.
+_EPOCH = date(1900, 1, 1)
 
 #: A window with fewer observations than this is reported as insufficient for a trend
 #: statement. Chosen low deliberately: it screens out "one record appeared" dressed as a trend
 #: without suppressing genuine early signal. It is a floor on *confidence of the wording*, not
 #: a hidden filter — the count itself is always shown.
 MIN_OBSERVATIONS_FOR_TREND = 5
+
+#: Occurrence metrics (a change, a first observation, a permit issued) are only meaningful
+#: inside a period, so they are absent from the "all time" view. Stock metrics (projects held,
+#: evidence held) are meaningful for every window including "all".
+_PERIOD_WINDOWS: tuple[str, ...] = tuple(label for label, days in WINDOWS if days > 0)
+_ALL_WINDOWS: tuple[str, ...] = tuple(label for label, _days in WINDOWS)
+_OCCURRENCE_WINDOWS = _PERIOD_WINDOWS
 
 #: SQL fragment: a well-formed `YYYY-MM-DD` date. Anything else is treated as missing rather
 #: than compared as text, so a malformed value cannot land inside a period by accident.
@@ -61,6 +77,9 @@ class Period:
 
     start: date
     end: date
+    #: True when the period covers the whole dataset rather than a trailing window. Set by
+    #: `resolve_window`; an occurrence metric over an all-time period is a cumulative total.
+    is_all_time: bool = False
 
     @property
     def days(self) -> int:
@@ -70,6 +89,11 @@ class Period:
         return self.start <= value < self.end
 
     def previous(self) -> Period:
+        # An all-time period has no previous period to compare against; returning an empty
+        # interval keeps the previous-period queries from scanning the whole table for a
+        # comparison that cannot exist.
+        if self.is_all_time:
+            return Period(_EPOCH, _EPOCH, is_all_time=True)
         span = timedelta(days=self.days)
         return Period(self.start - span, self.start)
 
@@ -79,13 +103,19 @@ def resolve_window(window: str | int, *, today: date | None = None) -> Period:
 
     The window is inclusive of today, so ``[today - (days-1), today + 1)`` holds exactly
     ``days`` calendar days. This keeps "last 7 days" from silently meaning 8.
+
+    ``all`` (or any non-positive day count) is the whole dataset: it starts at an epoch
+    sentinel so the same bounded SQL shape still applies, and its ``is_all_time`` is True so the
+    page can label the occurrence figures as cumulative totals rather than a trailing trend.
     """
     if isinstance(window, int):
-        days = window
+        days = int(window)
     else:
         days = WINDOW_DAYS.get(str(window), WINDOW_DAYS[DEFAULT_WINDOW])
-    days = max(1, int(days))
     end_day = today or datetime.now(timezone.utc).date()
+    if days <= 0:
+        return Period(_EPOCH, end_day + timedelta(days=1), is_all_time=True)
+    days = max(1, days)
     start = end_day - timedelta(days=days - 1)
     return Period(start, end_day + timedelta(days=1))
 
@@ -102,6 +132,13 @@ class Metric:
     comparison_available: bool = False
     comparison_note: str | None = None
     excluded_future: int = 0
+    #: True when the value is a cumulative total over the whole dataset (the "all time"
+    #: window), not an occurrence inside a trailing period. A cumulative total is not a trend,
+    #: so the page labels it accordingly rather than showing it as a period figure.
+    cumulative: bool = False
+    #: The window options this metric is meaningful for. Occurrence metrics (a change, a first
+    #: observation) are only meaningful inside a period and are absent from "all".
+    windows: tuple[str, ...] = ()
 
     @property
     def delta(self) -> int | None:
@@ -238,11 +275,23 @@ def _ingestion_window(db: Database, *, trade: str) -> dict:
     ).fetchone()
     if row is None:
         return {}
+    # How long BuildScope has actually been collecting. A window longer than this span is
+    # reminding the reader that the database is younger than the period, so the figure is a
+    # total held, not a complete period.
+    span_days = None
+    if row["first_seen"] and row["last_seen"]:
+        try:
+            first = datetime.fromisoformat(str(row["first_seen"]).replace("Z", "+00:00"))
+            last = datetime.fromisoformat(str(row["last_seen"]).replace("Z", "+00:00"))
+            span_days = max((last.date() - first.date()).days, 0)
+        except ValueError:
+            span_days = None
     return {
         "first_observed": row["first_seen"],
         "last_observed": row["last_seen"],
         "oldest_permit_date": row["oldest_permit"],
         "newest_permit_date": row["newest_permit"],
+        "observation_span_days": span_days,
     }
 
 
@@ -270,13 +319,20 @@ def build_trend_report(
             ).date()
         except ValueError:
             first_seen = None
-    comparison_available = first_seen is not None and first_seen <= previous.start
-    comparison_note = None
-    if not comparison_available:
+    if period.is_all_time:
+        comparison_available = False
         comparison_note = (
-            "No record in this database predates the previous period, so no comparison is "
-            "shown. A zero here would read as a decline and would be false."
+            "This window is the whole stored dataset, so there is no previous period to "
+            "compare against. Occurrence figures here are cumulative totals, not a trend."
         )
+    else:
+        comparison_available = first_seen is not None and first_seen <= previous.start
+        comparison_note = None
+        if not comparison_available:
+            comparison_note = (
+                "No record in this database predates the previous period, so no comparison is "
+                "shown. A zero here would read as a decline and would be false."
+            )
 
     # --- the metrics ---------------------------------------------------------
     # 1. Projects whose permit date falls in the window: distinct project count.
@@ -301,6 +357,8 @@ def build_trend_report(
         comparison_available=comparison_available,
         comparison_note=comparison_note,
         excluded_future=_future_excluded(db, trade=trade, today=reference_day),
+        cumulative=period.is_all_time,
+        windows=_OCCURRENCE_WINDOWS,
     )
 
     # 2. Permits with a permit date in the window. A project count and a permit count are not
@@ -338,6 +396,8 @@ def build_trend_report(
         previous=permits_prev,
         comparison_available=comparison_available,
         comparison_note=comparison_note,
+        cumulative=period.is_all_time,
+        windows=_OCCURRENCE_WINDOWS,
     )
 
     # 3. Projects carrying a classified trade relationship, dated in the window. This is
@@ -376,6 +436,8 @@ def build_trend_report(
         previous=trade_prev,
         comparison_available=comparison_available,
         comparison_note=comparison_note,
+        cumulative=period.is_all_time,
+        windows=_OCCURRENCE_WINDOWS,
     )
 
     # 4. Projects changed *after* first being observed, in the window. `new_project` is the
@@ -413,6 +475,8 @@ def build_trend_report(
         previous=changed_prev,
         comparison_available=comparison_available,
         comparison_note=comparison_note,
+        cumulative=period.is_all_time,
+        windows=_OCCURRENCE_WINDOWS,
     )
 
     # 5. Projects first observed (ingested) in the window. This measures BuildScope's data
@@ -445,6 +509,8 @@ def build_trend_report(
         previous=observed_prev,
         comparison_available=comparison_available,
         comparison_note=comparison_note,
+        cumulative=period.is_all_time,
+        windows=_OCCURRENCE_WINDOWS,
     )
 
     # 6. Projects with strong (tier 1 or 2) mechanical evidence, dated in the window.
@@ -479,6 +545,8 @@ def build_trend_report(
         previous=strong_prev,
         comparison_available=comparison_available,
         comparison_note=comparison_note,
+        cumulative=period.is_all_time,
+        windows=_ALL_WINDOWS,
     )
 
     malformed = _malformed_date_count(db, trade)
