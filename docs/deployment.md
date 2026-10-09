@@ -28,6 +28,31 @@ it. See `.env.example`.
 For Firebase Google Sign-In configuration (`FIREBASE_CONFIG_JSON`, `FIREBASE_CONFIG_PATH`,
 `FIREBASE_PROJECT_ID`), see [security](security.md).
 
+## Persistent storage (required for stable public counts)
+
+The database is a single SQLite file. On a host with no persistent disk the container filesystem
+is ephemeral, so the database is rebuilt from a bounded, partial ingest after every deploy. Two
+consequences follow:
+
+* A headline count read before a deploy and again after it describes two different datasets. That
+  is the observed cause of the home page showing different "commercial project" totals minutes
+  apart (see `audit/WP1_REPORT.md`).
+* The refresh loop is bounded (`MAX_PAGES`), so a fresh instance re-collects only the newest
+  pages; the assembled dataset never converges to the same numbers as a longer-running instance.
+
+The fix is a Render disk, which **requires a paid instance type**. In `render.yaml`:
+
+1. Change `plan: free` to `plan: starter` (or higher).
+2. Uncomment the `disk` block (`mountPath: /var/data`).
+3. Uncomment and set both `OPPINTEL_DATA_DIR=/var/data` and `OPPINTEL_DB=/var/data/oppintel.db`.
+
+`ops/start.sh` already honours both variables, and fails with a named error if an explicitly
+configured path is not writable. A Blueprint that declares a disk on a Free instance does not
+apply at all, which is why the block ships commented out and the plan is not changed here.
+
+**Do not point `OPPINTEL_DATA_DIR` at `/var/data` without a disk attached** — that path does not
+exist on a Free instance and the start is the one way to break the service.
+
 ## Deploy
 
 1. **Install and build.**

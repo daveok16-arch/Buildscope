@@ -7,6 +7,16 @@
 # This defaults to the Free plan, which has no persistent disk. That is enough to get the service
 # up, but the database then lives in the checkout and is replaced on every deploy. To keep the
 # assembled dataset, switch to a paid plan and enable the disk block at the bottom of this file.
+#
+# WHY A DISK IS REQUIRED FOR STABLE COUNTS: the database is SQLite (a file). On a host with no
+# disk it is rebuilt from a bounded, partial ingest after every deploy, so a headline count taken
+# before a deploy and again after it describes two different datasets. With the disk mounted at
+# /var/data and OPPINTEL_DB pointing at it, a deploy replaces the code, not the data.
+#
+# A Blueprint that declares a `disk` on a Free instance does not apply at all, which is why the
+# disk block below is shipped commented out and `plan` stays `free`. Enabling the disk is a
+# two-step change by the owner: set `plan: starter` (or higher) AND uncomment the disk block and
+# the two OPPINTEL_* variables. This file does not change the plan on its own.
 
 services:
   - type: web
@@ -59,9 +69,10 @@ services:
       #   value: /var/data
       # - key: OPPINTEL_DB
       #   value: /var/data/oppintel.db
-    # Persistent disk. Requires a paid instance type — uncomment this block and the two
-    # OPPINTEL_* variables above, and change `plan` to `starter`. Without it the database is
-    # rebuilt from scratch after every deploy.
+    # Persistent disk (REQUIRED to keep public counts stable across deploys). Requires a paid
+    # instance type — uncomment this block and the two OPPINTEL_* variables above, and change
+    # `plan` to `starter`. Without it the database is rebuilt from scratch after every deploy and
+    # the headline numbers change between a pre-deploy read and a post-deploy read.
     # disk:
     #   name: oppintel-data
     #   mountPath: /var/data
