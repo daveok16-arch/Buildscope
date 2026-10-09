@@ -4,7 +4,7 @@ This is the *current* Dallas source. The Socrata open-data extract and the FY202
 layer both stop in the past (2019-12-31 and 2023-12-29), which is why they are retained only
 for historical analysis.
 
-Mechanism, verified 2026-09-21 and documented in docs/dallas_source.md:
+Mechanism, verified 2026-09-21 and documented in docs/engineering/dallas_source.md:
 
 * The portal is ASP.NET WebForms. Search is a ``__doPostBack`` on ``btnNewSearch``.
 * The POST is accepted only when all three hold: a ``__VIEWSTATE`` taken from a GET in the

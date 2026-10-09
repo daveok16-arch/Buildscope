@@ -237,7 +237,7 @@ They belong in the design document rather than in tribal knowledge.
 GIS layer (ends 2023-12-29) are both stale, so Dallas was previously an explicit gap. The
 current system is **DallasNow**, an Accela Citizen Access portal at
 `aca-prod.accela.com/DALLASTX`, which is public, login-free, and current. The verified request
-mechanism is documented in [`docs/dallas_source.md`](dallas_source.md).
+mechanism is documented in [dallas_source.md](dallas_source.md).
 
 **Dallas supplies Tier-1 mechanical evidence.** The portal publishes
 `Commercial Mechanical Permit` as a first-class record type. Together with Fort Worth's

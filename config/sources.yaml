@@ -75,7 +75,7 @@ sources:
       unverified for Dallas records.
     notes: >
       ASP.NET WebForms public search. Requires a session-scoped __VIEWSTATE plus Origin and
-      Referer headers; see docs/dallas_source.md for the verified request mechanism.
+      Referer headers; see docs/engineering/dallas_source.md for the verified request mechanism.
       Paginates ten records per page and saturates its result counter at "100+".
 
   - id: dallas_gis_permits

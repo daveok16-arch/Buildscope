@@ -33,3 +33,6 @@ data/raw/
 # Firebase web config contains a project API key. Inject it per-deployment via
 # FIREBASE_CONFIG_PATH (or FIREBASE_CONFIG_JSON) instead of committing it.
 firebase-applet-config.json
+
+# Generated report output (the /reports page reads the database, not this directory).
+reports/

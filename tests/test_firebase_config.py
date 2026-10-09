@@ -1,9 +1,9 @@
 """Guards against re-committing the Firebase web API key.
 
 The key is public client configuration, but an *unrestricted* key in a public repository is a
-finding in its own right (the repo's own `BUILD_SCOPE_REPOSITORY_AUDIT.md` rates it HIGH). These
-tests fail if the file is tracked again, if a live-looking key reappears anywhere in the tree, or
-if the environment-injection path regresses.
+finding in its own right (the repo's own `docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md` rates
+it HIGH). These tests fail if the file is tracked again, if a live-looking key reappears anywhere
+in the tree, or if the environment-injection path regresses.
 """
 
 from __future__ import annotations
@@ -13,7 +13,6 @@ import re
 import subprocess
 from pathlib import Path
 
-import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 

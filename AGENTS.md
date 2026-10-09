@@ -202,7 +202,7 @@ These are enforced by tests, not by convention. Breaking one fails the suite.
   `test_list_marks_records_without_trade_evidence`) and
   `test_app_directory.py::test_plumbing_only_record_is_not_listed_as_hvac` (now
   `test_plumbing_only_record_is_listed_but_never_as_hvac`).
-* `tests/test_seo_keywords.py` encodes an internal-linking contract (README ~line 361): the
+* `tests/test_seo_keywords.py` encodes an internal-linking contract (see `docs/testing.md`): the
   category page must link to `/opportunities`, `/markets/dfw`, `/trades/commercial-hvac` and
   `/guides`, and the footer must link the category page on every public page. The shipped
   `templates/base.html` had neither, so those two links were added to the footer Product column.
@@ -223,7 +223,7 @@ These are enforced by tests, not by convention. Breaking one fails the suite.
 * The repository is committed on branch `main` (163 files, ~1.8 MB of source). `vendor/python/` and
   `data/` runtime state are git-ignored — the host installs from `requirements.txt` and regenerates
   the database. The GitHub App token in this sandbox cannot create repositories; the owner must
-  create the remote and push (see `docs/RENDER_DEPLOY.md`).
+  create the remote and push (see `docs/deployment.md`).
 
 ## Local live run (sandbox)
 
