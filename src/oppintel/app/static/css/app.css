@@ -105,7 +105,6 @@ html {
   -webkit-text-size-adjust: 100%;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   scroll-behavior: smooth;
-  overflow-x: hidden;
 }
 
 body {
@@ -119,7 +118,6 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
   width: 100%;
 }
 
@@ -208,6 +206,20 @@ a:hover {
   margin-right: auto;
   padding-left: clamp(16px, 3.5vw, 28px);
   padding-right: clamp(16px, 3.5vw, 28px);
+}
+
+/* Visible to screen readers only. Used for headings that exist to keep the
+   document outline valid when the visible heading is hidden at a breakpoint. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .skip-link {
@@ -329,7 +341,8 @@ p:last-child {
   gap: 10px;
   color: #ffffff;
   text-decoration: none;
-  flex-shrink: 0;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .brand-mark {
@@ -471,6 +484,8 @@ p:last-child {
   justify-content: center;
   width: 44px;
   height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: var(--radius-sm);
@@ -512,6 +527,11 @@ p:last-child {
   transition: opacity 0.25s ease, visibility 0.25s ease;
 }
 
+/* aria-modal dialog. role="dialog" is not permitted on <aside> (axe
+   aria-allowed-role); a <div> is. Hidden entirely on desktop (no hamburger
+   there) so it cannot contribute to horizontal scroll; it becomes a flex
+   column only inside the mobile breakpoint, and visibility:hidden while
+   closed keeps its links out of the tab order. */
 .mobile-drawer {
   position: fixed;
   top: 0;
@@ -522,8 +542,12 @@ p:last-child {
   border-left: 1px solid var(--line-dark);
   z-index: 1100;
   transform: translateX(100%);
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  display: flex;
+  visibility: hidden;
+  /* visibility flips only after the slide-out finishes (so the close animation
+     is seen); on open it flips at once. Transitioning visibility by duration
+     would keep it hidden for the whole open animation and make focus() a no-op. */
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 0.25s;
+  display: none;
   flex-direction: column;
   box-shadow: -8px 0 32px rgba(0, 0, 0, 0.5);
   overflow-y: auto;
@@ -537,6 +561,8 @@ body.drawer-open .mobile-drawer-backdrop {
 
 body.drawer-open .mobile-drawer {
   transform: translateX(0);
+  visibility: visible;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 0s;
 }
 
 .drawer-header {
@@ -615,7 +641,11 @@ body.drawer-open .mobile-drawer {
   background: rgba(0, 0, 0, 0.25);
   border-top: 1px solid var(--line-dark);
   font-size: 0.76rem;
-  color: var(--slate-400);
+  color: var(--slate-300);
+}
+/* .muted is slate-500 (4.2:1 on this near-black panel); slate-300 is 13:1. */
+.drawer-footer-status .muted {
+  color: var(--slate-300);
 }
 
 /* ==========================================================================
@@ -640,14 +670,15 @@ body.drawer-open .mobile-drawer {
 }
 
 .btn-primary {
-  background: var(--gold-500);
+  /* gold-600 (#b45309), not gold-500: white on gold-500 is 3.19:1 (WCAG AA fail). */
+  background: var(--gold-600);
   color: #ffffff !important;
   border-color: var(--gold-600);
   box-shadow: 0 1px 2px rgba(180, 83, 9, 0.2);
 }
 .btn-primary:hover {
-  background: var(--gold-600);
-  border-color: var(--gold-600);
+  background: #92400e;
+  border-color: #92400e;
   color: #ffffff !important;
 }
 
@@ -700,6 +731,38 @@ body.drawer-open .mobile-drawer {
   padding: 13px 26px;
   min-height: 46px;
   border-radius: var(--radius-md);
+}
+
+/* WCAG 2.5.5 target size (44px) applies to touch input, so it is scoped to
+   coarse pointers and narrow viewports rather than shrinking desktop density. */
+@media (max-width: 640px), (hover: none) and (pointer: coarse) {
+  .btn,
+  .btn-small,
+  .drawer-close-btn,
+  .feed-sort-select,
+  .mobile-menu-btn,
+  .form-input,
+  .btn-google-auth {
+    min-height: 44px;
+  }
+  .hero-search-box button {
+    min-height: 44px;
+  }
+  .drawer-close-btn {
+    width: 44px;
+    height: 44px;
+  }
+  .btn-small {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  .drawer-nav a {
+    min-height: 44px;
+  }
+  .feed-sort-select {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
 }
 
 /* ==========================================================================
@@ -782,7 +845,7 @@ body.drawer-open .mobile-drawer {
 }
 
 .hero-search-box button {
-  background: var(--gold-500);
+  background: var(--gold-600);
   color: #ffffff;
   font-weight: 700;
   font-size: 0.90rem;
@@ -796,7 +859,7 @@ body.drawer-open .mobile-drawer {
 }
 
 .hero-search-box button:hover {
-  background: var(--gold-600);
+  background: #92400e;
 }
 
 .hero-cta {
@@ -1029,6 +1092,101 @@ body.drawer-open .mobile-drawer {
   margin-top: 24px;
 }
 
+/* --- Company directory card -------------------------------------------------
+   The company card previously reused `.card-meta` (a single-line flex row) to
+   hold a label/value list, so every value past the first was squeezed and the
+   text was clipped. A definition list keeps each field on its own row. */
+.company-card {
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.company-facts {
+  margin: 12px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.company-facts .meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.company-facts .meta-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--slate-500);
+}
+
+.company-facts .meta-val {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--navy-950);
+  overflow-wrap: anywhere;
+}
+
+.company-card-footer {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--slate-200);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Guide index cards (`.guide-grid` / `.guide-card` had no rules, so the list
+   rendered as unstyled full-width links). */
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: clamp(14px, 2vw, 20px);
+  margin-top: 8px;
+}
+
+.guide-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  text-decoration: none;
+  color: var(--ink);
+  transition: all 0.15s ease;
+}
+
+.guide-card:hover {
+  border-color: var(--slate-300);
+  box-shadow: var(--shadow-md);
+}
+
+.guide-card h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--navy-950);
+}
+
+.guide-card p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--slate-600);
+}
+
+/* Touch/narrow: company cards become single-column so a 320px grid track can
+   never overflow a 390px viewport. */
+@media (max-width: 640px) {
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .card {
   background: #ffffff;
   border: 1px solid var(--line);
@@ -1066,9 +1224,12 @@ body.drawer-open .mobile-drawer {
 .signal-indicator {
   font-weight: 800;
 }
-.signal-indicator.signal-high { color: var(--signal-high); }
-.signal-indicator.signal-medium { color: var(--signal-med); }
-.signal-indicator.signal-low { color: var(--signal-low); }
+/* The -text variants are the AA-safe pairings for white backgrounds (>=7:1);
+   the raw signal-* hues are 3.2-3.8:1 and fail WCAG AA as small body text. */
+.signal-indicator.signal-high { color: var(--signal-high-text); }
+.signal-indicator.signal-medium { color: var(--signal-med-text); }
+.signal-indicator.signal-low { color: var(--signal-low-text); }
+.signal-indicator.signal-closed { color: var(--signal-closed-text); }
 
 /* Card Title & Address */
 .card-header-block {
@@ -1079,6 +1240,19 @@ body.drawer-open .mobile-drawer {
   font-size: 1.15rem;
   margin-bottom: 6px;
   line-height: 1.3;
+}
+
+/* A small uppercase label above a panel/step title. It is deliberately not a
+   heading element: the visual eyebrow sits under an existing h2/h3 and a real
+   <h4> would skip a level in the document outline (WCAG 1.3.1 / axe
+   heading-order). */
+.panel-eyebrow {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--slate-600);
+  margin: 0 0 4px;
 }
 
 .card-header-block h3 a {
@@ -1602,6 +1776,11 @@ body.drawer-open .mobile-drawer {
   margin-bottom: 2px;
 }
 
+/* .muted is slate-500 (3.75:1 on the #0f172a auth panel); slate-400 is 7.6:1. */
+.auth-intelligence-panel .muted {
+  color: var(--slate-400);
+}
+
 .auth-guarantee-note {
   display: flex;
   align-items: center;
@@ -2098,6 +2277,11 @@ body.drawer-open .mobile-drawer {
   margin-top: 64px;
 }
 
+/* .muted resolves to slate-500 (4.13:1 on navy-950); slate-400 is 7.67:1. */
+.site-footer .muted {
+  color: var(--slate-400);
+}
+
 .footer-grid {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr;
@@ -2121,9 +2305,12 @@ body.drawer-open .mobile-drawer {
   margin-bottom: 12px;
 }
 
-.site-footer h4 {
+/* Footer column labels are not document headings; using <p> keeps the
+   heading outline h1 -> h2 without a skipped h3. */
+.footer-heading {
   color: #ffffff;
   font-size: 0.78rem;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-bottom: 16px;
@@ -2172,6 +2359,9 @@ body.drawer-open .mobile-drawer {
   .mobile-menu-btn {
     display: inline-flex;
   }
+  .mobile-drawer {
+    display: flex;
+  }
   .evidence-chain-grid {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -2209,6 +2399,9 @@ body.drawer-open .mobile-drawer {
   .split-3 {
     grid-template-columns: 1fr;
   }
+  .split-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 640px) {
@@ -2216,8 +2409,26 @@ body.drawer-open .mobile-drawer {
     flex-direction: column;
     padding: 8px;
   }
+  .split-4 {
+    grid-template-columns: 1fr;
+  }
+  /* A nowrap button with a long label ("Commercial HVAC opportunities") is
+     wider than a 390px viewport once padding is included; let it wrap and fill
+     the row instead of forcing horizontal scroll. */
+  .btn {
+    white-space: normal;
+    max-width: 100%;
+  }
+  .hero-cta {
+    width: 100%;
+  }
+  .hero-cta .btn {
+    width: 100%;
+    justify-content: center;
+  }
   .hero-search-box button {
     width: 100%;
+    min-height: 44px;
   }
   .evidence-strip {
     grid-template-columns: 1fr;
@@ -2263,5 +2474,13 @@ body.drawer-open .mobile-drawer {
   }
   .card {
     padding: 16px 14px;
+  }
+  /* Long product wordmark overflows a 320-360px header; the mark alone is
+     enough to identify the site at that width. */
+  .brand-text small {
+    display: none;
+  }
+  .brand-text strong {
+    font-size: 1rem;
   }
 }

@@ -179,6 +179,10 @@
       </div>
 
       {% if result.items %}
+        {# The filter sidebar (which carries the next heading) is hidden on
+           mobile, so the card <h3> would follow the <h1> directly. This h2
+           keeps the outline h1 -> h2 -> h3 at every viewport. #}
+        <h2 class="sr-only">Matching opportunities</h2>
         <div class="card-grid" style="margin-top:0">
           {% for project in result.items %}
             {% include "partials/opportunity_card.html" %}

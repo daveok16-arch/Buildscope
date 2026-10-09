@@ -66,9 +66,9 @@
     </div>
 
     {% if companies %}
-      <div class="card-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
+      <div class="card-grid">
         {% for c in companies %}
-        <article class="card opportunity-card" style="display:flex; flex-direction:column; justify-content:space-between">
+        <article class="card opportunity-card company-card">
           <div>
             <div class="card-badges">
               <span class="badge badge-plain">{{ c.primary_role }}</span>
@@ -76,37 +76,37 @@
                 <span class="badge badge-evidence">{{ c.mechanical_project_count }} with Mechanical</span>
               {% endif %}
             </div>
-            <h3 class="card-title" style="margin-top:8px">
+            <h3 class="card-title">
               <a href="{{ url_for('company_detail', slug=c.slug) }}">{{ c.name }}</a>
             </h3>
             
-            <div class="card-meta" style="margin:12px 0">
+            <dl class="company-facts">
               <div class="meta-item">
-                <span class="meta-label">Associated Projects:</span>
-                <span class="meta-val font-semibold">{{ c.project_count }}</span>
+                <dt class="meta-label">Associated Projects</dt>
+                <dd class="meta-val">{{ c.project_count }}</dd>
               </div>
               {% if c.total_declared_value %}
               <div class="meta-item">
-                <span class="meta-label">Declared Valuation:</span>
-                <span class="meta-val font-semibold">${{ "{:,.0f}".format(c.total_declared_value) }}</span>
+                <dt class="meta-label">Declared Valuation</dt>
+                <dd class="meta-val">${{ "{:,.0f}".format(c.total_declared_value) }}</dd>
               </div>
               {% endif %}
               {% if c.cities %}
               <div class="meta-item">
-                <span class="meta-label">Active Footprint:</span>
-                <span class="meta-val">{{ c.cities | join(', ') }}</span>
+                <dt class="meta-label">Active Footprint</dt>
+                <dd class="meta-val">{{ c.cities | join(', ') }}</dd>
               </div>
               {% endif %}
               {% if c.project_types %}
               <div class="meta-item">
-                <span class="meta-label">Specializations:</span>
-                <span class="meta-val">{{ c.project_types | join(', ') }}</span>
+                <dt class="meta-label">Specializations</dt>
+                <dd class="meta-val">{{ c.project_types | join(', ') }}</dd>
               </div>
               {% endif %}
-            </div>
+            </dl>
           </div>
 
-          <div class="card-footer" style="margin-top:16px; border-top:1px solid var(--slate-200); padding-top:12px; display:flex; justify-content:space-between; align-items:center">
+          <div class="card-footer company-card-footer">
             <span class="small muted">Public Records Verified</span>
             <a class="btn btn-small btn-outline" href="{{ url_for('company_detail', slug=c.slug) }}">View Profile &rarr;</a>
           </div>
