@@ -43,22 +43,30 @@
   <div class="wrap">
     <div class="evidence-strip">
       <div class="evidence-stat-item">
-        <span class="evidence-stat-num">{{ "{:,}".format(stats.projects_public) }}</span>
-        <span class="evidence-stat-label">Commercial projects</span>
+        <span class="evidence-stat-num">{{ "{:,}".format(stats.public_projects) }}</span>
+        <span class="evidence-stat-label">Public projects</span>
       </div>
       <div class="evidence-stat-item">
-        <span class="evidence-stat-num">{{ "{:,}".format(stats.with_mechanical) }}</span>
+        <span class="evidence-stat-num">{{ "{:,}".format(stats.projects_with_mechanical_evidence) }}</span>
         <span class="evidence-stat-label">Projects with mechanical evidence</span>
       </div>
       <div class="evidence-stat-item">
-        <span class="evidence-stat-num">{{ "{:,}".format(stats.cities) }}</span>
+        <span class="evidence-stat-num">{{ "{:,}".format(stats.active_jurisdictions) }}</span>
         <span class="evidence-stat-label">Active jurisdictions</span>
       </div>
       <div class="evidence-stat-item">
         <span class="evidence-stat-num">{{ "{:,}".format(stats.permit_records) }}</span>
-        <span class="evidence-stat-label">Permit records processed</span>
+        <span class="evidence-stat-label">Permit records</span>
       </div>
     </div>
+    <p class="evidence-strip-asof small muted">
+      {% set defs = stat_definitions or {} %}
+      <span title="{{ defs.get('public_projects', '') }}">Public projects</span>,
+      <span title="{{ defs.get('projects_with_mechanical_evidence', '') }}">mechanical evidence</span>,
+      <span title="{{ defs.get('active_jurisdictions', '') }}">active jurisdictions</span> and
+      <span title="{{ defs.get('permit_records', '') }}">permit records</span> — computed from
+      public records{% if stats.computed_at %}, as of {{ stats.computed_at[:16].replace('T', ' ') }} UTC{% endif %}.
+    </p>
   </div>
 </div>
 

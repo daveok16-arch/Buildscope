@@ -27,8 +27,12 @@ def test_homepage_renders(client):
 def test_homepage_shows_real_statistics_not_placeholders(client):
     """Every headline figure must come from the database."""
     body = client.get("/").get_data(as_text=True)
-    assert "Commercial projects" in body
-    assert "Permit records processed" in body
+    # Labels were renamed to match their exact definitions in `app/stat_snapshot.py`: "Public
+    # projects" (discoverable) and "Permit records" (public linked permits).
+    assert "Public projects" in body
+    assert "Permit records" in body
+    # The strip states its as-of time, so the figure is not presented as live.
+    assert "as of" in body
     # No placeholder or fabricated marketing figure.
     for fake in ("10,000+", "trusted by", "thousands of contractors"):
         assert fake not in body

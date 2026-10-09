@@ -1,0 +1,1345 @@
+{
+ "axe": {
+  "/": [
+   {
+    "id": "aria-allowed-role",
+    "impact": "minor",
+    "n": 1,
+    "help": "ARIA role should be appropriate for the element",
+    "targets": [
+     [
+      "#mobile-nav-drawer"
+     ]
+    ]
+   },
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 12,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "targets": [
+     [
+      ".btn-ghost.btn-small[href$=\"signin\"]"
+     ],
+     [
+      ".btn-primary.btn-small[href$=\"signup\"]"
+     ],
+     [
+      ".drawer-account > .btn-primary.btn[href$=\"signup\"]"
+     ]
+    ]
+   },
+   {
+    "id": "heading-order",
+    "impact": "moderate",
+    "n": 2,
+    "help": "Heading levels should only increase by one",
+    "targets": [
+     [
+      ".detail-panel:nth-child(1) > h4"
+     ],
+     [
+      ".footer-grid > div:nth-child(2) > h4"
+     ]
+    ]
+   },
+   {
+    "id": "region",
+    "impact": "moderate",
+    "n": 5,
+    "help": "All page content should be contained by landmarks",
+    "targets": [
+     [
+      ".hero-tagline-kicker"
+     ],
+     [
+      "h1"
+     ],
+     [
+      ".lede"
+     ]
+    ]
+   }
+  ],
+  "/opportunities": [
+   {
+    "id": "aria-allowed-role",
+    "impact": "minor",
+    "n": 1,
+    "help": "ARIA role should be appropriate for the element",
+    "targets": [
+     [
+      "#mobile-nav-drawer"
+     ]
+    ]
+   },
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 28,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "targets": [
+     [
+      ".btn-ghost.btn-small[href$=\"signin\"]"
+     ],
+     [
+      ".btn-primary.btn-small[href$=\"signup\"]"
+     ],
+     [
+      ".drawer-account > .btn-primary.btn[href$=\"signup\"]"
+     ]
+    ]
+   },
+   {
+    "id": "heading-order",
+    "impact": "moderate",
+    "n": 1,
+    "help": "Heading levels should only increase by one",
+    "targets": [
+     [
+      ".filter-sidebar-head > h3"
+     ]
+    ]
+   },
+   {
+    "id": "region",
+    "impact": "moderate",
+    "n": 1,
+    "help": "All page content should be contained by landmarks",
+    "targets": [
+     [
+      "section"
+     ]
+    ]
+   }
+  ],
+  "/markets/dfw": [
+   {
+    "id": "aria-allowed-role",
+    "impact": "minor",
+    "n": 1,
+    "help": "ARIA role should be appropriate for the element",
+    "targets": [
+     [
+      "#mobile-nav-drawer"
+     ]
+    ]
+   },
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 14,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "targets": [
+     [
+      ".btn-ghost"
+     ],
+     [
+      ".btn-primary.btn-small[href$=\"signup\"]"
+     ],
+     [
+      ".drawer-account > .btn-primary.btn[href$=\"signup\"]"
+     ]
+    ]
+   },
+   {
+    "id": "heading-order",
+    "impact": "moderate",
+    "n": 2,
+    "help": "Heading levels should only increase by one",
+    "targets": [
+     [
+      ".notice > h4"
+     ],
+     [
+      "div:nth-child(2) > h4"
+     ]
+    ]
+   },
+   {
+    "id": "region",
+    "impact": "moderate",
+    "n": 1,
+    "help": "All page content should be contained by landmarks",
+    "targets": [
+     [
+      ".hero"
+     ]
+    ]
+   }
+  ],
+  "/companies": [
+   {
+    "id": "aria-allowed-role",
+    "impact": "minor",
+    "n": 1,
+    "help": "ARIA role should be appropriate for the element",
+    "targets": [
+     [
+      "#mobile-nav-drawer"
+     ]
+    ]
+   },
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 8,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "targets": [
+     [
+      ".btn-ghost.btn-small[href$=\"signin\"]"
+     ],
+     [
+      ".btn-primary.btn-small[href$=\"signup\"]"
+     ],
+     [
+      ".drawer-account > .btn-primary.btn[href$=\"signup\"]"
+     ]
+    ]
+   },
+   {
+    "id": "heading-order",
+    "impact": "moderate",
+    "n": 1,
+    "help": "Heading levels should only increase by one",
+    "targets": [
+     [
+      ".filter-sidebar-head > h3"
+     ]
+    ]
+   },
+   {
+    "id": "region",
+    "impact": "moderate",
+    "n": 1,
+    "help": "All page content should be contained by landmarks",
+    "targets": [
+     [
+      "section"
+     ]
+    ]
+   }
+  ],
+  "/changes": [
+   {
+    "id": "aria-allowed-role",
+    "impact": "minor",
+    "n": 1,
+    "help": "ARIA role should be appropriate for the element",
+    "targets": [
+     [
+      "#mobile-nav-drawer"
+     ]
+    ]
+   },
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 7,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "targets": [
+     [
+      ".btn-ghost"
+     ],
+     [
+      ".btn-primary.btn-small[href$=\"signup\"]"
+     ],
+     [
+      ".drawer-account > .btn-primary.btn[href$=\"signup\"]"
+     ]
+    ]
+   },
+   {
+    "id": "heading-order",
+    "impact": "moderate",
+    "n": 2,
+    "help": "Heading levels should only increase by one",
+    "targets": [
+     [
+      "h3"
+     ],
+     [
+      "div:nth-child(2) > h4"
+     ]
+    ]
+   },
+   {
+    "id": "region",
+    "impact": "moderate",
+    "n": 1,
+    "help": "All page content should be contained by landmarks",
+    "targets": [
+     [
+      "section"
+     ]
+    ]
+   }
+  ],
+  "/trends": [
+   {
+    "id": "aria-allowed-role",
+    "impact": "minor",
+    "n": 1,
+    "help": "ARIA role should be appropriate for the element",
+    "targets": [
+     [
+      "#mobile-nav-drawer"
+     ]
+    ]
+   },
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 8,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "targets": [
+     [
+      ".btn-ghost"
+     ],
+     [
+      ".btn-primary.btn-small[href$=\"signup\"]"
+     ],
+     [
+      ".drawer-account > .btn-primary.btn[href$=\"signup\"]"
+     ]
+    ]
+   },
+   {
+    "id": "region",
+    "impact": "moderate",
+    "n": 1,
+    "help": "All page content should be contained by landmarks",
+    "targets": [
+     [
+      "section"
+     ]
+    ]
+   }
+  ],
+  "/analytics": [
+   {
+    "id": "aria-allowed-role",
+    "impact": "minor",
+    "n": 1,
+    "help": "ARIA role should be appropriate for the element",
+    "targets": [
+     [
+      "#mobile-nav-drawer"
+     ]
+    ]
+   },
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 6,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "targets": [
+     [
+      ".btn-ghost"
+     ],
+     [
+      ".btn-primary.btn-small[href$=\"signup\"]"
+     ],
+     [
+      ".drawer-account > .btn-primary.btn[href$=\"signup\"]"
+     ]
+    ]
+   },
+   {
+    "id": "heading-order",
+    "impact": "moderate",
+    "n": 1,
+    "help": "Heading levels should only increase by one",
+    "targets": [
+     [
+      "div:nth-child(2) > h4"
+     ]
+    ]
+   },
+   {
+    "id": "region",
+    "impact": "moderate",
+    "n": 1,
+    "help": "All page content should be contained by landmarks",
+    "targets": [
+     [
+      "section"
+     ]
+    ]
+   }
+  ],
+  "/reports": [
+   {
+    "id": "aria-allowed-role",
+    "impact": "minor",
+    "n": 1,
+    "help": "ARIA role should be appropriate for the element",
+    "targets": [
+     [
+      "#mobile-nav-drawer"
+     ]
+    ]
+   },
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 6,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "targets": [
+     [
+      ".btn-ghost"
+     ],
+     [
+      ".btn-small.btn-primary[href$=\"signup\"]"
+     ],
+     [
+      ".drawer-account > .btn-primary.btn[href$=\"signup\"]"
+     ]
+    ]
+   },
+   {
+    "id": "region",
+    "impact": "moderate",
+    "n": 1,
+    "help": "All page content should be contained by landmarks",
+    "targets": [
+     [
+      ".hero"
+     ]
+    ]
+   }
+  ],
+  "/signin": [
+   {
+    "id": "aria-allowed-role",
+    "impact": "minor",
+    "n": 1,
+    "help": "ARIA role should be appropriate for the element",
+    "targets": [
+     [
+      "#mobile-nav-drawer"
+     ]
+    ]
+   },
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 5,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "targets": [
+     [
+      ".btn-ghost"
+     ],
+     [
+      ".btn-small.btn-primary[href$=\"signup\"]"
+     ],
+     [
+      ".drawer-account > .btn-primary.btn[href$=\"signup\"]"
+     ]
+    ]
+   }
+  ],
+  "/signup": [
+   {
+    "id": "aria-allowed-role",
+    "impact": "minor",
+    "n": 1,
+    "help": "ARIA role should be appropriate for the element",
+    "targets": [
+     [
+      "#mobile-nav-drawer"
+     ]
+    ]
+   },
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "n": 8,
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "targets": [
+     [
+      ".btn-ghost"
+     ],
+     [
+      ".btn-small.btn-primary[href$=\"signup\"]"
+     ],
+     [
+      ".drawer-account > .btn-primary.btn[href$=\"signup\"]"
+     ]
+    ]
+   }
+  ]
+ },
+ "mobile": {
+  "/opportunities": {
+   "smallTargets": [
+    {
+     "tag": "a",
+     "cls": "brand",
+     "w": 332,
+     "h": 33,
+     "text": "BUILD SCOPE.\n        Cons"
+    },
+    {
+     "tag": "button",
+     "cls": "mobile-menu-btn",
+     "w": 22,
+     "h": 44,
+     "text": ""
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-outline",
+     "w": 294,
+     "h": 38,
+     "text": "Sign In"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-primary",
+     "w": 294,
+     "h": 38,
+     "text": "Get Access"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 39,
+     "h": 15,
+     "text": "Home"
+    },
+    {
+     "tag": "button",
+     "cls": "btn btn-outline",
+     "w": 358,
+     "h": 38,
+     "text": "Filter Opportunities\n    "
+    },
+    {
+     "tag": "select",
+     "cls": "feed-sort-select",
+     "w": 165,
+     "h": 31,
+     "text": "Most recent permit\n      "
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 95,
+     "h": 30,
+     "text": "Dossier \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 281,
+     "h": 21,
+     "text": "Renovation of HVAC system"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 95,
+     "h": 30,
+     "text": "Dossier \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 95,
+     "h": 30,
+     "text": "Dossier \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 95,
+     "h": 30,
+     "text": "Dossier \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 95,
+     "h": 30,
+     "text": "Dossier \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 95,
+     "h": 30,
+     "text": "Dossier \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 95,
+     "h": 30,
+     "text": "Dossier \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 95,
+     "h": 30,
+     "text": "Dossier \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 95,
+     "h": 30,
+     "text": "Dossier \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 95,
+     "h": 30,
+     "text": "Dossier \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 150,
+     "h": 21,
+     "text": "HVAC Remodel"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 95,
+     "h": 30,
+     "text": "Dossier \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 95,
+     "h": 30,
+     "text": "Dossier \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 95,
+     "h": 30,
+     "text": "Dossier \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 95,
+     "h": 30,
+     "text": "Dossier \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 95,
+     "h": 30,
+     "text": "Dossier \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 95,
+     "h": 30,
+     "text": "Dossier \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 95,
+     "h": 30,
+     "text": "Dossier \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 95,
+     "h": 30,
+     "text": "Dossier \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 95,
+     "h": 30,
+     "text": "Dossier \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 95,
+     "h": 30,
+     "text": "Dossier \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-outline btn-sm",
+     "w": 75,
+     "h": 38,
+     "text": "Next"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 92,
+     "h": 15,
+     "text": "Opportunities"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 53,
+     "h": 15,
+     "text": "Markets"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 75,
+     "h": 15,
+     "text": "Companies"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 58,
+     "h": 15,
+     "text": "Changes"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 44,
+     "h": 15,
+     "text": "Trends"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 61,
+     "h": 15,
+     "text": "Analytics"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 52,
+     "h": 15,
+     "text": "Reports"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 214,
+     "h": 15,
+     "text": "Commercial Construction L"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 46,
+     "h": 15,
+     "text": "Guides"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 88,
+     "h": 15,
+     "text": "How It Works"
+    }
+   ],
+   "smallCount": 46,
+   "textOverflow": [
+    {
+     "tag": "aside",
+     "cls": "mobile-drawer",
+     "sw": 352,
+     "cw": 334,
+     "text": "BUILD SCOPE.\n        Construction Opport"
+    },
+    {
+     "tag": "div",
+     "cls": "drawer-header",
+     "sw": 352,
+     "cw": 334,
+     "text": "BUILD SCOPE.\n        Construction Opport"
+    }
+   ],
+   "overflowCount": 2
+  },
+  "/companies": {
+   "smallTargets": [
+    {
+     "tag": "a",
+     "cls": "brand",
+     "w": 332,
+     "h": 33,
+     "text": "BUILD SCOPE.\n        Cons"
+    },
+    {
+     "tag": "button",
+     "cls": "mobile-menu-btn",
+     "w": 22,
+     "h": 44,
+     "text": ""
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-outline",
+     "w": 294,
+     "h": 38,
+     "text": "Sign In"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-primary",
+     "w": 294,
+     "h": 38,
+     "text": "Get Access"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 39,
+     "h": 15,
+     "text": "Home"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 105,
+     "h": 20,
+     "text": "PLANO ISD"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 127,
+     "h": 30,
+     "text": "View Profile \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 100,
+     "h": 20,
+     "text": "ALLEN ISD"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 127,
+     "h": 30,
+     "text": "View Profile \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 193,
+     "h": 20,
+     "text": "BB-8 HOLDINGS LLC"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 127,
+     "h": 30,
+     "text": "View Profile \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 130,
+     "h": 20,
+     "text": "PROSPER ISD"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 127,
+     "h": 30,
+     "text": "View Profile \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 184,
+     "h": 20,
+     "text": "MCKINNEY CITY OF"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 127,
+     "h": 30,
+     "text": "View Profile \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 147,
+     "h": 20,
+     "text": "PLANO CITY OF"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 127,
+     "h": 30,
+     "text": "View Profile \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 278,
+     "h": 42,
+     "text": "TDC-DRI MCKINNEY PHASE II"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 127,
+     "h": 30,
+     "text": "View Profile \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 308,
+     "h": 42,
+     "text": "COLUMBIA MEDICAL CENTER O"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 127,
+     "h": 30,
+     "text": "View Profile \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 218,
+     "h": 20,
+     "text": "ADL DEVELOPMENT LP"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 127,
+     "h": 30,
+     "text": "View Profile \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 127,
+     "h": 30,
+     "text": "View Profile \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 264,
+     "h": 20,
+     "text": "TEXAS HEALTH RESOURCES"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 127,
+     "h": 30,
+     "text": "View Profile \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 277,
+     "h": 20,
+     "text": "DB DATA CENTER PLANO LLC"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 127,
+     "h": 30,
+     "text": "View Profile \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 251,
+     "h": 20,
+     "text": "DD OWNSBY FARMS II LLC"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 127,
+     "h": 30,
+     "text": "View Profile \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 156,
+     "h": 20,
+     "text": "COLLIN COUNTY"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 127,
+     "h": 30,
+     "text": "View Profile \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 160,
+     "h": 20,
+     "text": "COMMUNITY ISD"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 127,
+     "h": 30,
+     "text": "View Profile \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 304,
+     "h": 42,
+     "text": "NORTH FOREST OFFICE SPACE"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 127,
+     "h": 30,
+     "text": "View Profile \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 214,
+     "h": 20,
+     "text": "HOME DEPOT USA INC"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 127,
+     "h": 30,
+     "text": "View Profile \u2192"
+    },
+    {
+     "tag": "a",
+     "cls": "",
+     "w": 204,
+     "h": 42,
+     "text": "SHELTON LANDMARK FOUNDATI"
+    },
+    {
+     "tag": "a",
+     "cls": "btn btn-small btn-outline",
+     "w": 127,
+     "h": 30,
+     "text": "View Profile \u2192"
+    }
+   ],
+   "smallCount": 137,
+   "textOverflow": [
+    {
+     "tag": "body",
+     "cls": "",
+     "sw": 426,
+     "cw": 390,
+     "text": "Skip to content\n\n\n\n  \n    \n    \n      \n "
+    },
+    {
+     "tag": "aside",
+     "cls": "mobile-drawer",
+     "sw": 352,
+     "cw": 334,
+     "text": "BUILD SCOPE.\n        Construction Opport"
+    },
+    {
+     "tag": "div",
+     "cls": "drawer-header",
+     "sw": 352,
+     "cw": 334,
+     "text": "BUILD SCOPE.\n        Construction Opport"
+    },
+    {
+     "tag": "main",
+     "cls": "",
+     "sw": 426,
+     "cw": 390,
+     "text": "Filter Stakeholders\n        Reset\n      "
+    },
+    {
+     "tag": "div",
+     "cls": "wrap",
+     "sw": 426,
+     "cw": 390,
+     "text": "Filter Stakeholders\n        Reset\n      "
+    },
+    {
+     "tag": "div",
+     "cls": "feed-workspace-layout",
+     "sw": 410,
+     "cw": 358,
+     "text": "Filter Stakeholders\n        Reset\n      "
+    },
+    {
+     "tag": "div",
+     "cls": "feed-results-area",
+     "sw": 410,
+     "cw": 358,
+     "text": "59 Companies Recorded\n        Active sta"
+    },
+    {
+     "tag": "div",
+     "cls": "card-grid",
+     "sw": 410,
+     "cw": 358,
+     "text": "Owner\n              \n            \n      "
+    },
+    {
+     "tag": "article",
+     "cls": "card opportunity-card",
+     "sw": 404,
+     "cw": 356,
+     "text": "Owner\n              \n            \n      "
+    },
+    {
+     "tag": "div",
+     "cls": "",
+     "sw": 382,
+     "cw": 312,
+     "text": "Owner\n              \n            \n      "
+    },
+    {
+     "tag": "div",
+     "cls": "card-meta",
+     "sw": 382,
+     "cw": 312,
+     "text": "Associated Projects:\n                11\n"
+    },
+    {
+     "tag": "article",
+     "cls": "card opportunity-card",
+     "sw": 394,
+     "cw": 356,
+     "text": "Owner\n              \n            \n      "
+    },
+    {
+     "tag": "div",
+     "cls": "",
+     "sw": 372,
+     "cw": 312,
+     "text": "Owner\n              \n            \n      "
+    },
+    {
+     "tag": "div",
+     "cls": "card-meta",
+     "sw": 372,
+     "cw": 312,
+     "text": "Associated Projects:\n                9\n "
+    },
+    {
+     "tag": "article",
+     "cls": "card opportunity-card",
+     "sw": 375,
+     "cw": 356,
+     "text": "Owner\n              \n            \n      "
+    },
+    {
+     "tag": "div",
+     "cls": "",
+     "sw": 353,
+     "cw": 312,
+     "text": "Owner\n              \n            \n      "
+    },
+    {
+     "tag": "div",
+     "cls": "card-meta",
+     "sw": 353,
+     "cw": 312,
+     "text": "Associated Projects:\n                4\n "
+    },
+    {
+     "tag": "article",
+     "cls": "card opportunity-card",
+     "sw": 394,
+     "cw": 356,
+     "text": "Owner\n              \n            \n      "
+    },
+    {
+     "tag": "div",
+     "cls": "",
+     "sw": 372,
+     "cw": 312,
+     "text": "Owner\n              \n            \n      "
+    },
+    {
+     "tag": "div",
+     "cls": "card-meta",
+     "sw": 372,
+     "cw": 312,
+     "text": "Associated Projects:\n                2\n "
+    },
+    {
+     "tag": "article",
+     "cls": "card opportunity-card",
+     "sw": 385,
+     "cw": 356,
+     "text": "Owner\n              \n            \n      "
+    },
+    {
+     "tag": "div",
+     "cls": "",
+     "sw": 363,
+     "cw": 312,
+     "text": "Owner\n              \n            \n      "
+    },
+    {
+     "tag": "div",
+     "cls": "card-meta",
+     "sw": 363,
+     "cw": 312,
+     "text": "Associated Projects:\n                2\n "
+    },
+    {
+     "tag": "article",
+     "cls": "card opportunity-card",
+     "sw": 385,
+     "cw": 356,
+     "text": "Owner\n              \n            \n      "
+    },
+    {
+     "tag": "div",
+     "cls": "",
+     "sw": 363,
+     "cw": 312,
+     "text": "Owner\n              \n            \n      "
+    },
+    {
+     "tag": "div",
+     "cls": "card-meta",
+     "sw": 363,
+     "cw": 312,
+     "text": "Associated Projects:\n                2\n "
+    },
+    {
+     "tag": "article",
+     "cls": "card opportunity-card",
+     "sw": 385,
+     "cw": 356,
+     "text": "Owner\n              \n            \n      "
+    },
+    {
+     "tag": "div",
+     "cls": "",
+     "sw": 363,
+     "cw": 312,
+     "text": "Owner\n              \n            \n      "
+    },
+    {
+     "tag": "div",
+     "cls": "card-meta",
+     "sw": 363,
+     "cw": 312,
+     "text": "Associated Projects:\n                2\n "
+    },
+    {
+     "tag": "article",
+     "cls": "card opportunity-card",
+     "sw": 375,
+     "cw": 356,
+     "text": "Owner\n              \n            \n      "
+    },
+    {
+     "tag": "div",
+     "cls": "",
+     "sw": 353,
+     "cw": 312,
+     "text": "Owner\n              \n            \n      "
+    },
+    {
+     "tag": "div",
+     "cls": "card-meta",
+     "sw": 353,
+     "cw": 312,
+     "text": "Associated Projects:\n                2\n "
+    },
+    {
+     "tag": "article",
+     "cls": "card opportunity-card",
+     "sw": 409,
+     "cw": 356,
+     "text": "Owner\n              \n            \n      "
+    },
+    {
+     "tag": "div",
+     "cls": "",
+     "sw": 387,
+     "cw": 312,
+     "text": "Owner\n              \n            \n      "
+    },
+    {
+     "tag": "div",
+     "cls": "card-meta",
+     "sw": 387,
+     "cw": 312,
+     "text": "Associated Projects:\n                1\n "
+    },
+    {
+     "tag": "article",
+     "cls": "card opportunity-card",
+     "sw": 394,
+     "cw": 356,
+     "text": "Owner\n              \n            \n      "
+    },
+    {
+     "tag": "div",
+     "cls": "",
+     "sw": 372,
+     "cw": 312,
+     "text": "Owner\n              \n            \n      "
+    },
+    {
+     "tag": "div",
+     "cls": "card-meta",
+     "sw": 372,
+     "cw": 312,
+     "text": "Associated Projects:\n                1\n "
+    },
+    {
+     "tag": "article",
+     "cls": "card opportunity-card",
+     "sw": 394,
+     "cw": 356,
+     "text": "Owner\n              \n            \n      "
+    },
+    {
+     "tag": "div",
+     "cls": "",
+     "sw": 372,
+     "cw": 312,
+     "text": "Owner\n              \n            \n      "
+    }
+   ],
+   "overflowCount": 185
+  }
+ }
+}

@@ -514,6 +514,24 @@ CREATE INDEX IF NOT EXISTS idx_project_public_updated
 CREATE INDEX IF NOT EXISTS idx_project_type_public
     ON project(project_type, classification, procurement_status);
 
+-- One row per market+trade holding the computed public headline statistics for the last
+-- refresh. The application reads every headline figure from here, so routes never run their
+-- own COUNT(*) and two pages cannot disagree. `metrics` is a JSON blob so the metric set can
+-- grow without a schema migration; `computed_at` and `last_observed` make a figure's as-of
+-- time explicit. Declared here (not in a migration) because it is additive and idempotent.
+CREATE TABLE IF NOT EXISTS market_stat_snapshot (
+    id             INTEGER PRIMARY KEY,
+    market_id      TEXT NOT NULL,
+    trade_id       TEXT NOT NULL,
+    metrics        TEXT NOT NULL,
+    computed_at    TEXT NOT NULL,
+    last_observed  TEXT,
+    UNIQUE (market_id, trade_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_market_stat_snapshot_market
+    ON market_stat_snapshot(market_id, trade_id);
+
 -- =====================================================================
 -- Organizations and entitlement
 -- =====================================================================

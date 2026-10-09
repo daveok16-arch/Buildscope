@@ -1,0 +1,888 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Market Analytics</title>
+<meta name="description" content="Drill-down market analytics across commercial construction opportunities, property types, and trade evidence.">
+<link rel="canonical" href="https://buildscope-xppz.onrender.com/">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#060b17">
+
+
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Market Analytics">
+<meta property="og:description" content="Drill-down market analytics across commercial construction opportunities, property types, and trade evidence.">
+<meta property="og:url" content="https://buildscope-xppz.onrender.com/">
+<meta property="og:site_name" content="BuildScope — Construction Opportunity Intelligence">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Market Analytics">
+<meta name="twitter:description" content="Drill-down market analytics across commercial construction opportunities, property types, and trade evidence.">
+
+
+<link rel="stylesheet" href="/static/css/app.css">
+
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    
+    <a class="brand" href="/" aria-label="BuildScope Home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg class="brand-logo-svg" viewBox="0 0 24 24">
+          <path d="M12 2L2 7l10 5 10-5-10-5z" />
+          <path d="M2 17l10 5 10-5" />
+          <path d="M2 12l10 5 10-5" />
+          <circle cx="12" cy="12" r="3" class="brand-logo-accent" />
+        </svg>
+      </span>
+      <span class="brand-text">
+        <strong>BUILD SCOPE<span class="brand-dot">.</span></strong>
+        <small>Construction Opportunity Intelligence</small>
+      </span>
+    </a>
+
+    
+    <nav class="site-nav" aria-label="Main navigation">
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/opportunities">Opportunities</a></li>
+        <li><a href="/markets">Markets</a></li>
+        <li><a href="/companies">Companies</a></li>
+        <li><a href="/changes">Changes</a></li>
+        <li><a href="/trends">Trends</a></li>
+        <li><a href="/analytics">Analytics</a></li>
+        <li><a href="/reports">Reports</a></li>
+        <li><a href="/how-it-works">How It Works</a></li>
+      </ul>
+
+      <div class="nav-account">
+        <a class="nav-search-trigger" href="/opportunities" aria-label="Search opportunities">
+          <svg class="nav-search-icon" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <span>Search projects...</span>
+        </a>
+
+        
+          <a class="btn btn-small btn-ghost" href="/signin">Sign In</a>
+          <a class="btn btn-small btn-primary" href="/signup">Get Access</a>
+        
+      </div>
+    </nav>
+
+    
+    <button type="button" class="mobile-menu-btn" id="mobile-menu-open-btn" aria-label="Open Navigation Menu" aria-expanded="false" aria-controls="mobile-nav-drawer">
+      <div class="mobile-menu-icon" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </button>
+  </div>
+</header>
+
+
+<div class="mobile-drawer-backdrop" id="mobile-drawer-backdrop" aria-hidden="true"></div>
+<aside class="mobile-drawer" id="mobile-nav-drawer" role="dialog" aria-modal="true" aria-label="Mobile Navigation" tabindex="-1">
+  <div class="drawer-header">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg class="brand-logo-svg" viewBox="0 0 24 24">
+          <path d="M12 2L2 7l10 5 10-5-10-5z" />
+          <path d="M2 17l10 5 10-5" />
+          <path d="M2 12l10 5 10-5" />
+          <circle cx="12" cy="12" r="3" class="brand-logo-accent" />
+        </svg>
+      </span>
+      <span class="brand-text">
+        <strong>BUILD SCOPE<span class="brand-dot">.</span></strong>
+        <small>Construction Opportunity Intelligence</small>
+      </span>
+    </div>
+    <button type="button" class="drawer-close-btn" id="mobile-menu-close-btn" aria-label="Close Navigation Menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+  </div>
+
+  <nav class="drawer-nav" aria-label="Mobile main navigation">
+    <a href="/">Home</a>
+    <a href="/opportunities">Opportunities</a>
+    <a href="/markets">Markets</a>
+    <a href="/companies">Companies</a>
+    <a href="/changes">Changes</a>
+    <a href="/trends">Trends</a>
+    <a href="/analytics">Analytics</a>
+    <a href="/reports">Reports</a>
+    <a href="/how-it-works">How It Works</a>
+  </nav>
+
+  <div class="drawer-divider"></div>
+
+  <div class="drawer-account">
+    
+      <a class="btn btn-outline" href="/signin">Sign In</a>
+      <a class="btn btn-primary" href="/signup">Get Access</a>
+    
+  </div>
+
+  <div class="drawer-footer-status">
+    <div><strong>Active Market:</strong> Dallas–Fort Worth</div>
+    <div class="muted">Data freshness: October 2026</div>
+  </div>
+</aside>
+
+
+<section class="hero hero-compact">
+  <div class="wrap">
+    <p class="crumb"><a href="/">Home</a> · Analytics</p>
+    <div class="hero-tagline-kicker">
+      <span class="bs-motif" aria-hidden="true"><span></span><span></span><span></span></span>
+      Navigational Market Intelligence
+    </div>
+    <h1>Market Analytics &amp; Intelligence Drill-Down</h1>
+    <p class="lede">
+      Analyze commercial construction volume, property type distributions, and verified trade evidence across Dallas–Fort Worth.
+      Every chart and metric connects directly to the underlying project dossiers.
+    </p>
+  </div>
+</section>
+
+
+<main id="main">
+  
+    
+  
+  
+<div class="wrap" style="padding-top:28px; padding-bottom:56px">
+
+<div class="stat-strip">
+  <div class="stat">
+    <span class="stat-value">175</span>
+    <span class="stat-label">Commercial Projects</span>
+  </div>
+  <div class="stat">
+    <span class="stat-value">12</span>
+    <span class="stat-label">With Mechanical Evidence</span>
+  </div>
+  <div class="stat">
+    <span class="stat-value">2</span>
+    <span class="stat-label">Tier 1 Mechanical Permits</span>
+  </div>
+  <div class="stat">
+    <span class="stat-value">16</span>
+    <span class="stat-label">Active Municipalities</span>
+  </div>
+  <div class="stat">
+    <span class="stat-value">6,175</span>
+    <span class="stat-label">Permits Processed</span>
+  </div>
+</div>
+
+<div class="detail-grid" style="margin-top:28px">
+  
+  <div>
+    
+    <div class="detail-panel">
+      <div class="section-kicker">Geographic Activity</div>
+      <h2>Top Municipalities by Project Volume</h2>
+      <p class="small muted">Click any city to view its filtered opportunity directory.</p>
+      
+      <div style="margin-top:16px; display:flex; flex-direction:column; gap:12px">
+        
+        
+        
+        
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <span>
+              <a href="/opportunities?city=Plano" style="font-weight:600">Plano</a>
+              
+            </span>
+            <span class="font-semibold">42 projects</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--navy-700); height:100%; width:24.0%"></div>
+          </div>
+        </div>
+        
+        
+        
+        
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <span>
+              <a href="/opportunities?city=McKinney" style="font-weight:600">McKinney</a>
+              
+            </span>
+            <span class="font-semibold">29 projects</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--navy-700); height:100%; width:17.0%"></div>
+          </div>
+        </div>
+        
+        
+        
+        
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <span>
+              <a href="/opportunities?city=Fort+Worth" style="font-weight:600">Fort Worth</a>
+              
+                <span class="small muted">(7 with mechanical)</span>
+              
+            </span>
+            <span class="font-semibold">26 projects</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--navy-700); height:100%; width:15.0%"></div>
+          </div>
+        </div>
+        
+        
+        
+        
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <span>
+              <a href="/opportunities?city=Dallas" style="font-weight:600">Dallas</a>
+              
+                <span class="small muted">(5 with mechanical)</span>
+              
+            </span>
+            <span class="font-semibold">18 projects</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--navy-700); height:100%; width:10.0%"></div>
+          </div>
+        </div>
+        
+        
+        
+        
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <span>
+              <a href="/opportunities?city=Celina" style="font-weight:600">Celina</a>
+              
+            </span>
+            <span class="font-semibold">14 projects</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--navy-700); height:100%; width:8.0%"></div>
+          </div>
+        </div>
+        
+        
+        
+        
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <span>
+              <a href="/opportunities?city=Frisco" style="font-weight:600">Frisco</a>
+              
+            </span>
+            <span class="font-semibold">14 projects</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--navy-700); height:100%; width:8.0%"></div>
+          </div>
+        </div>
+        
+        
+        
+        
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <span>
+              <a href="/opportunities?city=Allen" style="font-weight:600">Allen</a>
+              
+            </span>
+            <span class="font-semibold">12 projects</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--navy-700); height:100%; width:7.0%"></div>
+          </div>
+        </div>
+        
+        
+        
+        
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <span>
+              <a href="/opportunities?city=Prosper" style="font-weight:600">Prosper</a>
+              
+            </span>
+            <span class="font-semibold">5 projects</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--navy-700); height:100%; width:3.0%"></div>
+          </div>
+        </div>
+        
+        
+        
+        
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <span>
+              <a href="/opportunities?city=Wylie" style="font-weight:600">Wylie</a>
+              
+            </span>
+            <span class="font-semibold">4 projects</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--navy-700); height:100%; width:2.0%"></div>
+          </div>
+        </div>
+        
+        
+        
+        
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <span>
+              <a href="/opportunities?city=Murphy" style="font-weight:600">Murphy</a>
+              
+            </span>
+            <span class="font-semibold">3 projects</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--navy-700); height:100%; width:2.0%"></div>
+          </div>
+        </div>
+        
+        
+        
+        
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <span>
+              <a href="/opportunities?city=Richardson" style="font-weight:600">Richardson</a>
+              
+            </span>
+            <span class="font-semibold">3 projects</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--navy-700); height:100%; width:2.0%"></div>
+          </div>
+        </div>
+        
+        
+        
+        
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <span>
+              <a href="/opportunities?city=Anna" style="font-weight:600">Anna</a>
+              
+            </span>
+            <span class="font-semibold">1 projects</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--navy-700); height:100%; width:1.0%"></div>
+          </div>
+        </div>
+        
+        
+        
+        
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <span>
+              <a href="/opportunities?city=Farmersville" style="font-weight:600">Farmersville</a>
+              
+            </span>
+            <span class="font-semibold">1 projects</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--navy-700); height:100%; width:1.0%"></div>
+          </div>
+        </div>
+        
+        
+        
+        
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <span>
+              <a href="/opportunities?city=Melissa" style="font-weight:600">Melissa</a>
+              
+            </span>
+            <span class="font-semibold">1 projects</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--navy-700); height:100%; width:1.0%"></div>
+          </div>
+        </div>
+        
+        
+        
+        
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <span>
+              <a href="/opportunities?city=Nevada" style="font-weight:600">Nevada</a>
+              
+            </span>
+            <span class="font-semibold">1 projects</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--navy-700); height:100%; width:1.0%"></div>
+          </div>
+        </div>
+        
+        
+        
+        
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <span>
+              <a href="/opportunities?city=Royse+City" style="font-weight:600">Royse City</a>
+              
+            </span>
+            <span class="font-semibold">1 projects</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--navy-700); height:100%; width:1.0%"></div>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+
+    
+    <div class="detail-panel" style="margin-top:24px">
+      <div class="section-kicker">Sector Breakdown</div>
+      <h2>Commercial Project Types</h2>
+      <p class="small muted">Commercial construction projects categorized by primary occupancy use.</p>
+
+      <div style="margin-top:16px; display:flex; flex-direction:column; gap:12px">
+        
+        
+        
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <a href="/opportunities?project_type=Education" style="font-weight:600">Education</a>
+            <span class="font-semibold">42</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--gold-500); height:100%; width:24.0%"></div>
+          </div>
+        </div>
+        
+        
+        
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <a href="/opportunities?project_type=Healthcare" style="font-weight:600">Healthcare</a>
+            <span class="font-semibold">34</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--gold-500); height:100%; width:19.0%"></div>
+          </div>
+        </div>
+        
+        
+        
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <a href="/opportunities?project_type=Retail" style="font-weight:600">Retail</a>
+            <span class="font-semibold">31</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--gold-500); height:100%; width:18.0%"></div>
+          </div>
+        </div>
+        
+        
+        
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <a href="/opportunities?project_type=Office" style="font-weight:600">Office</a>
+            <span class="font-semibold">20</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--gold-500); height:100%; width:11.0%"></div>
+          </div>
+        </div>
+        
+        
+        
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <a href="/opportunities?project_type=Industrial" style="font-weight:600">Industrial</a>
+            <span class="font-semibold">15</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--gold-500); height:100%; width:9.0%"></div>
+          </div>
+        </div>
+        
+        
+        
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <a href="/opportunities?project_type=Public+/+Institutional" style="font-weight:600">Public / Institutional</a>
+            <span class="font-semibold">10</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--gold-500); height:100%; width:6.0%"></div>
+          </div>
+        </div>
+        
+        
+        
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <a href="/opportunities?project_type=Multifamily" style="font-weight:600">Multifamily</a>
+            <span class="font-semibold">8</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--gold-500); height:100%; width:5.0%"></div>
+          </div>
+        </div>
+        
+        
+        
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <a href="/opportunities?project_type=Commercial+(unspecified)" style="font-weight:600">Commercial (unspecified)</a>
+            <span class="font-semibold">7</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--gold-500); height:100%; width:4.0%"></div>
+          </div>
+        </div>
+        
+        
+        
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <a href="/opportunities?project_type=Manufacturing" style="font-weight:600">Manufacturing</a>
+            <span class="font-semibold">3</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--gold-500); height:100%; width:2.0%"></div>
+          </div>
+        </div>
+        
+        
+        
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <a href="/opportunities?project_type=Data+Center" style="font-weight:600">Data Center</a>
+            <span class="font-semibold">2</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--gold-500); height:100%; width:1.0%"></div>
+          </div>
+        </div>
+        
+        
+        
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <a href="/opportunities?project_type=Hospitality" style="font-weight:600">Hospitality</a>
+            <span class="font-semibold">2</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--gold-500); height:100%; width:1.0%"></div>
+          </div>
+        </div>
+        
+        
+        
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:4px">
+            <a href="/opportunities?project_type=Commercial" style="font-weight:600">Commercial</a>
+            <span class="font-semibold">1</span>
+          </div>
+          <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
+            <div style="background:var(--gold-500); height:100%; width:1.0%"></div>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+
+  
+  <div>
+    
+    <div class="detail-panel">
+      <div class="section-kicker">Evidence Methodology</div>
+      <h2>Evidence Hierarchy Distribution</h2>
+      <p class="small muted">How BuildScope substantiates commercial opportunities from raw municipal records.</p>
+      
+      <div style="margin-top:16px; display:flex; flex-direction:column; gap:16px">
+        <div style="background:var(--signal-high-bg); border:1px solid var(--signal-high-border); padding:14px 16px; border-radius:var(--radius-sm)">
+          <div style="display:flex; justify-content:space-between; align-items:center">
+            <span class="badge badge-high">Tier 1: Direct Mechanical Permit</span>
+            <strong style="color:var(--signal-high-text); font-size:1.1rem">2</strong>
+          </div>
+          <p class="small" style="margin:8px 0 0 0; color:var(--signal-high-text)">
+            The building department recorded an explicit mechanical permit. Confirms mechanical contractor procurement.
+          </p>
+        </div>
+
+        <div style="background:var(--signal-med-bg); border:1px solid var(--signal-med-border); padding:14px 16px; border-radius:var(--radius-sm)">
+          <div style="display:flex; justify-content:space-between; align-items:center">
+            <span class="badge badge-med">Tier 2: Mechanical Scope Named</span>
+            <strong style="color:var(--signal-med-text); font-size:1.1rem">10</strong>
+          </div>
+          <p class="small" style="margin:8px 0 0 0; color:var(--signal-med-text)">
+            Commercial building permit whose official work description names HVAC, chillers, boilers, or ductwork.
+          </p>
+        </div>
+
+        <div style="background:var(--slate-100); border:1px solid var(--slate-300); padding:14px 16px; border-radius:var(--radius-sm)">
+          <div style="display:flex; justify-content:space-between; align-items:center">
+            <span class="badge badge-plain">Commercial Base</span>
+            <strong style="color:var(--slate-800); font-size:1.1rem">163</strong>
+          </div>
+          <p class="small" style="margin:8px 0 0 0; color:var(--slate-600)">
+            Verified commercial construction projects with structural/architectural permits on file before mechanical filings appear.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    
+    <div class="detail-panel" style="margin-top:24px">
+      <div class="section-kicker">Continuous Audit</div>
+      <h2>Recent Market Movement</h2>
+      <p class="small muted">Latest detected differences across the market.</p>
+
+      
+        <ul class="why-list" style="margin-top:12px">
+          
+          <li>
+            <span class="tick" aria-hidden="true">&#9679;</span>
+            <span>
+              <strong>NORTH WATTERS RETAIL</strong> (Allen): Project first entered the system.
+              
+                <a href="/opportunities/999-state-hwy-121-allen-tx-75013-allen-0a4236" style="margin-left:4px; font-weight:600">Dossier &rarr;</a>
+              
+            </span>
+          </li>
+          
+          <li>
+            <span class="tick" aria-hidden="true">&#9679;</span>
+            <span>
+              <strong>(Post Public Frontage Road Widening project) - Remediation, repairs, and renovation to the Church front yard area, including selective demo, limited grading adjustments, replacement sidewalks, paving, and curbs, as well as replacement of monument sign, and site light poles, with landscape and irrigation to clean up and return the site to equal or better than before the public works project impacted the front yard.</strong> (Fort Worth): Project first entered the system.
+              
+                <a href="/opportunities/9915-ray-white-rd-fort-worth-098a1d" style="margin-left:4px; font-weight:600">Dossier &rarr;</a>
+              
+            </span>
+          </li>
+          
+          <li>
+            <span class="tick" aria-hidden="true">&#9679;</span>
+            <span>
+              <strong>Enterprise Rent-A-Car Remodel / 3rd Party Plan Review &amp; Inspections / Winston Services</strong> (Fort Worth): Project first entered the system.
+              
+                <a href="/opportunities/9636-white-settlement-rd-fort-worth-675d0a" style="margin-left:4px; font-weight:600">Dossier &rarr;</a>
+              
+            </span>
+          </li>
+          
+          <li>
+            <span class="tick" aria-hidden="true">&#9679;</span>
+            <span>
+              <strong>ANNA RETAIL ADDITION</strong> (Anna): Project first entered the system.
+              
+                <a href="/opportunities/951-s-buddy-hayes-blvd-anna-tx-75409-anna-0f0e8b" style="margin-left:4px; font-weight:600">Dossier &rarr;</a>
+              
+            </span>
+          </li>
+          
+          <li>
+            <span class="tick" aria-hidden="true">&#9679;</span>
+            <span>
+              <strong>MCKINNEY INDUSTRIAL PARK NO 2</strong> (McKinney): Project first entered the system.
+              
+                <a href="/opportunities/901-harry-mckillop-blvd-mckinney-tx-75069-mckinney-1cb487" style="margin-left:4px; font-weight:600">Dossier &rarr;</a>
+              
+            </span>
+          </li>
+          
+          <li>
+            <span class="tick" aria-hidden="true">&#9679;</span>
+            <span>
+              <strong>X TEAM /// INTERIOR BUILD OUT OF A RETAIL SPECIALITY GROCERY STORE, SALES FLOOR WILL
+INCLUDE STORE FIXTURIZATION AND CUSTOMER RESTROOOMS.
+BACK OF HOUSE WILL INCLUDE EMPLOUEE RESTROOMS BREAKROOM, PREP ROOM, WALK-INSTORAGE , ETC.</strong> (Fort Worth): Project first entered the system.
+              
+                <a href="/opportunities/9000-north-city-dr-fort-worth-856660" style="margin-left:4px; font-weight:600">Dossier &rarr;</a>
+              
+            </span>
+          </li>
+          
+          <li>
+            <span class="tick" aria-hidden="true">&#9679;</span>
+            <span>
+              <strong>Standard Review: Ground-up construction of a new 2,765 SF Jack in the Box restaurant, including architectural, structural, mechanical, electrical, plumbing, commercial kitchen, drive-thru, parking, exterior lighting, and associated site development.</strong> (Dallas): Project first entered the system.
+              
+                <a href="/opportunities/8825-clark-rd-dallas-01beae" style="margin-left:4px; font-weight:600">Dossier &rarr;</a>
+              
+            </span>
+          </li>
+          
+          <li>
+            <span class="tick" aria-hidden="true">&#9679;</span>
+            <span>
+              <strong>Commercial tenant improvement of an existing 1190 square foot gross area, located on the second floor of the NorthPark Center Shopping Mall. Scope includes interior demolition, new partition walls, fixtures, finishes, relocate existing restroom, remodel existing storefront. No change in building area, no change in use. Improvements to existing Mechanical, Electrical, Plumbing and Structural as part of tenant move in.</strong> (Dallas): Project first entered the system.
+              
+                <a href="/opportunities/8687-n-central-expy-2316-dallas-83f188" style="margin-left:4px; font-weight:600">Dossier &rarr;</a>
+              
+            </span>
+          </li>
+          
+        </ul>
+        <div style="margin-top:14px">
+          <a class="btn btn-small btn-outline" href="/changes">View Full Audit Log &rarr;</a>
+        </div>
+      
+    </div>
+  </div>
+</div>
+</div>
+
+</main>
+
+
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand-title">
+          <span class="bs-motif" aria-hidden="true"><span></span><span></span><span></span></span>
+          BUILD SCOPE
+        </div>
+        <p class="footer-brand-descriptor">
+          <strong>See the work before the work begins.</strong><br>
+          Commercial construction opportunity intelligence built directly from official public records.
+        </p>
+        <p class="small muted" style="margin-top:12px">
+          Live Market: Dallas–Fort Worth (DFW)<br>
+          Continuous Ingestion: October 2026
+        </p>
+      </div>
+
+      <div>
+        <h4>Product</h4>
+        <ul>
+          <li><a href="/opportunities">Opportunities</a></li>
+          <li><a href="/markets">Markets</a></li>
+          <li><a href="/companies">Companies</a></li>
+          <li><a href="/changes">Changes</a></li>
+          <li><a href="/trends">Trends</a></li>
+          <li><a href="/analytics">Analytics</a></li>
+          <li><a href="/reports">Reports</a></li>
+          <li><a href="/commercial-construction-leads">Commercial Construction Leads</a></li>
+          <li><a href="/guides">Guides</a></li>
+          <li><a href="/how-it-works">How It Works</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4>Coverage</h4>
+        <ul>
+          
+          <li>
+            <a href="/markets/dfw">
+              Dallas–Fort Worth
+            </a>
+          </li>
+          
+          <li>
+            <a href="/markets/austin">
+              Austin (Planned)
+            </a>
+          </li>
+          
+          <li>
+            <a href="/markets/houston">
+              Greater Houston (Planned)
+            </a>
+          </li>
+          
+          
+          <li>
+            <a href="/trades/commercial-hvac">
+              Commercial HVAC / Mechanical
+            </a>
+          </li>
+          
+        </ul>
+      </div>
+
+      <div>
+        <h4>Workspace</h4>
+        <ul>
+          
+            <li><a href="/signin">Sign In</a></li>
+            <li><a href="/signup">Get Access</a></li>
+          
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-legal">
+      <p>
+        <strong>Evidence &amp; Reliability Notice:</strong> BuildScope indexes and clusters public commercial construction records, municipal permit filings, and trade scope data.
+        Permit filings represent public documentary records and do not imply active subcontract bidding or owner solicitation unless verified in official procurement documents.
+        Confirm all valuations, specifications, and project statuses with issuing municipal jurisdictions and project authorities.
+      </p>
+      <p class="muted">&copy; 2026 BuildScope. All rights reserved. Commercial Opportunity Intelligence.</p>
+    </div>
+  </div>
+</footer>
+
+
+<script>
+(function() {
+  var openBtn = document.getElementById('mobile-menu-open-btn');
+  var closeBtn = document.getElementById('mobile-menu-close-btn');
+  var backdrop = document.getElementById('mobile-drawer-backdrop');
+  var drawer = document.getElementById('mobile-nav-drawer');
+
+  function openDrawer() {
+    document.body.classList.add('drawer-open');
+    if (openBtn) openBtn.setAttribute('aria-expanded', 'true');
+    if (drawer) drawer.focus();
+  }
+
+  function closeDrawer() {
+    document.body.classList.remove('drawer-open');
+    if (openBtn) openBtn.setAttribute('aria-expanded', 'false');
+  }
+
+  if (openBtn) openBtn.addEventListener('click', openDrawer);
+  if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+  if (backdrop) backdrop.addEventListener('click', closeDrawer);
+
+  window.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && document.body.classList.contains('drawer-open')) {
+      closeDrawer();
+      if (openBtn) openBtn.focus();
+    }
+  });
+})();
+</script>
+</body>
+</html>

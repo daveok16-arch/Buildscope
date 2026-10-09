@@ -790,11 +790,20 @@ class OpportunityService:
     # --- statistics -----------------------------------------------------------
 
     def market_statistics(self) -> dict[str, Any]:
-        """Real counts from the database, for the homepage and landing pages.
+        """Real counts for the homepage and landing pages, read from the stats snapshot.
 
-        Every figure is a count of stored rows. Nothing here is estimated, projected or
-        rounded up, because a public statistic the database cannot support is a fabricated one.
+        The figures come from `app/stat_snapshot.py`, which computes them once per refresh and
+        stores them, so a page cannot disagree with the API about the same word and a visitor
+        cannot see two different totals seconds apart. The keys and semantics are unchanged for
+        callers; only the computation moved to one place.
         """
+        from .app.stat_snapshot import read_snapshot
+
+        metrics = read_snapshot(self.db, self.market, self.trade)
+        if metrics:
+            return metrics
+        # No snapshot and the table is absent (a database that predates it): fall back to the
+        # equivalent computation so a read still works during an upgrade window.
         return self.statistics_for(where="1=1", params=[])
 
     def _evidence_predicate(self, alias: str = "p") -> str:

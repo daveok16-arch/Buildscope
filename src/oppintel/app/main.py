@@ -436,6 +436,8 @@ def create_app(config: AppConfig | None = None) -> Flask:
 
     @app.route("/")
     def home() -> str:
+        from .stat_snapshot import METRIC_DEFINITIONS
+
         stats = g.service.market_statistics()
         latest = g.service.list_opportunities(
             OpportunityFilters(page_size=6, sort=DEFAULT_SORT)
@@ -443,6 +445,7 @@ def create_app(config: AppConfig | None = None) -> Flask:
         return render_template(
             "home.html",
             stats=stats,
+            stat_definitions={k: v[1] for k, v in METRIC_DEFINITIONS.items()},
             latest=latest.items,
             recent_changes=g.service.recent_changes(limit=4, days=30),
             cities=g.service.city_statistics()[:8],
@@ -1089,10 +1092,15 @@ def create_app(config: AppConfig | None = None) -> Flask:
         """
         payload: dict[str, Any] = {"status": "ok", "database": str(cfg.database_path)}
         try:
-            row = g.db.conn.execute(
-                "SELECT (SELECT COUNT(*) FROM project) AS projects,"
-                "       (SELECT COUNT(*) FROM permit) AS permits"
-            ).fetchone()
+            # Counts come from the stats snapshot, not a fresh COUNT(*), so the probe and the
+            # pages agree and the probe does not race the refresh loop.
+            from .stat_snapshot import read_snapshot
+
+            metrics = read_snapshot(g.db, g.market, g.trade)
+            row = {
+                "projects": metrics.get("projects_total", 0),
+                "permits": metrics.get("permit_records_all", 0),
+            }
             payload["projects"] = row["projects"]
             payload["permits"] = row["permits"]
             # Coverage state is reported so an operator can distinguish "the process is up" from
@@ -1713,6 +1721,26 @@ def create_app(config: AppConfig | None = None) -> Flask:
 # --- module helpers -----------------------------------------------------------
 
 
+def _refresh_stat_snapshots(db: Database) -> dict[str, Any]:
+    """Recompute and store the public headline statistics for every active market+trade.
+
+    Called at the end of a refresh (``build-search-index`` is the last pipeline step) so one
+    snapshot covers a whole refresh cycle. Idempotent: re-running with unchanged data writes
+    the same numbers with a new ``computed_at``.
+    """
+    from .stat_snapshot import write_snapshot
+
+    written: dict[str, Any] = {}
+    for market in load_markets().values():
+        if not market.active:
+            continue
+        for trade in _trade_map().values():
+            if not trade.active:
+                continue
+            written[f"{market.id}:{trade.id}"] = write_snapshot(db, market, trade)
+    return written
+
+
 def _service(
     db: Database, market: MarketConfig, trade: TradeConfig, user: Any
 ) -> OpportunityService:
@@ -2228,6 +2256,7 @@ def _register_cli(app: Flask, cfg: AppConfig) -> None:
         db.init_app_schema()
         print(f"slugs created: {ensure_slugs(db)}")
         print(f"projects indexed: {rebuild_index(db)}")
+        _refresh_stat_snapshots(db)
 
     @app.cli.command("grant-admin")
     @click.argument("email")
