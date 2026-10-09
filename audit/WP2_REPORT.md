@@ -1,7 +1,7 @@
 # WP2 — Mobile & Accessibility Report
 
 **Branch:** `wp2-mobile-a11y`
-**HEAD:** `1b702a3` (tip of `wp2-mobile-a11y`)
+**Branch tip:** `wp2-mobile-a11y` (docs commits atop code commit `3fb8e4d`)
 **Code HEAD:** `3fb8e4d` — `fix(wp2): mobile filter bottom sheet + date presets + overflow fixes`
 **Base:** `d052430` (merge of `wp1-truth-stability` into `wp2-mobile-a11y`)
 **Date:** 2026-10-09
