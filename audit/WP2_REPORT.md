@@ -1,7 +1,8 @@
 # WP2 — Mobile & Accessibility Report
 
 **Branch:** `wp2-mobile-a11y`
-**HEAD:** `3fb8e4d` — `fix(wp2): mobile filter bottom sheet + date presets + overflow fixes`
+**HEAD:** `5277457` — `docs(wp2): B1/B2/B3 report with pasted evidence + before/after screenshots`
+**Code HEAD:** `3fb8e4d` — `fix(wp2): mobile filter bottom sheet + date presets + overflow fixes`
 **Base:** `d052430` (merge of `wp1-truth-stability` into `wp2-mobile-a11y`)
 **Date:** 2026-10-09
 **Scope:** B1 horizontal overflow, B2 touch targets, B3 mobile filter bottom sheet.
