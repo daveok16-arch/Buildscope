@@ -1,7 +1,7 @@
 # WP1.1 — Director corrections (PART 0)
 
 Branch `wp1-truth-stability`. This closes the Director's PART 0 items **D1–D8**. Every claim is
-backed by pasted command output. Full suite after the changes: **966 passed** (see §D1 test run
+backed by pasted command output. Full suite after the changes: **968 passed** (see §D1 test run
 and the final suite run below).
 
 Ordering note: PART 1 (`wp2-mobile-a11y`) is not started because it is gated on every PART 0
@@ -158,13 +158,37 @@ returns zero hits in templates).
 
 ```
 $ PYTHONPATH="vendor/python:src" python -m pytest tests/test_copy_honesty.py -q
-................                                                         [100%]
-16 passed in 0.49s
+..................                                                       [100%]
+18 passed in 0.62s
 ```
+
+### "Last collection: <date and time>" (was "Continuous Ingestion: <month>")
+
+The Director required the freshness label to read `"Last collection: <date and time>"`. The
+prior pass had replaced the string with `"Data collected through: <month>"` — better than
+"Continuous", but still a month, so it could not distinguish a run that finished this morning
+from one three weeks ago. Corrected:
+
+* `OpportunityService.format_date_time()` (`src/oppintel/service.py:653`) renders
+  `"09 Oct 2026, 16:49 UTC"` for a timestamp and `"09 Oct 2026"` for a date-only value (no
+  fabricated midnight).
+* `_freshness_label()` (`src/oppintel/app/main.py:2167`) now reads `MAX(updated_at)` from
+  `source_coverage` — the moment the collection run wrote coverage — not only the calendar day.
+* `base.html:163` (drawer) and `base.html:215` (footer) read
+  `Last collection: {{ freshness.display_time }}`.
+
+```
+$ python -c "...GET /..."
+label: Last collection: 09 Oct 2026, 16:49 UTC
+old label present? False
+```
+
+Pinned by `test_collection_label_states_a_date_and_time_not_a_month` and
+`test_format_date_time_keeps_the_clock_and_does_not_invent_one`.
 
 Residual (reported, not silently changed, because it is a scope-boundary product decision): the
 tagline "See the work **before the work begins**" (`home.html:11`, `signin.html:13`,
-`signup.html:13`, `base.html:9,208`) is a slogan whose literal reading is a lead-time promise
+`signup.html:13`, `base.html:9,210`) is a slogan whose literal reading is a lead-time promise
 the product does not measure. Flagged for the Director; not banned by the current test.
 
 ---
@@ -392,7 +416,7 @@ plan. It states that the disk requires the paid plan.
 
 ```
 $ PYTHONPATH="vendor/python:src" python -m pytest tests/ -q
-966 passed in 125.52s (0:02:05)
+968 passed in 117.78s (0:01:57)
 ```
 
 ## PASS/FAIL

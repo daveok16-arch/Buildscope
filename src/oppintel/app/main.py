@@ -2127,10 +2127,20 @@ def _private_seo(g: Any, title: str, description: str):
 
 def _freshness_label(db: Database | None) -> dict[str, Any]:
     if db is None:
-        return {"display": "Not verified", "retrieval_date": None}
-    row = db.conn.execute("SELECT MAX(retrieval_date) AS d FROM source_coverage").fetchone()
+        return {"display": "Not verified", "display_time": "Not verified", "retrieval_date": None}
+    row = db.conn.execute(
+        "SELECT MAX(retrieval_date) AS d, MAX(updated_at) AS u FROM source_coverage"
+    ).fetchone()
     value = row["d"] if row else None
-    return {"display": OpportunityService.format_month(value), "retrieval_date": value}
+    # `updated_at` is the moment the collection run wrote coverage; `retrieval_date` is only the
+    # calendar day. Prefer the timestamp so the label can state a time, falling back to the date
+    # when a row predates the timestamp column.
+    stamped = (row["u"] if row else None) or value
+    return {
+        "display": OpportunityService.format_month(value),
+        "display_time": OpportunityService.format_date_time(stamped),
+        "retrieval_date": value,
+    }
 
 
 def _detail_title(project: dict[str, Any], g: Any) -> str:

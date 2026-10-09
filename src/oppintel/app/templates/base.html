@@ -160,7 +160,7 @@
 
   <div class="drawer-footer-status">
     <div><strong>Active Market:</strong> {{ market.name }}</div>
-    <div class="muted">Data freshness: {{ freshness.display }}</div>
+    <div class="muted">Last collection: {{ freshness.display_time }}</div>
   </div>
 </aside>
 
@@ -210,7 +210,7 @@
         </p>
         <p class="small muted" style="margin-top:12px">
           Active Market: {{ market.name }} ({{ market.short_name }})<br>
-          Data collected through: {{ freshness.display }}
+          Last collection: {{ freshness.display_time }}
         </p>
       </div>
 

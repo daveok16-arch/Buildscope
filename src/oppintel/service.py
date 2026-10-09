@@ -651,6 +651,24 @@ class OpportunityService:
         return parsed.strftime("%B %Y")
 
     @staticmethod
+    def format_date_time(value: Any) -> str:
+        """A date and its time, for the collection timestamp.
+
+        The collection boundary is a moment, not a month: "October 2026" cannot distinguish a
+        run that finished this morning from one three weeks ago. A source that stores only a
+        date (no time) still renders as a date rather than a fabricated midnight.
+        """
+        if not value:
+            return "Not verified"
+        try:
+            parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        except ValueError:
+            return str(value)
+        if parsed.hour or parsed.minute or parsed.second:
+            return parsed.strftime("%d %b %Y, %H:%M UTC")
+        return parsed.strftime("%d %b %Y")
+
+    @staticmethod
     def format_date(value: Any) -> str:
         if not value:
             return "Not verified"

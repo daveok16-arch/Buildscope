@@ -72,3 +72,28 @@ def test_changes_page_explains_a_zero_difference_feed(client):
 def test_signup_does_not_promise_saved_searches(client):
     body = client.get("/signup").get_data(as_text=True).lower()
     assert "saved search" not in body
+
+
+def test_collection_label_states_a_date_and_time_not_a_month(client):
+    """The collection boundary is a moment, not a month.
+
+    "Continuous Ingestion: October 2026" was replaced by "Last collection: <date and time>".
+    A month label cannot tell a run that finished this morning from one three weeks ago, and
+    "continuous" is a claim the periodic loop does not honour.
+    """
+    for path in ("/", "/opportunities", "/how-it-works"):
+        body = client.get(path).get_data(as_text=True)
+        assert "Last collection:" in body, f"{path} is missing the collection label"
+        assert "Data collected through" not in body, f"{path} still uses the old month label"
+        assert "Continuous Ingestion" not in body, f"{path} still claims continuous ingestion"
+
+
+def test_format_date_time_keeps_the_clock_and_does_not_invent_one():
+    """A timestamp renders with its time; a date-only value renders without a fake midnight."""
+    from oppintel.service import OpportunityService
+
+    assert OpportunityService.format_date_time("2026-10-09T16:49:04.056655+00:00") == (
+        "09 Oct 2026, 16:49 UTC"
+    )
+    assert OpportunityService.format_date_time("2026-10-09") == "09 Oct 2026"
+    assert OpportunityService.format_date_time(None) == "Not verified"
