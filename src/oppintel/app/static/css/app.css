@@ -695,11 +695,27 @@ body.drawer-open .mobile-drawer {
 
 .btn-ghost {
   background: transparent;
-  color: var(--slate-300) !important;
+  color: var(--slate-600);
 }
 .btn-ghost:hover {
+  background: var(--slate-100);
+  color: var(--slate-900);
+}
+
+/* Ghost buttons on the dark chrome (sticky header, hero, mobile drawer) need the
+   light treatment; on a white surface the base style above applies. Previously the
+   light colour was hardcoded on .btn-ghost with !important, which made every ghost
+   button on white unreadable (1.48:1) and defeated inline overrides. */
+.site-header .btn-ghost,
+.hero .btn-ghost,
+.mobile-drawer .btn-ghost {
+  color: var(--slate-300);
+}
+.site-header .btn-ghost:hover,
+.hero .btn-ghost:hover,
+.mobile-drawer .btn-ghost:hover {
   background: rgba(255, 255, 255, 0.08);
-  color: #ffffff !important;
+  color: #ffffff;
 }
 
 .btn-dark {

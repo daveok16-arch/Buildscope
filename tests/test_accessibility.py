@@ -55,6 +55,11 @@ ROUTES = [
 TOUCH_ROUTES = ["/", "/opportunities", "/companies", "/changes", "/signin", "/signup"]
 
 MOBILE = {"width": 390, "height": 844}
+DESKTOP = {"width": 1440, "height": 900}
+
+#: axe must be clean at both ends of the responsive range: the desktop header and
+#: the mobile drawer each only exist at one width, so a single viewport misses half.
+AXE_VIEWPORTS = {"mobile": MOBILE, "desktop": DESKTOP}
 
 
 @pytest.fixture(scope="module")
@@ -93,9 +98,10 @@ def _axe(page) -> dict:
     return page.evaluate("async () => await axe.run(document)")
 
 
+@pytest.mark.parametrize("viewport_name", list(AXE_VIEWPORTS))
 @pytest.mark.parametrize("route", ROUTES)
-def test_no_serious_or_critical_axe_violations(live_server, browser, route):
-    context = browser.new_context(viewport=MOBILE)
+def test_no_serious_or_critical_axe_violations(live_server, browser, route, viewport_name):
+    context = browser.new_context(viewport=AXE_VIEWPORTS[viewport_name])
     try:
         page = context.new_page()
         page.goto(live_server + route, wait_until="networkidle")
@@ -105,7 +111,7 @@ def test_no_serious_or_critical_axe_violations(live_server, browser, route):
             for v in result["violations"]
             if v["impact"] in ("serious", "critical")
         ]
-        assert blocking == [], f"{route} has serious/critical a11y violations: {blocking}"
+        assert blocking == [], f"{route} @{viewport_name} has serious/critical a11y violations: {blocking}"
     finally:
         context.close()
 
