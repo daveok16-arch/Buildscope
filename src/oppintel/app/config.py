@@ -101,6 +101,17 @@ class AppConfig:
         default_factory=lambda: _env_bool("PREVIEW_MODE", False)
     )
 
+    #: Build identifier surfaced as a `<meta name="buildscope-release">` tag so a deploy can be
+    #: confirmed to be serving the expected revision. Precedence: `OPPINTEL_RELEASE` (explicit
+    #: override) -> Render's `RENDER_GIT_COMMIT` (short sha) -> empty. Empty means unset; no
+    #: value is invented.
+    release: str = field(
+        default_factory=lambda: (
+            (os.environ.get("OPPINTEL_RELEASE") or "").strip()
+            or (os.environ.get("RENDER_GIT_COMMIT") or "").strip()[:7]
+        )
+    )
+
     def __post_init__(self) -> None:
         """Derive the security flags from the debug flag unless overridden explicitly.
 

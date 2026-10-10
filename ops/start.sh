@@ -56,6 +56,11 @@ export OPPINTEL_DB="${OPPINTEL_DB:-$OPPINTEL_DATA_DIR/oppintel.db}"
 # fallback (relative paths when the origin is unknown) is never reached because this sets a value.
 export BASE_URL="${BASE_URL:-${RENDER_EXTERNAL_URL:-http://127.0.0.1:${PORT}}}"
 
+# Build marker. Render injects RENDER_GIT_COMMIT; surface its short sha so a deploy can be
+# confirmed to be serving the expected revision via /healthz and the release meta tag. An
+# explicit OPPINTEL_RELEASE wins; unset stays unset (nothing is invented).
+export OPPINTEL_RELEASE="${OPPINTEL_RELEASE:-${RENDER_GIT_COMMIT:-}}"
+
 # The database may be pointed outside OPPINTEL_DATA_DIR, so check its directory too: sqlite
 # creates the file, not the directory, and a missing mount path fails as a raw traceback.
 DB_DIR="$(dirname "$OPPINTEL_DB")"

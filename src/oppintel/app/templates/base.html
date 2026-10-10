@@ -10,6 +10,7 @@
 {% if seo and seo.canonical %}<link rel="canonical" href="{{ seo.canonical }}">{% endif %}
 <meta name="robots" content="{{ seo.robots_directive if seo else 'noindex,nofollow' }}">
 <meta name="theme-color" content="#060b17">
+{% if release %}<meta name="buildscope-release" content="{{ release }}">{% endif %}
 
 {# Open Graph / Twitter metadata #}
 {% if seo and seo.canonical %}

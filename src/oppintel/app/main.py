@@ -336,6 +336,7 @@ def create_app(config: AppConfig | None = None) -> Flask:
             "firebase_config": _load_firebase_config(),
             "asset_url": asset_url,
             "preview_mode": cfg.preview_mode,
+            "release": cfg.release,
             "collection_since": _collection_since_label(),
         }
 
@@ -1240,6 +1241,8 @@ def create_app(config: AppConfig | None = None) -> Flask:
         Reports counts and never content, so it discloses nothing about a project.
         """
         payload: dict[str, Any] = {"status": "ok", "database": str(cfg.database_path)}
+        if cfg.release:
+            payload["release"] = cfg.release
         try:
             # Counts come from the stats snapshot, not a fresh COUNT(*), so the probe and the
             # pages agree and the probe does not race the refresh loop.
