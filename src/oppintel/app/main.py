@@ -611,6 +611,48 @@ def create_app(config: AppConfig | None = None) -> Flask:
             seo=g.seo_for_directory(filters, is_canonical, result.total),
         )
 
+    @app.route("/opportunities/new")
+    def new_filings() -> str:
+        """New filings that are not yet trade-verified.
+
+        A record whose stored `updated_at` is within a short window and which carries no
+        mechanical evidence tier is a *new sample*, not a confirmed trade opportunity: the
+        permit may or may not carry mechanical scope, and the pipeline has not (yet) found any.
+        This view surfaces that fresh, unverified set explicitly, labelled as such, so a
+        contractor can see the newest filings without the site ever claiming trade evidence
+        the data does not support. Ordered by most recent usable permit date.
+        """
+        window_days = 21
+        filters = OpportunityFilters(
+            freshness_days=window_days, without_mechanical=True, sort="recent"
+        )
+        result = g.service.list_opportunities(filters)
+        record_landing(g.db, LANDING_DIRECTORY, market_id=g.market.id, trade_id=g.trade.id)
+        return render_template(
+            "opportunities/list.html",
+            result=result,
+            filters=filters,
+            interpreted=None,
+            evidence_breakdown={"tier1": 0, "tier2": 0, "base": result.total},
+            cities=g.service.available_cities(),
+            project_types=g.service.available_project_types(),
+            procurement_options=g.service.procurement_options(),
+            sort_options=SORT_OPTIONS,
+            active_filter_count=0,
+            date_presets=_date_presets(),
+            pagination_endpoint="new_filings",
+            feed_kicker="New Filings",
+            feed_eyebrow="Fresh Public Record — Trade Not Yet Verified",
+            feed_heading="New filings, not yet trade-verified",
+            feed_lede=(
+                f"Commercial permits observed in the last {window_days} days for which the "
+                "pipeline has not confirmed mechanical scope. These are the newest filings in "
+                "the market — shown as an unverified sample, never as a trade opportunity."
+            ),
+            page_title="New filings — trade not yet verified",
+            seo=_new_filings_seo(g),
+        )
+
     @app.route("/opportunities/<slug>")
     def opportunity_detail(slug: str) -> str:
         project = g.service.get_by_slug(slug)
@@ -2035,9 +2077,24 @@ def _filter_summary(filters: OpportunityFilters) -> str | None:
     return ",".join(sorted(names)) or None
 
 
+def _new_filings_seo(g: Any) -> Any:
+    """SEO for the new-filings view: a real route, but a fresh, non-canonical sample.
+
+    It is reachable and titleable, and it must not be indexed, because it describes a moving
+    subset (the last few weeks of filings) rather than a stable canonical list.
+    """
+    seo = g.seo_builder.simple(
+        "New commercial filings — trade not yet verified",
+        "The newest commercial permit filings for which mechanical scope is not yet confirmed. "
+        "A fresh sample, not a verified trade opportunity.",
+        path="/opportunities/new",
+    )
+    seo.noindex = True
+    return seo
+
+
 def _date_presets() -> dict[str, str]:
     """Native date-input presets for the permit-date range.
-
     Computed server-side so the preset links work with no JavaScript, and so each preset resolves
     to a real calendar date the database can compare rather than a relative token.
     """

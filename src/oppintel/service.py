@@ -124,6 +124,10 @@ class OpportunityFilters:
     max_value: float | None = None
     #: Structural filters. Each maps to a stored column, never to a derived judgement.
     mechanical_only: bool = False
+    #: The complement of `mechanical_only`: exclude records the trade has evidence for, so a
+    #: view of "fresh filings, trade not yet verified" is filtered in SQL rather than by
+    #: dropping rows after the page is built (which would misreport the total and page count).
+    without_mechanical: bool = False
     #: Only records whose stored `updated_at` is within this many days.
     freshness_days: int | None = None
     #: Restrict to an explicit id set. Used by the account views (saved, watching, pipeline),
@@ -180,6 +184,7 @@ class OpportunityFilters:
             min_value=band(self.min_value),
             max_value=band(self.max_value),
             mechanical_only=bool(self.mechanical_only),
+            without_mechanical=bool(self.without_mechanical),
             freshness_days=days,
             project_ids=ids,
             sort=self.sort if self.sort in SORT_OPTIONS else DEFAULT_SORT,
@@ -209,6 +214,8 @@ class OpportunityFilters:
             params["include_unverified"] = "1"
         if self.mechanical_only:
             params["mechanical_only"] = "1"
+        if self.without_mechanical:
+            params["without_mechanical"] = "1"
         if self.freshness_days:
             params["freshness_days"] = self.freshness_days
         params.update(overrides)
@@ -344,7 +351,8 @@ class OpportunityService:
         whole point: the directory may widen, but it may not claim a trade the record does not
         support.
         """
-        if filters.include_unverified or filters.procurement_status or filters.mechanical_only:
+        if (filters.include_unverified or filters.procurement_status or filters.mechanical_only
+                or filters.without_mechanical):
             return None, []
         if (self.trade.discovery or {}).get("discover_commercial_base"):
             return None, []
@@ -411,6 +419,11 @@ class OpportunityService:
             field = (self.trade.discovery or {}).get("evidence_field")
             if field and re.fullmatch(r"[a-z_]+", str(field)):
                 clauses.append(f"p.{field} IS NOT NULL")
+        if filters.without_mechanical:
+            # "Trade not yet verified" is expressed by the stored tier, the same value the card
+            # reads, so the page count and the cards agree.
+            clauses.append("(p.mechanical_evidence_tier IS NULL "
+                           "OR p.mechanical_evidence_tier NOT IN (1, 2))")
         if filters.freshness_days:
             clauses.append("p.updated_at >= ?")
             params.append(

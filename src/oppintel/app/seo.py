@@ -254,8 +254,8 @@ class SeoBuilder:
             ],
         )
 
-    def simple(self, title: str, description: str) -> Seo:
-        return Seo(title=title, description=description, canonical=self.url("/"))
+    def simple(self, title: str, description: str, path: str = "/") -> Seo:
+        return Seo(title=title, description=description, canonical=self.url(path))
 
     def project_types_index(self, types: list[dict[str, Any]]) -> Seo:
         named = ", ".join(row["project_type"] for row in types[:6]) or "commercial building types"

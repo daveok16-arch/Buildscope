@@ -3,15 +3,14 @@
 {% block hero %}
 <section class="hero hero-compact">
   <div class="wrap">
-    <p class="crumb"><a href="{{ url_for('home') }}">Home</a> · Opportunity Feed</p>
+    <p class="crumb"><a href="{{ url_for('home') }}">Home</a> · {{ feed_kicker | default('Opportunity Feed') }}</p>
     <div class="hero-tagline-kicker">
       <span class="bs-motif" aria-hidden="true"><span></span><span></span><span></span></span>
-      Commercial Intelligence Feed
+      {{ feed_eyebrow | default('Commercial Intelligence Feed') }}
     </div>
-    <h1>Opportunity Feed</h1>
+    <h1>{{ feed_heading | default('Opportunity Feed') }}</h1>
     <p class="lede">
-      Verified commercial construction opportunities across {{ market.name }} with documentary public record evidence.
-      Every project links to its official source records.
+      {{ feed_lede | default('Verified commercial construction opportunities across ' ~ market.name ~ ' with documentary public record evidence. Every project links to its official source records.') }}
     </p>
   </div>
 </section>
