@@ -1,0 +1,416 @@
+================ J5 PASTES ================
+date=2026-10-09 ; branch wp2-mobile-a11y ; origin/main=e01eadd
+
+########## J5.1 banned-phrase grep (audit/scripts/h3_banned_grep.py) ##########
+=== files scanned ===
+  src/oppintel/app/templates/account/alerts.html
+  src/oppintel/app/templates/account/forgot_password.html
+  src/oppintel/app/templates/account/pipeline.html
+  src/oppintel/app/templates/account/preferences.html
+  src/oppintel/app/templates/account/reset_password.html
+  src/oppintel/app/templates/account/saved.html
+  src/oppintel/app/templates/account/signin.html
+  src/oppintel/app/templates/account/signup.html
+  src/oppintel/app/templates/account/watching.html
+  src/oppintel/app/templates/admin/data.html
+  src/oppintel/app/templates/analytics.html
+  src/oppintel/app/templates/base.html
+  src/oppintel/app/templates/changes.html
+  src/oppintel/app/templates/companies/detail.html
+  src/oppintel/app/templates/companies/index.html
+  src/oppintel/app/templates/content/detail.html
+  src/oppintel/app/templates/content/index.html
+  src/oppintel/app/templates/content_linkedin.html
+  src/oppintel/app/templates/core_category.html
+  src/oppintel/app/templates/dashboard.html
+  src/oppintel/app/templates/errors/403.html
+  src/oppintel/app/templates/errors/404.html
+  src/oppintel/app/templates/errors/500.html
+  src/oppintel/app/templates/home.html
+  src/oppintel/app/templates/how_it_works.html
+  src/oppintel/app/templates/markets/city.html
+  src/oppintel/app/templates/markets/city_trade.html
+  src/oppintel/app/templates/markets/detail.html
+  src/oppintel/app/templates/markets/index.html
+  src/oppintel/app/templates/markets/trade.html
+  src/oppintel/app/templates/opportunities/detail.html
+  src/oppintel/app/templates/opportunities/list.html
+  src/oppintel/app/templates/partials/csrf.html
+  src/oppintel/app/templates/partials/dialog_a11y.html
+  src/oppintel/app/templates/partials/empty_state.html
+  src/oppintel/app/templates/partials/gate_notice.html
+  src/oppintel/app/templates/partials/opportunity_card.html
+  src/oppintel/app/templates/partials/pagination.html
+  src/oppintel/app/templates/project_types/detail.html
+  src/oppintel/app/templates/project_types/index.html
+  src/oppintel/app/templates/reports/detail.html
+  src/oppintel/app/templates/reports/index.html
+  src/oppintel/app/templates/trades/detail.html
+  src/oppintel/app/templates/trades/index.html
+  src/oppintel/app/templates/trends.html
+  src/oppintel/app/static/css/app.css
+  docs/README.md
+  docs/api.md
+  docs/architecture.md
+  docs/data-sources.md
+  docs/deployment.md
+  docs/engineering/BUILDSCOPE_PLATFORM_AUDIT.md
+  docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md
+  docs/engineering/DESIGN.md
+  docs/engineering/PHASE_1A_AUTH_REMEDIATION.md
+  docs/engineering/PHASE_8_INTELLIGENCE_AUDIT.md
+  docs/engineering/POSTGRES_MIGRATION.md
+  docs/engineering/README.md
+  docs/engineering/dallas_source.md
+  docs/evidence-and-classification.md
+  docs/getting-started.md
+  docs/operations.md
+  docs/security.md
+  docs/testing.md
+  README.md
+(65 files)
+
+### 'continuous'  -> 0 hit(s)
+
+### 'false alert'  -> 0 hit(s)
+
+### 'real differences'  -> 3 hit(s)
+    src/oppintel/app/templates/changes.html:10: Records entering the system and real differences detected between consecutive collection
+    docs/architecture.md:117: records only real differences. A re-run with identical data produces nothing.
+    docs/testing.md:25: | `test_changes.py` | Change detection: real differences recorded, no-op passes silent, before/after
+
+### 'receive'  -> 3 hit(s)
+    src/oppintel/app/templates/account/forgot_password.html:24: <p style="margin:0"><strong>Request Received:</strong> {{ success }}</p>
+    src/oppintel/app/templates/partials/dialog_a11y.html:37: // exempt: an inert element receives no pointer events, so inerting it would break
+    docs/deployment.md:140: An unauthenticated request is redirected to sign-in, and a signed-in non-operator receives
+
+### 'revision alert'  -> 0 hit(s)
+
+### 'team'  -> 15 hit(s)
+    src/oppintel/app/templates/content/index.html:10: a project is worth investigating. Written for estimating and business-development teams.
+    src/oppintel/app/templates/core_category.html:47: The result is significantly higher signal-to-noise: fewer bloated records, each of which your estima
+    src/oppintel/app/templates/core_category.html:52: Commercial specialty subcontractors — mechanical, HVAC, electrical, plumbing, structural — and the t
+    docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md:290: | PLAN | `plan` | `id` | — | 3 rows (FREE/PRO/TEAM) |
+    docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md:612: - **Orgs/roles:** tables exist; `access_level ∈ {FREE, PRO, TEAM, ADMIN}`; ADMIN granted only by
+    docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md:734: | Plan catalogue (FREE/PRO/TEAM) | **IMPLEMENTED** (3 rows) |
+    docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md:737: | Feature gates (`export`, `alerts`, `team`, `api`) | **IMPLEMENTED** as keys + `require_entitlement
+    docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md:742: | Team/enterprise (org admin, invites) | **PARTIAL** (membership/assignment in `workflow.py`; no web
+    docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md:1031: | 17 | Authorization | **6** | FREE/PRO/TEAM/ADMIN, CLI-only escalation, IDOR-safe; `require_entitle
+    docs/engineering/POSTGRES_MIGRATION.md:49: | 18 | `organization` | `organizations` | Multi-user team workspace root |
+    docs/engineering/POSTGRES_MIGRATION.md:58: | 27 | `opportunity_note` | `project_notes` | Private internal team notes with revision timestamps |
+    docs/security.md:11: | Authorization | Anonymous ≠ FREE ≠ PRO/TEAM ≠ ADMIN. ADMIN is granted only by CLI |
+    docs/security.md:55: - A **plan** is a catalogue entry in `plan` (`FREE`, `PRO`, `TEAM`), seeded from `entitlements.py`.
+    docs/security.md:70: PYTHONPATH=src flask --app oppintel.app.wsgi set-plan estimator@example.com TEAM --status TRIALING
+    README.md:13: BuildScope is built for estimating and business-development teams at commercial mechanical
+
+### 'months before'  -> 0 hit(s)
+
+### 'before the work begins'  -> 7 hit(s)
+    src/oppintel/app/templates/account/signin.html:13: <h1 class="auth-brand-title">See the work before the work begins.</h1>
+    src/oppintel/app/templates/account/signup.html:13: <h1 class="auth-brand-title">See the work before the work begins.</h1>
+    src/oppintel/app/templates/base.html:9: <meta name="description" content="{{ seo.description if seo else 'BuildScope turns public constructi
+    src/oppintel/app/templates/base.html:212: <strong>See the work before the work begins.</strong><br>
+    src/oppintel/app/templates/home.html:11: <h1>See the work before the work begins.</h1>
+    src/oppintel/app/static/css/app.css:4: Tagline: "See the work before the work begins."
+    README.md:5: *See the work before the work begins.*
+
+### 'saved search'  -> 5 hit(s)
+    docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md:484: - **Saved searches:** **MISSING.** `user_preference` holds cities/project_types/value band, but
+    docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md:1000: - **Saved searches** + **autocomplete**.
+    docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md:1023: | 9 | Search | **6** | FTS5 + filters works; no saved search, autocomplete, or geo; no ranking tunin
+    docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md:1131: Documents, Companies (entity), People, Procurement signals, Saved searches, Autocomplete, Geo
+    docs/engineering/POSTGRES_MIGRATION.md:54: | 23 | `user_preference` | `saved_searches` | Saved search criteria, automated territory watch bound
+
+### 'guarantee'  -> 7 hit(s)
+    src/oppintel/app/templates/account/signin.html:68: <div class="auth-guarantee-note">
+    src/oppintel/app/templates/account/signup.html:63: <div class="auth-guarantee-note">
+    src/oppintel/app/templates/home.html:33: <span><strong>Evidence Guarantee:</strong> Every fact links directly to its official municipal recor
+    src/oppintel/app/templates/opportunities/detail.html:510: {# Data Quality Guarantee #}
+    src/oppintel/app/static/css/app.css:1953: .auth-guarantee-note {
+    src/oppintel/app/static/css/app.css:1963: .auth-guarantee-note svg {
+    docs/engineering/POSTGRES_MIGRATION.md:22: | **Event Outbox** | Transactional Outbox in PostgreSQL | Guarantees at-least-once asynchronous even
+
+### 'watch'  -> 75 hit(s)
+    src/oppintel/app/templates/account/alerts.html:95: message = "Alerts appear when a project you watch changes. Nothing has changed yet.",
+    src/oppintel/app/templates/account/alerts.html:96: suggestions = ["Watch opportunities you care about to get in-app alerts about them.",
+    src/oppintel/app/templates/account/alerts.html:98: reset_url = url_for('watching') %}
+    src/oppintel/app/templates/account/signup.html:15: Monitor construction opportunities, watched projects, and recorded project changes across Dallas&nda
+    src/oppintel/app/templates/account/signup.html:57: <strong>Pursuit Pipeline &amp; Watchlist</strong>
+    src/oppintel/app/templates/account/watching.html:6: <p class="crumb"><a href="{{ url_for('dashboard') }}">Dashboard</a> · Watching</p>
+    src/oppintel/app/templates/account/watching.html:47: <form method="post" action="{{ url_for('watch_opportunity', project_id=project.id) }}" class="inline
+    src/oppintel/app/templates/account/watching.html:50: <button class="btn btn-small btn-outline" type="submit">Stop watching</button>
+    src/oppintel/app/templates/account/watching.html:60: {% with heading = "You are not watching any opportunities yet",
+    src/oppintel/app/templates/account/watching.html:61: message = "Watching asks the system to notify you when a project's record changes. It is separate fr
+    src/oppintel/app/templates/account/watching.html:62: suggestions = ["Open an opportunity from the feed and choose Watch.",
+    src/oppintel/app/templates/account/watching.html:63: "Your watched projects appear here and drive your in-app alerts."],
+    src/oppintel/app/templates/admin/data.html:146: <div class="stat"><span class="stat-value">{{ health.monitoring.watches.watches }}</span><span class
+    src/oppintel/app/templates/admin/data.html:155: <div class="stat"><span class="stat-value">{{ health.watched_total }}</span><span class="stat-label"
+    src/oppintel/app/templates/base.html:81: <a class="btn btn-small btn-ghost" href="{{ url_for('watching') }}">Watching</a>
+    src/oppintel/app/templates/base.html:151: <a class="btn btn-outline" href="{{ url_for('watching') }}">Watching</a>
+    src/oppintel/app/templates/base.html:262: <li><a href="{{ url_for('watching') }}">Watching</a></li>
+    src/oppintel/app/templates/core_category.html:67: Watching an opportunity records your interest in it and raises an in-app alert when a later collecti
+    src/oppintel/app/templates/dashboard.html:27: <a class="stat" href="{{ url_for('watching') }}">
+    src/oppintel/app/templates/dashboard.html:28: <span class="stat-value">{{ summary.watching }}</span>
+    src/oppintel/app/templates/dashboard.html:29: <span class="stat-label">Watched Records</span>
+    src/oppintel/app/templates/dashboard.html:117: {# Monitored Watchlist Panel #}
+    src/oppintel/app/templates/dashboard.html:121: <a class="small" href="{{ url_for('watching') }}" style="font-weight:600">View all ({{ summary.watch
+    src/oppintel/app/templates/dashboard.html:125: {% if watching %}
+    src/oppintel/app/templates/dashboard.html:127: {% for project in watching[:5] %}
+    src/oppintel/app/templates/dashboard.html:141: <p class="small muted" style="margin:0">You are not watching any opportunities yet. Click "Watch" on
+    src/oppintel/app/templates/home.html:15: Discover active projects, verify mechanical scope from official documents, and watch the record for 
+    src/oppintel/app/templates/home.html:116: <div class="chain-step-body">Watch the record and get an in-app alert when a later collection run de
+    src/oppintel/app/templates/home.html:154: <p class="panel-eyebrow" style="color:var(--gold-600)">03. Watch</p>
+    src/oppintel/app/templates/how_it_works.html:60: <p class="small muted">Verified projects populate the opportunity feed, dossiers, and customer repor
+    src/oppintel/app/templates/opportunities/detail.html:37: {# Top Actions: Save, Watch, and Pipeline #}
+    src/oppintel/app/templates/opportunities/detail.html:50: <form method="post" action="{{ url_for('watch_opportunity', project_id=project.id) }}" class="inline
+    src/oppintel/app/templates/opportunities/detail.html:52: <input type="hidden" name="action" value="{{ 'remove' if project.is_watched else 'watch' }}">
+    src/oppintel/app/templates/opportunities/detail.html:53: <button class="btn {{ 'btn-outline' if project.is_watched else 'btn-ghost' }}" type="submit">
+    src/oppintel/app/templates/opportunities/detail.html:54: {{ 'Watching' if project.is_watched else 'Watch for changes' }}
+    src/oppintel/app/templates/partials/opportunity_card.html:119: <form method="post" action="{{ url_for('watch_opportunity', project_id=project.id) }}" class="inline
+    src/oppintel/app/templates/partials/opportunity_card.html:121: <input type="hidden" name="action" value="{{ 'remove' if project.is_watched else 'watch' }}">
+    src/oppintel/app/templates/partials/opportunity_card.html:122: <button class="btn btn-small {{ 'btn-outline' if project.is_watched else 'btn-ghost' }}" type="submi
+    src/oppintel/app/templates/partials/opportunity_card.html:123: {{ 'Watching' if project.is_watched else 'Watch' }}
+    docs/api.md:19: | `/api/watching`, `/api/watching/<id>` | GET, POST/DELETE | The account's watched opportunities |
+    docs/architecture.md:66: | `app/workflow.py` | The account's own record: watching, pipeline, notes, tags, activity |
+    docs/architecture.md:78: | `/dashboard` | The account's working centre: new matches, recently updated, watching, saved, pipel
+    docs/architecture.md:89: | `/watching` | Opportunities the account is monitoring for change |
+    docs/architecture.md:107: - **Save vs. watch.** A save bookmarks a project. A watch asks the system to re-check the record
+    docs/architecture.md:109: - **Pipeline.** A user workflow stage (New, Reviewing, Watching, Target, Contacted, Pursuing,
+    docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md:50: are architecturally present and thinly used (1 saved row, 1 watch, 1 pipeline entry, 0 alerts,
+    docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md:283: | WATCH | `watched_opportunity` | `(user_id, project_id)` | — | 1 row |
+    docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md:508: - Saved/watched/pipeline state for the signed-in viewer.
+    docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md:542: ## Watchlists
+    docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md:544: - `watched_opportunity` table + `app/workflow.py` + `/watching`.
+    docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md:545: - A watch is distinct from a save (documented and structurally separate).
+    docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md:546: - **Live data: 1 watch, 1 save.** The feature is implemented and essentially unused.
+    docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md:548: **Assessment: IMPLEMENTED but unexercised.** Design is sound (watch drives re-check + alerts).
+    docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md:557: - **Live data: `alert_event` = 0 rows.** No alerts have been generated because no user has watched
+    docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md:568: - Stages: NEW, REVIEWING, WATCHING, TARGET, CONTACTED, PURSUING, CLOSED (rendered "Closed out").
+    docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md:584: - Funnel: landing → viewed → created → saved → watched → pipeline, from real event rows.
+    docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md:677: project-types, guides, how-it-works, reports, companies, changes, analytics, dashboard, watching,
+    docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md:891: | `test_workflow.py` | 35 | watching, pipeline, notes, tags, assignment, **stage/procurement separat
+    docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md:1026: | 12 | Watchlists | **7** | Implemented, correctly distinct from saves; 1 row in data |
+    docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md:1101: PROCUREMENT SIGNALS, lifecycle DISCOVER → UNDERSTAND → VERIFY → WATCH → DETECT CHANGE → DECIDE → ACT
+    docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md:1117: | WATCH | **PARTIALLY EXISTS** | Implemented, unexercised |
+    docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md:1127: Trades (config), Location (text), Events (`project_change`), Watch, Alerts, Pipeline, Analytics,
+    docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md:1197: serve a dataset with 46 discoverable projects, 17 mechanical-evidence projects, 1 watch, 1 save and
+    docs/engineering/POSTGRES_MIGRATION.md:54: | 23 | `user_preference` | `saved_searches` | Saved search criteria, automated territory watch bound
+    docs/engineering/POSTGRES_MIGRATION.md:56: | 25 | `watched_opportunity`| `watched_projects` | Active monitoring registrations driving event not
+    docs/engineering/POSTGRES_MIGRATION.md:272: CREATE TABLE watched_projects (
+    docs/engineering/POSTGRES_MIGRATION.md:275: watched_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    docs/getting-started.md:42: projects) and the application schema (accounts, saves, watches, pipeline). Both are created
+    docs/testing.md:26: | `test_workflow.py` | Watching, pipeline, notes, tags, assignment, per-account isolation, stage/pro
+    docs/testing.md:27: | `test_alerts.py` | Event-driven alerts, watch scoping, no-change-means-no-alert, alert integrity |
+    docs/testing.md:66: | Account area, dashboard, watching, pipeline, alerts, saved, preferences, admin | noindex and disal
+    docs/testing.md:72: viewed → account created → saved → watched → pipeline action — are read from existing events.
+    README.md:27: - **Monitoring and change alerts** — watch a project and get an alert when a tracked field or its
+    README.md:29: - **Account pipeline** — save and watch opportunities, and track your own workflow stage (New,
+    README.md:30: Reviewing, Watching, Target, Contacted, Pursuing, Closed out) separately from the project's
+
+
+########## J5.2 the banned-phrase list (tests/test_copy_honesty.py) ##########
+BANNED_OVERCLAIMS: list[tuple[str, str]] = [
+    ("saved search", "saved searches are not a built feature"),
+    ("zero-false-positive", "an outcome guarantee the pipeline cannot make"),
+    ("zero false positive", "an outcome guarantee the pipeline cannot make"),
+    ("without false alerts", "an outcome guarantee the pipeline cannot make"),
+    ("continuous", "collection is periodic, not continuous"),
+    ("months before general contractors", "an unsupported timing claim"),
+    ("commands buildscope to monitor the parcel", "implies per-parcel continuous monitoring"),
+    ("organize active pursuits with your team", "no multi-user pursuit coordination exists"),
+    ("coordinate team business development", "no multi-user pursuit coordination exists"),
+    ("teams can bookmark", "organization membership is not exposed in any web route"),
+    ("receive alerts", "delivery is not built; alerts are in-app and event-driven"),
+    ("receive an alert", "delivery is not built; alerts are in-app and event-driven"),
+]
+@pytest.mark.parametrize("phrase,why", BANNED_OVERCLAIMS)
+def test_no_template_contains_a_banned_overclaim(phrase, why):
+    offenders = [name for name, text in _template_texts() if phrase in text]
+    assert offenders == [], f"'{phrase}' found in {offenders}: {why}"
+
+
+def test_changes_page_states_the_honest_recording_rule(client):
+    """The change feed says what it actually records, not what a reader might assume."""
+    body = client.get("/changes").get_data(as_text=True)
+    assert "We record every permit we observe and flag differences between collection runs." in body
+
+
+def test_changes_page_shows_before_and_after_values(client):
+    """A change entry is shown as a before/after pair, not a single summary string."""
+    body = client.get("/changes").get_data(as_text=True)
+    for header in ("Before", "After"):
+        assert f">{header}<" in body
+
+
+def test_changes_page_explains_a_zero_difference_feed(client):
+    """While no real difference exists, the page says so rather than implying live churn."""
+    body = client.get("/changes").get_data(as_text=True)
+    assert "Collection began" in body
+    assert "none have been recorded yet" in body.lower()
+
+
+def test_signup_does_not_promise_saved_searches(client):
+    body = client.get("/signup").get_data(as_text=True).lower()
+    assert "saved search" not in body
+
+
+def test_collection_label_states_a_date_and_time_not_a_month(client):
+    """The collection boundary is a moment, not a month.
+
+    "Continuous Ingestion: October 2026" was replaced by "Last collection: <date and time>".
+    A month label cannot tell a run that finished this morning from one three weeks ago, and
+    "continuous" is a claim the periodic loop does not honour.
+    """
+    for path in ("/", "/opportunities", "/how-it-works"):
+        body = client.get(path).get_data(as_text=True)
+        assert "Last collection:" in body, f"{path} is missing the collection label"
+        assert "Data collected through" not in body, f"{path} still uses the old month label"
+        assert "Continuous Ingestion" not in body, f"{path} still claims continuous ingestion"
+
+
+def test_format_date_time_keeps_the_clock_and_does_not_invent_one():
+    """A timestamp renders with its time; a date-only value renders without a fake midnight."""
+    from oppintel.service import OpportunityService
+
+    assert OpportunityService.format_date_time("2026-10-09T16:49:04.056655+00:00") == (
+        "09 Oct 2026, 16:49 UTC"
+    )
+    assert OpportunityService.format_date_time("2026-10-09") == "09 Oct 2026"
+    assert OpportunityService.format_date_time(None) == "Not verified"
+
+########## J5.3 ls audit/scripts ##########
+README.md
+a4.py
+a4_final.py
+a4_rows.py
+a4b.py
+a4c.py
+a4d.py
+a4e.py
+a5.sh
+a5_final.sh
+a5_firstboot.sh
+a5_sidebyside.sh
+a5b.sh
+a5c.sh
+a5d.sh
+a7.py
+a7b.py
+c1_jurisdiction.py
+dq_audit.py
+h1_d5_reconcile.py
+h2_assemble_rss.py
+h2_estimate.py
+h3_banned_grep.py
+h5_button_options.py
+h5_contrast_full.py
+i3_cache_matrix.py
+j2_button_shots.py
+j2_rss.py
+j2_sizing.py
+j4_button_options.py
+j4_change_tracking.py
+j4_montage.py
+j6_idempotency.py
+smoke_live.py
+wp1_d1_soak.py
+wp1_d5_trends.py
+wp1_d5_window.py
+wp1_render_check.py
+wp1_render_routes.py
+wp2_axe_all.py
+wp2_axe_run.py
+wp2_axe_structural.py
+wp2_axe_zero.py
+wp2_before_after.py
+wp2_contrast_table.py
+wp2_drawer_focus.py
+wp2_e5_screenshots.py
+wp2_header_probe.py
+wp2_measure.py
+wp2_overflow.py
+wp2_overflow2.py
+wp2_screenshots.py
+wp2_smoke.py
+wp2_tap_targets.py
+wp2_tap_targets_routes.py
+
+########## J5.4 audit/scripts/README.md ##########
+# WP1.1 verification scripts
+
+Read-only inspection scripts used to reconcile the WP1.1 figures (A1–A7). They open the
+database, run `SELECT`/`COUNT` queries, and start the app from a **copy** of the database.
+None of them write to the shipped `data/oppintel.db`.
+
+## Prerequisites
+
+Every script needs the vendored dependencies and the package on the path:
+
+```bash
+export PYTHONPATH="vendor/python:src"
+```
+
+The Python scripts read `/tmp/populated.db`. That path is a scratch copy of the shipped
+database; create it first (this never mutates `data/oppintel.db`):
+
+```bash
+cp data/oppintel.db /tmp/populated.db
+```
+
+The shell scripts copy the database themselves and use `/tmp/a5*` working directories.
+
+## Scripts
+
+| Script | What it proves | How to run |
+| --- | --- | --- |
+| `a4.py` | Groups permits by `(source_id, permit_number)` to size the duplicate surface | `PYTHONPATH="vendor/python:src" python audit/scripts/a4.py` |
+| `a4_final.py` | Reconciles those groups against WP1's seven true-duplicate groups | `PYTHONPATH="vendor/python:src" python audit/scripts/a4_final.py` |
+| `a4_rows.py` | Prints the permits behind each disputed group | `PYTHONPATH="vendor/python:src" python audit/scripts/a4_rows.py` |
+| `a4b.py` | Duplicate-group histogram by address and date spread | `PYTHONPATH="vendor/python:src" python audit/scripts/a4b.py` |
+| `a4c.py` | Same histogram, distinct permit-number only | `PYTHONPATH="vendor/python:src" python audit/scripts/a4c.py` |
+| `a4d.py` | Resolves the seven true-duplicate groups | `PYTHONPATH="vendor/python:src" python audit/scripts/a4d.py` |
+| `a4e.py` | The seven groups as `(permit_number, address_key, permit_date)` triples | `PYTHONPATH="vendor/python:src" python audit/scripts/a4e.py` |
+| `a7.py` | `project_change` composition: total and per `change_kind` | `PYTHONPATH="vendor/python:src" python audit/scripts/a7.py` |
+| `a7b.py` | Starts the service against a populated DB and reads the change feed | `PYTHONPATH="vendor/python:src" python audit/scripts/a7b.py` |
+| `a5.sh` | Starts the app from a copied DB three times, restarting between runs | `bash audit/scripts/a5.sh` |
+| `a5_final.sh` | Three-process start on the WP1 branch (`RENDER=true`) | `bash audit/scripts/a5_final.sh` |
+| `a5_firstboot.sh` | Empty mounted disk must start (`200`, `status:"empty"`) and self-seed | `bash audit/scripts/a5_firstboot.sh` |
+| `a5_sidebyside.sh` | Captures the headline figures from three separate runs | `bash audit/scripts/a5_sidebyside.sh` |
+| `a5b.sh` | Same, printing each run's headline figures for comparison | `bash audit/scripts/a5b.sh` |
+| `a5c.sh` | First boot, empty disk vs already-populated disk | `bash audit/scripts/a5c.sh` |
+| `a5d.sh` | Start against an explicitly configured `OPPINTEL_DB` path | `bash audit/scripts/a5d.sh` |
+| `c1_jurisdiction.py` | Prints the configured city list, the observed in-market count and the excluded out-of-market city, so the 19/15/14/18 figures can be told apart | `PYTHONPATH="vendor/python:src" python audit/scripts/c1_jurisdiction.py` |
+| `wp1_d1_soak.py` | Runs concurrent readers and web writes against an ingest writer for 60s and reports lock errors (D1) | `PYTHONPATH="vendor/python:src" python audit/scripts/wp1_d1_soak.py` |
+| `wp1_d5_trends.py` | Trends vs the public feed: last-30-day counts by classification/procurement, the gate for non-public rows, 10 samples, and the public permit-date month spread (D5) | `PYTHONPATH="vendor/python:src" python audit/scripts/wp1_d5_trends.py` |
+
+## WP2 UI verification scripts
+
+These need the app already running on `http://127.0.0.1:12000` (see the local run note in
+`AGENTS.md`) and Playwright + Chromium. They are read-only: they load pages and read the DOM.
+
+| Script | What it proves | How to run |
+| --- | --- | --- |
+| `wp2_overflow.py` | Horizontal-overflow check (`scrollWidth > innerWidth`) over the public routes at 390px | `python audit/scripts/wp2_overflow.py` |
+| `wp2_overflow2.py` | Same check over a wider route list | `python audit/scripts/wp2_overflow2.py` |
+| `wp2_tap_targets.py` | Lists interactive controls below 44px on the feed routes | `python audit/scripts/wp2_tap_targets.py` |
+| `wp2_tap_targets_routes.py` | 44px audit across every public route with touch emulation | `python audit/scripts/wp2_tap_targets_routes.py` |
+| `wp2_axe_all.py` | axe-core scan; prints only serious/critical violations | `python audit/scripts/wp2_axe_all.py` |
+| `wp2_axe_run.py` | axe-core scan with the full violation dump | `python audit/scripts/wp2_axe_run.py` |
+| `wp2_measure.py` | Layout probe: element widths/overflow at a given viewport | `python audit/scripts/wp2_measure.py` |
+| `wp2_header_probe.py` | Reports the computed style of the header controls at 390px | `python audit/scripts/wp2_header_probe.py` |
+| `wp2_drawer_focus.py` | Opens the mobile drawer and reports the focused element (focus-management check) | `python audit/scripts/wp2_drawer_focus.py` |
+| `wp2_screenshots.py` | Captures full-page screenshots to `audit/wp2/` at three viewports | `python audit/scripts/wp2_screenshots.py` |
+
+## WP1 render scripts
+
+| Script | What it proves | How to run |
+| --- | --- | --- |
+| `wp1_render_check.py` | Renders routes through the Flask test client against a DB copy and greps the HTML for a figure | `python audit/scripts/wp1_render_check.py <repo-root> <db-path>` |
+| `wp1_render_routes.py` | Renders the public routes and prints the headline figures each shows | `python audit/scripts/wp1_render_routes.py` |
+
+## Notes
+
+* The shell scripts bind a local port and start a short-lived server; run them from the
+  repository root. Each cleans its own `/tmp/a5*` directory at the start.
+* These are audit instruments, not tests. The durable regression coverage lives in
+  `tests/` (`test_stat_snapshot.py`, `test_trends.py`, `test_db_concurrency.py`).

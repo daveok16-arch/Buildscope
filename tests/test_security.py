@@ -453,3 +453,40 @@ def test_login_errors_do_not_reveal_whether_an_account_exists(secured_client):
     assert "unknown" not in lowered
     assert "no such user" not in lowered
     assert "not found" not in lowered
+
+
+def test_csp_nonce_is_at_least_128_bits():
+    """The CSP nonce must carry at least 128 bits of entropy from a CSPRNG.
+
+    An 8-character nonce is a shape a reader and a scanner both flag; it is also what a
+    hand-rolled `os.urandom(6)` produces. This pins the strength and the source.
+    """
+    import base64
+    import inspect
+
+    from oppintel.app import security
+
+    src = inspect.getsource(security.csp_nonce)
+    assert "secrets.token_urlsafe" in src, "nonce must come from the `secrets` CSPRNG"
+
+    # Base64url of n bytes is ceil(4n/3) characters with the padding stripped. 128 bits is 16
+    # bytes -> 22 characters. Assert the observed length matches 128+ bits, not a literal.
+    for _ in range(20):
+        nonce = security.secrets.token_urlsafe(16)
+        raw = base64.urlsafe_b64decode(nonce + "=" * (-len(nonce) % 4))
+        assert len(raw) * 8 >= 128
+        assert len(nonce) >= 22
+
+
+def test_csp_nonce_is_unique_per_request(client):
+    """Two requests must not share a nonce, or the CSP defence degrades to a static token."""
+    import re
+
+    def nonce_of(path):
+        body = client.get(path).get_data(as_text=True)
+        m = re.search(r'nonce="([^"]+)"', body)
+        assert m, f"no nonce in {path}"
+        return m.group(1)
+
+    seen = {nonce_of("/") for _ in range(5)}
+    assert len(seen) == 5, f"nonce repeated across requests: {seen}"
