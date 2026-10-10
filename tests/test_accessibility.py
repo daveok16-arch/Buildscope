@@ -327,7 +327,20 @@ def test_mobile_drawer_focus_and_aria(live_server, browser):
 
 
 def _assert_focus_stays_inside(page, panel_id: str, presses: int = 20) -> None:
-    """Press Tab (and Shift+Tab) and assert focus never leaves the dialog."""
+    """Press Tab (and Shift+Tab) and assert focus never leaves the dialog.
+
+    Waits for focus to have moved into the panel first. Without that wait this is the only
+    tolerance for the click that opened the dialog: on a loaded machine the first Tab could be
+    dispatched before the open handler had run, so focus was still on the trigger and the first
+    press looked like an escape (the flaky failure seen under a full-suite run). Awaiting the
+    documented post-condition — focus inside the dialog — removes the race without weakening the
+    trap assertion.
+    """
+    page.wait_for_function(
+        "p => document.getElementById(p).contains(document.activeElement)",
+        arg=panel_id,
+        timeout=5000,
+    )
     for i in range(presses):
         page.keyboard.press("Tab")
         inside = page.evaluate(

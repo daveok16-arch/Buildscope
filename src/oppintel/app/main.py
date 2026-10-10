@@ -8,12 +8,14 @@ layer and applying them twice would let the two disagree.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import os
 import secrets
 import urllib.request
 from datetime import date, datetime, timedelta, timezone
+from functools import lru_cache
 
 import click
 from typing import Any
@@ -239,6 +241,9 @@ def create_app(config: AppConfig | None = None) -> Flask:
         template_folder=str(cfg.templates_dir),
         static_folder=str(cfg.static_dir),
     )
+    # Static assets are content-fingerprinted in the templates (`app.css?v=<hash>`), so a long
+    # public cache is safe and a rebuild is still picked up. Without this Flask sends `no-cache`.
+    app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 31536000
     app.config.update(
         SECRET_KEY=cfg.secret_key,
         SESSION_COOKIE_HTTPONLY=True,
@@ -326,7 +331,28 @@ def create_app(config: AppConfig | None = None) -> Flask:
                 else 0
             ),
             "firebase_config": _load_firebase_config(),
+            "asset_url": asset_url,
         }
+
+    @lru_cache(maxsize=None)
+    def asset_version(filename: str) -> str:
+        """A short fingerprint of a static file (mtime + size), or empty when it is absent.
+
+        Versions the stylesheet URL so a long public cache stays safe: a new build changes the
+        fingerprint and the browser fetches the new file instead of reusing the old one.
+        """
+        try:
+            stat = (cfg.static_dir / filename).stat()
+        except OSError:
+            return ""
+        digest = hashlib.sha256(f"{int(stat.st_mtime)}:{stat.st_size}".encode()).hexdigest()
+        return digest[:12]
+
+    def asset_url(filename: str) -> str:
+        """`url_for('static', filename=...)` with a content fingerprint query appended."""
+        base = url_for("static", filename=filename)
+        version = asset_version(filename)
+        return f"{base}?v={version}" if version else base
 
     @app.template_filter("money")
     def money_filter(value: Any) -> str:
@@ -1109,11 +1135,17 @@ def create_app(config: AppConfig | None = None) -> Flask:
     @app.route("/sitemap.xml")
     def sitemap() -> Any:
         xml = g.seo_builder.sitemap()
-        return app.response_class(xml, mimetype="application/xml")
+        response = app.response_class(xml, mimetype="application/xml")
+        # Generated from the database, so a year-long cache would keep a stale route list. A day
+        # is short enough that a rebuild is picked up and long enough to spare the crawler.
+        response.headers["Cache-Control"] = "public, max-age=86400"
+        return response
 
     @app.route("/robots.txt")
     def robots() -> Any:
-        return app.response_class(g.seo_builder.robots(), mimetype="text/plain")
+        response = app.response_class(g.seo_builder.robots(), mimetype="text/plain")
+        response.headers["Cache-Control"] = "public, max-age=86400"
+        return response
 
     @app.route("/healthz")
     def healthz() -> Any:

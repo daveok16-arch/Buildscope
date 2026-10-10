@@ -23,7 +23,7 @@
 <meta name="twitter:description" content="{{ seo.description }}">
 {% endif %}
 
-<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+<link rel="stylesheet" href="{{ asset_url('css/app.css') }}">
 {% if seo %}{% for block in seo.json_ld %}
 <script type="application/ld+json">{{ block | tojson }}</script>
 {% endfor %}{% endif %}

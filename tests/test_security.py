@@ -354,15 +354,14 @@ def test_security_headers_are_present(secured_client):
 
 
 def test_private_pages_are_not_cacheable(client, session_client):
-    """A per-account or operator response must never be stored by a cache.
+    """Every HTML/JSON response and anything that sets a cookie must never be stored.
 
-    Regression for H8: no `Cache-Control` was emitted at all, so a shared cache or the
+    Regression for H8/I3: no `Cache-Control` was emitted at all, so a shared cache or the
     browser's back/forward cache could serve one account's saved list to the next visit.
     """
     # A signed-in account surface.
     assert session_client.get("/saved").headers["Cache-Control"] == "private, no-store"
-    # The account surfaces are private even when signed out, because the redirect itself
-    # must not be cached for the next visitor.
+    # Account surfaces are private even when signed out (a cached redirect is still wrong).
     for path in ("/signin", "/signup", "/dashboard", "/saved", "/admin/data"):
         assert client.get(path).headers["Cache-Control"] == "private, no-store", path
     # The API and the health probe are never cacheable.
@@ -370,10 +369,53 @@ def test_private_pages_are_not_cacheable(client, session_client):
         assert client.get(path).headers["Cache-Control"] == "private, no-store", path
 
 
+def test_every_html_route_is_no_store(client):
+    """No HTML route may be publicly cacheable, because every one carries a nonce and a header.
+
+    A per-request CSP nonce is embedded in every page and the header renders "Sign in" versus
+    the account name, so a shared cache could replay one visitor's page to another. This walks
+    the whole public route table rather than a sample, so a new route is covered on arrival.
+    """
+    checked = 0
+    for rule in client.application.url_map.iter_rules():
+        if rule.endpoint == "static" or "GET" not in (rule.methods or set()):
+            continue
+        if "<" in rule.rule:  # needs a real id; the detail routes are covered elsewhere
+            continue
+        response = client.get(rule.rule)
+        if response.headers.get("Content-Type", "").startswith("text/html"):
+            assert response.headers["Cache-Control"] == "private, no-store", rule.rule
+            checked += 1
+    assert checked >= 20, f"expected the public route table, only saw {checked} HTML routes"
+
+
+def test_no_html_response_combines_public_cache_with_a_nonce_or_cookie(client, app_db):
+    """The exact invariant: an HTML response never says `public` while carrying a nonce/cookie."""
+    for path in ("/", "/opportunities", "/trends", "/companies", "/markets", "/changes"):
+        response = client.get(path)
+        cache = response.headers.get("Cache-Control", "")
+        csp = response.headers.get("Content-Security-Policy", "")
+        has_nonce = "nonce-" in csp
+        sets_cookie = bool(response.headers.get("Set-Cookie"))
+        assert not (cache.startswith("public") and (has_nonce or sets_cookie)), path
+        # And the stronger statement: none of these HTML pages is public at all.
+        assert cache == "private, no-store", path
+
+
+def test_static_assets_keep_a_long_cache_and_are_fingerprinted(client):
+    """A static asset is publicly cacheable for a long time and its URL is content-versioned."""
+    response = client.get("/static/css/app.css")
+    assert response.status_code == 200
+    assert "max-age=31536000" in response.headers["Cache-Control"]
+    # The base template links it with a fingerprint query so a rebuild is not served stale.
+    body = client.get("/").get_data(as_text=True)
+    assert "css/app.css?v=" in body
+
+
 def test_public_pages_get_a_short_public_cache(client, session_client):
-    response = client.get("/")
-    assert response.headers["Cache-Control"] == "public, max-age=60"
-    # A signed-in request is private even on a public path, because the header shows the account.
+    """Kept as a guard that no HTML page is public — the header shows account state."""
+    for path in ("/", "/trends", "/companies"):
+        assert client.get(path).headers["Cache-Control"] == "private, no-store", path
     assert session_client.get("/").headers["Cache-Control"] == "private, no-store"
 
 

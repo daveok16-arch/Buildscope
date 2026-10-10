@@ -17,11 +17,13 @@ documented production deployment puts a real limiter in front of the app.
 referrer policy, and a content security policy that permits only same-origin assets and the
 inline JSON-LD the SEO layer emits.
 
-**Cacheability.** A private page (any authenticated request, the account surfaces, the API and
-the health probe) is sent `private, no-store`. Without this a shared cache or the browser's
-back/forward cache can serve one account's saved list to the next visitor on the same machine.
-Public pages carry a short `public, max-age=60`, long enough to absorb a burst, short enough
-that a refreshed snapshot is visible within a minute.
+**Cacheability.** Anything that can vary per visitor — HTML (the header shows "Sign in" or the
+account name; a per-request CSP nonce is embedded; a session cookie may be set) and JSON (the
+API and the health probe) — is sent `private, no-store`. A shared or back/forward cache must
+never replay one visitor's page to another. Only truly static assets, which Flask's file
+handler gives its own long `Cache-Control`, keep a public cache; the app fingerprints the
+stylesheet URL so a new build is not served from an old cache. There is therefore **no public
+HTML cache at all** — the nonce and the cookie make it unsafe by construction.
 """
 
 from __future__ import annotations
@@ -42,24 +44,6 @@ UNSAFE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 
 #: Session key holding the per-session CSRF token.
 CSRF_SESSION_KEY = "_csrf_token"
-
-#: Paths that render per-account data (or the operator view) and must never be stored by a
-#: cache. Kept as an explicit list so a new private route is visibly absent from it, and a test
-#: asserts each of these is emitted `no-store`.
-PRIVATE_PATHS = frozenset({
-    "/signin",
-    "/signup",
-    "/signout",
-    "/forgot-password",
-    "/dashboard",
-    "/saved",
-    "/watching",
-    "/my-pipeline",
-    "/alerts",
-    "/preferences",
-    "/admin/data",
-    "/content/linkedin",
-})
 
 #: Header / form field a client may use to present the token.
 CSRF_FORM_FIELD = "_csrf_token"
@@ -220,20 +204,21 @@ def csp_nonce() -> str:
     return nonce
 
 
-def _is_private_request() -> bool:
-    """Whether this response is per-account and must not be stored by any cache.
+def _is_private_response(response: Response) -> bool:
+    """Whether a response may be stored by a cache. Only static assets may.
 
-    A request that carries a session for a signed-in account is private whatever it fetched.
-    The account surfaces are private even when signed out (they redirect, and a cached redirect
-    for the next visitor is still wrong), so the path prefixes catch them. The API and the
-    health probe are always private. Everything else is a public, indexable page.
+    The decision is made from the response, not a hand-maintained path list, so a new HTML or
+    JSON route is private by default rather than by remembering to register it:
+
+    * a `Set-Cookie` means the response is establishing per-visitor state;
+    * an HTML or JSON content type can carry a CSP nonce, the "Sign in"/account header and a
+      CSRF token — all per-visitor;
+    * everything else (a CSS/JS/image static file) is safe to cache publicly.
     """
-    if session.get("user_id"):
+    if response.headers.get("Set-Cookie"):
         return True
-    path = request.path
-    if path.startswith("/api/") or path.startswith("/admin/") or path == "/healthz":
-        return True
-    return path in PRIVATE_PATHS or path.startswith("/reset-password/")
+    content_type = (response.headers.get("Content-Type") or "").lower()
+    return "text/html" in content_type or "application/json" in content_type
 
 
 def apply_security_headers(response: Response) -> Response:
@@ -241,12 +226,13 @@ def apply_security_headers(response: Response) -> Response:
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
     response.headers.setdefault("X-Frame-Options", "DENY")
     response.headers.setdefault("Referrer-Policy", "same-origin")
-    # Cacheability: a private response must never be stored, a public one may be briefly.
-    # `setdefault` leaves a route free to override, e.g. robots.txt/sitemap.xml for a day.
-    if _is_private_request():
+    # Cacheability: every HTML or JSON response and anything that sets a cookie is private;
+    # only static files keep a public cache (Flask's static handler sets its own max-age, and
+    # the templates fingerprint asset URLs, so a rebuild is picked up).
+    if _is_private_response(response):
         response.headers.setdefault("Cache-Control", "private, no-store")
     else:
-        response.headers.setdefault("Cache-Control", "public, max-age=60")
+        response.headers.setdefault("Cache-Control", "public, max-age=31536000")
     response.headers.setdefault(
         "Permissions-Policy", "geolocation=(), microphone=(), camera=()"
     )
