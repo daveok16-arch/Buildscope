@@ -170,3 +170,30 @@ def test_companies_page_does_not_claim_unpublished_stakeholder_roles(stakeholder
     """The directory never found GCs/architects for live data; the copy must not promise them."""
     body = stakeholder_client.get("/companies").get_data(as_text=True)
     assert "project owners today" in body
+
+
+# --- role counts drive the filter control (WP3 M5) -----------------------------
+
+def test_role_counts_reports_only_present_roles(stakeholder_db):
+    counts = CompanyService(stakeholder_db).role_counts()
+    # Two distinct owners (ACME, Tarrant) and two distinct contractors (Builder Co, Rival).
+    assert counts.get("owner") == 2
+    assert counts.get("contractor") == 2
+    # No architect or developer is published by this fixture, so neither is offered.
+    assert "architect" not in counts
+    assert "developer" not in counts
+
+
+def test_role_counts_omits_a_role_that_would_filter_to_nothing(stakeholder_client):
+    """The role control must not offer an option the data cannot honour."""
+    body = stakeholder_client.get("/companies").get_data(as_text=True)
+    assert "General Contractor (2)" in body
+    assert "Property Owner / Developer (2)" in body
+    assert "Architect / Designer" not in body
+
+
+def test_role_counts_narrow_with_a_city_filter(stakeholder_db):
+    counts = CompanyService(stakeholder_db).role_counts(city="Dallas")
+    # In Dallas only ACME (owner) and Rival Builders (contractor) are present.
+    assert counts.get("owner") == 1
+    assert counts.get("contractor") == 1

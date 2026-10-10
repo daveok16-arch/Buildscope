@@ -34,7 +34,7 @@
         </div>
         <h3 style="margin-top:14px">
           <a href="{{ url_for('opportunity_detail', slug=project.slug) }}">
-            {{ ((project.project_name | titlecase) or project.address or 'Commercial project') | truncate(80) }}
+            {{ ((project.project_name | clean_title) or project.address or 'Commercial project') | truncate(80) }}
           </a>
         </h3>
         <p class="card-meta">

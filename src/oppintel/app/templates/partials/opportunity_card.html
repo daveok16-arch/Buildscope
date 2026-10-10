@@ -41,7 +41,7 @@
   {# 2. Project Title & Location. The title is title-cased (source names arrive shouted); the
      address is left exactly as the source published it, because an address is an identifier, not
      prose, and the directory/search tests match it verbatim. #}
-  {% set display_name = (project.project_name or project.address or 'Commercial construction project') | titlecase | truncate(88) %}
+  {% set display_name = (project.project_name or project.address or 'Commercial construction project') | clean_title | truncate(88) %}
   <div class="card-header-block">
     <h3>
       {% if project.slug %}

@@ -25,7 +25,7 @@
     {% endif %}
   </div>
 
-  <h1>{{ (project.project_name | titlecase) or project.address or 'Commercial construction project' }}</h1>
+  <h1>{{ (project.project_name | clean_title) or project.address or 'Commercial construction project' }}</h1>
   <p class="muted" style="font-size:0.95rem; margin-bottom:0">
     <svg class="card-location-icon" viewBox="0 0 24 24" style="vertical-align:middle; margin-right:4px">
       <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
@@ -102,7 +102,7 @@
       <dl class="facts">
         <div>
           <dt>Project name</dt>
-          <dd>{{ project.project_name | titlecase | or_na }}</dd>
+          <dd>{{ project.project_name | clean_title | or_na }}</dd>
         </div>
         <div>
           <dt>Address</dt>
@@ -147,7 +147,7 @@
             {% if project.permits and project.permits[0].work_description %}
               {{ project.permits[0].work_description }}
             {% else %}
-              {{ project.project_name | titlecase | or_na }}
+              {{ project.project_name | clean_title | or_na }}
             {% endif %}
           </dd>
         </div>
@@ -460,7 +460,8 @@
           <span class="muted small">record {{ s.source_record_key }}</span>
           {% if s.has_url %}
             <a class="src-url" href="{{ s.source_url }}" target="_blank" rel="noopener noreferrer nofollow">
-              {{ s.source_url | truncate(72) }}
+              <span class="src-domain">{{ s.source_url | domain or 'source record' }}</span>
+              <span class="src-open">Open source record ↗</span>
             </a>
           {% else %}
             <span class="src-url muted">

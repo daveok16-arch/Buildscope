@@ -34,7 +34,7 @@
       {% for project in column.entries %}
       <article class="pipeline-card">
         <a class="pipeline-title" href="{{ url_for('opportunity_detail', slug=project.slug) }}">
-          {{ ((project.project_name | titlecase) or project.address or 'Commercial project') | truncate(52) }}
+          {{ ((project.project_name | clean_title) or project.address or 'Commercial project') | truncate(52) }}
         </a>
         <p class="muted small" style="margin:2px 0 6px">
           {{ project.city | or_na }} · {{ project.classification | replace('_',' ') | title }}

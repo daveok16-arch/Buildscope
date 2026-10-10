@@ -2931,3 +2931,14 @@ body.drawer-open .mobile-drawer {
 .detail-grid > * { min-width: 0; }
 .src-url { overflow-wrap: anywhere; word-break: break-word; }
 .detail-panel dd, .detail-panel dt { overflow-wrap: anywhere; }
+
+/* WP3 M4 — a source link shows its domain and an "Open source record" affordance, never a long
+   raw URL that wraps or overflows the column. */
+.src-url { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
+.src-url .src-domain { font-weight: 600; }
+.src-url .src-open {
+  color: var(--accent-light);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+}

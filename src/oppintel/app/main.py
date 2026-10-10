@@ -425,6 +425,25 @@ def create_app(config: AppConfig | None = None) -> Flask:
 
         return titlecase(value)
 
+    @app.template_filter("clean_title")
+    def clean_title_filter(value: Any) -> str:
+        """Render a raw project name as a clean headline (display-only).
+
+        Strips a leading meeting-note marker, repairs a figure run into the preceding word, and
+        reduces an over-long prose description to its first sentence. Never touches a stored
+        value.
+        """
+        from .display import clean_title
+
+        return clean_title(value)
+
+    @app.template_filter("domain")
+    def domain_filter(value: Any) -> str:
+        """The host of a URL for display, so a long raw link does not overflow the column."""
+        from .display import domain_of
+
+        return domain_of(value)
+
     @app.template_filter("has_value")
     def has_value_filter(value: Any) -> bool:
         from .display import has_value
@@ -1032,10 +1051,12 @@ def create_app(config: AppConfig | None = None) -> Flask:
         city = request.args.get("city")
         company_service = CompanyService(g.db)
         companies = company_service.list_companies(role=role, q=q, city=city, limit=60)
+        role_counts = company_service.role_counts(q=q, city=city)
         return render_template(
             "companies/index.html",
             companies=companies,
             selected_role=role,
+            role_counts=role_counts,
             q=q,
             selected_city=city,
             active_filter_count=sum(bool(v) for v in (q, role, city)),

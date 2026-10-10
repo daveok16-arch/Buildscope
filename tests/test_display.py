@@ -10,6 +10,7 @@ from __future__ import annotations
 import pytest
 
 from oppintel.app.display import (
+    clean_title,
     has_value,
     join_missing,
     present_fields,
@@ -131,3 +132,70 @@ def test_join_missing_is_a_human_list():
     )
     assert join_missing(["A", "B", "C"]) == "A, B and C"
     assert join_missing([]) == ""
+
+
+# --- clean_title: display-layer headline cleanup (WP3 M3/M4) -------------------
+
+def test_clean_title_rejoins_a_figure_run_into_a_word():
+    # The Monticello dossier title: "is16,297" is a run-together figure, not a word.
+    assert clean_title("2 Story Restaurant in Uptown on McKinney Ave. It is16,297 SF") == (
+        "2 Story Restaurant in Uptown on McKinney Ave. It is 16,297 SF"
+    )
+
+
+@pytest.mark.parametrize(
+    "raw,expected",
+    [
+        # A leading meeting-note marker is not part of the identity.
+        ("QTEAM MEETING TBD - Ground-up new construction of an office building.",
+         "Ground-up new construction of an office building."),
+        ("QTEAM INHOUSE - Property Manager Remodel - SHELL: MEP and Grease Trap Install",
+         "Property Manager Remodel - SHELL: MEP and Grease Trap Install"),
+    ],
+)
+def test_clean_title_strips_a_leading_meeting_note(raw, expected):
+    assert clean_title(raw) == expected
+
+
+def test_clean_title_reduces_a_verbose_description_to_its_first_sentence():
+    raw = (
+        "QTEAM MEETING TBD - Ground-up new construction of a single-story office and warehouse "
+        "building totaling 10,500 square feet. The building consists of a pre-engineered metal "
+        "building (PEMB) structure."
+    )
+    assert clean_title(raw) == (
+        "Ground-up new construction of a single-story office and warehouse building totaling "
+        "10,500 square feet."
+    )
+
+
+def test_clean_title_does_not_split_a_thousands_figure():
+    # "2,765 SF" must survive: the comma is inside a number, not a clause boundary.
+    raw = (
+        "Standard Review: Ground-up construction of a new 2,765 SF Jack in the Box restaurant, "
+        "including architectural, structural, mechanical and plumbing work for the site."
+    )
+    assert "2,765 SF" in clean_title(raw)
+
+
+def test_clean_title_does_not_split_an_abbreviation():
+    raw = (
+        "DSST-DISD-STAR-Todd/Young School: The Dr. Frederick Douglass Todd/Whitney M. Young "
+        "project is a new ground-up PreK-8 school building for the district."
+    )
+    assert clean_title(raw).startswith("DSST-DISD-STAR-Todd/Young School: The Dr. Frederick")
+
+
+def test_clean_title_leaves_an_identifier_and_a_capacity_untouched():
+    assert clean_title("PERMIT PB25-09094 REMODEL") == "Permit PB25-09094 Remodel"
+    assert clean_title("INSTALL 240V 40A CIRCUIT") == "Install 240V 40A Circuit"
+
+
+def test_clean_title_never_invents_a_value():
+    assert clean_title(None) == ""
+    assert clean_title("   ") == ""
+
+
+def test_clean_title_keeps_a_short_honest_name_whole():
+    # A compact title is not a prose description; it must not be truncated.
+    assert clean_title("MURPHY MARKETPLACE - WEST ADDITION") == "Murphy Marketplace - West Addition"

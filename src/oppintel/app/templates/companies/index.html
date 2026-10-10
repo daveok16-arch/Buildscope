@@ -55,11 +55,24 @@
         <div class="field">
           <label for="role">Stakeholder Role</label>
           <select id="role" name="role">
-            <option value="">All Roles</option>
-            <option value="contractor" {% if selected_role == 'contractor' %}selected{% endif %}>General Contractor</option>
-            <option value="owner" {% if selected_role == 'owner' %}selected{% endif %}>Property Owner / Developer</option>
-            <option value="architect" {% if selected_role == 'architect' %}selected{% endif %}>Architect / Designer</option>
+            {% set _role_opts = [
+              ('contractor', 'General Contractor', role_counts.contractor | default(0)),
+              ('owner', 'Property Owner / Developer', role_counts.owner | default(0)),
+              ('architect', 'Architect / Designer', role_counts.architect | default(0)),
+            ] %}
+            <option value="">All Roles ({{ role_counts.values() | sum }})</option>
+            {% for value, label, count in _role_opts %}
+              {% if count %}
+              <option value="{{ value }}" {% if selected_role == value %}selected{% endif %}>{{ label }} ({{ count }})</option>
+              {% endif %}
+            {% endfor %}
+            {% if selected_role and selected_role not in ['contractor', 'owner', 'architect'] %}
+              <option value="{{ selected_role }}" selected>{{ selected_role | replace('_', ' ') | title }}</option>
+            {% endif %}
           </select>
+          {% if not role_counts.contractor and not role_counts.architect %}
+          <p class="field-hint small muted">Only owner records are published by the current sources. General-contractor and architect roles appear here as sources begin to publish them.</p>
+          {% endif %}
         </div>
 
         <div class="field">

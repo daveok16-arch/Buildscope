@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import re
 from typing import Any, Iterable, Sequence
+from urllib.parse import urlsplit
 
 #: Tokens that are acronyms or brand-cased words and must stay upper-cased. Trade terms first
 #: (so HVAC/AHU/RTU survive), then geography and measurement units that appear in names and
@@ -57,7 +58,8 @@ def _collapse_whitespace(text: str) -> str:
     """Collapse runs of whitespace/newlines and fix a space left before sentence punctuation."""
     text = re.sub(r"\s+", " ", text).strip()
     # Municipal exports often produce "100 CRESCENT CT , 550" — remove the space before the comma.
-    text = re.sub(r"\s+([,;:])", r"\1", text)
+    # A period too: "DWELLING UNITS . INCLUDING" is the same artifact, not a decimal.
+    text = re.sub(r"\s+([,;:.])", r"\1", text)
     return text
 
 
@@ -150,6 +152,136 @@ def titlecase(value: Any) -> str:
     if not _is_shouting(text):
         return text
     return _titlecase_shouting(text)
+
+
+#: Leading meeting/administration markers that a source prepends to a work description and that
+#: are not part of the project's identity. Matched case-insensitively at the start of the string.
+_TITLE_PREFIXES: tuple[re.Pattern[str], ...] = (
+    re.compile(r"^\s*q\s*team\s*meeting\s*(?:tbd|tba)?\s*[-–—:]\s*", re.IGNORECASE),
+    re.compile(r"^\s*qteam\s*meeting\s*(?:tbd|tba)?\s*[-–—:]\s*", re.IGNORECASE),
+    re.compile(r"^\s*q\s*team\s*(?:inhouse|in-house)\s*[-–—:]\s*", re.IGNORECASE),
+    re.compile(r"^\s*qteam\s*(?:inhouse|in-house)\s*[-–—:]\s*", re.IGNORECASE),
+    re.compile(r"^\s*(?:pre[-\s]?application|pre[-\s]?app)\s*meeting\s*[-–—:]\s*", re.IGNORECASE),
+    re.compile(r"^\s*meeting\s*(?:tbd|tba)?\s*[-–—:]\s*", re.IGNORECASE),
+)
+
+#: A lowercase letter immediately followed by a digit ("is16,297"). The two tokens ran together
+#: when the source concatenated them. Restricted to a lower-case letter so an identifier such as
+#: "PB25-09094" (upper-case letter + digit) and a capacity ("240V") are never split.
+_LETTER_DIGIT_RE = re.compile(r"([a-z])(\d)")
+
+#: A verbose work description longer than this is reduced to its first sentence. Below it, the
+#: whole (short) text is kept, so a compact title is never truncated.
+_SUMMARISE_MIN_LENGTH = 140
+
+#: Abbreviations and single-letter initials whose trailing period is not a sentence end. Checked
+#: before a period is treated as a boundary, so "The Dr. Frederick Douglass Todd/Whitney M. Young
+#: project ..." is not cut after "Dr.".
+_ABBREVIATIONS: frozenset[str] = frozenset(
+    {"dr", "mr", "mrs", "ms", "st", "jr", "sr", "no", "inc", "ltd", "co", "corp", "ave",
+     "blvd", "rd", "ste", "fl", "bldg", "sq", "mt", "ft", "dept", "univ", "vs", "etc"}
+)
+
+#: A comma or semicolon that is *not* inside a number ("2,765", "1,500,000"). Used so a clause
+#: split never breaks a thousands-separated figure.
+_CLAUSE_SPLIT_RE = re.compile(r"(?<!\d)[,;](?!\s*\d)|(?<!\d)\s[-–—]\s")
+
+
+def _first_sentence(text: str) -> str:
+    """The leading sentence of ``text``, treating an abbreviation's period as not a boundary."""
+    for match in re.finditer(r"(?<=[.!?])\s+", text):
+        before = text[: match.start()].rstrip()
+        last_word = re.split(r"[\s/]", before)[-1].strip(".").lower()
+        if last_word in _ABBREVIATIONS or len(last_word) == 1:
+            continue
+        return before
+    return text.strip()
+
+
+def _summarise_verbose_title(text: str) -> str:
+    """Reduce a long prose work description to a headline when the source record allows it.
+
+    A municipal work description can run to several sentences ("Ground-up new construction of a
+    single-story office and warehouse building totaling 10,500 square feet. The building
+    consists of ..."). The first sentence carries the identity; the rest is specification. Only
+    applied to a genuinely long description and only across a safe boundary, so a compact title
+    or an abbreviation never produces a truncated fragment.
+    """
+    if len(text) < _SUMMARISE_MIN_LENGTH:
+        return text
+    stripped = text.strip()
+    head = _first_sentence(stripped)
+    if head != stripped and 50 <= len(head) < len(stripped):
+        return head
+    # No usable sentence break: reduce a run-on to its leading clause. The split protects a
+    # thousands-separated figure, and a substantial lead clause is required.
+    lead = _CLAUSE_SPLIT_RE.split(stripped, maxsplit=1)[0].strip()
+    if 50 <= len(lead) < len(stripped):
+        return lead
+    return text
+
+
+def _strip_title_prefix(text: str) -> str:
+    """Drop a leading meeting/administration marker that is not part of the project identity.
+
+    "QTEAM MEETING TBD - Ground-up ..." -> "Ground-up ...". Only a marker at the very start is
+    removed; the same words inside a description are left alone.
+    """
+    for pattern in _TITLE_PREFIXES:
+        stripped = pattern.sub("", text, count=1)
+        if stripped != text:
+            return stripped.lstrip()
+    return text
+
+
+def _repair_run_together_figure(text: str) -> str:
+    """Split a figure that a source ran into the preceding word ("is16,297" -> "is 16,297").
+
+    Only a letter directly followed by a digit is touched, so an identifier such as a permit
+    number ("PB25-09094") and a capacity ("240V") are never split — those contain a digit but no
+    letter-digit boundary that reads as two words.
+    """
+    return _LETTER_DIGIT_RE.sub(r"\1 \2", text)
+
+
+def clean_title(value: Any) -> str:
+    """Produce a clean headline from a raw project name for the display layer only.
+
+    Applies, in order: whitespace collapse and title-casing (:func:`titlecase`), removal of a
+    leading meeting-note marker, repair of a figure run into the preceding word, and reduction of
+    an over-long prose description to its first sentence. The stored value is never changed; this
+    runs at render time.
+
+    Returns an empty string for a missing value so a template can fall back to the address.
+    """
+    text = titlecase(value)
+    if not text:
+        return ""
+    text = _strip_title_prefix(text)
+    text = _repair_run_together_figure(text)
+    text = _summarise_verbose_title(text)
+    # A separator left dangling at the end ("... Avenue -") reads as an unfinished headline.
+    text = re.sub(r"\s*[-–—:;,]\s*$", "", text).strip()
+    # Restore the spaced figure after a summary so "16,297 SF" stays legible if it was rejoined.
+    return text
+
+
+def domain_of(value: Any) -> str:
+    """The registrable-ish host of a URL for display ("https://x.gov/a" -> "x.gov").
+
+    The dossier shows the source's domain next to an "Open source record" link rather than a long
+    raw URL that overflows the column. Returns an empty string when no host can be determined, so
+    a template can fall back rather than print a broken label.
+    """
+    if not value:
+        return ""
+    text = str(value).strip()
+    if not text:
+        return ""
+    host = urlsplit(text if "//" in text else f"//{text}").hostname or ""
+    if host.startswith("www."):
+        host = host[4:]
+    return host
 
 
 def has_value(value: Any) -> bool:

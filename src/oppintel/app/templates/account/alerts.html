@@ -45,10 +45,10 @@
     <h3 style="margin:8px 0 6px">
       {% if alert.slug %}
         <a href="{{ url_for('opportunity_detail', slug=alert.slug) }}">
-          {{ ((alert.project_name | titlecase) or alert.address or 'Project') | truncate(70) }}
+          {{ ((alert.project_name | clean_title) or alert.address or 'Project') | truncate(70) }}
         </a>
       {% else %}
-        {{ ((alert.project_name | titlecase) or alert.address or 'Project') | truncate(70) }}
+        {{ ((alert.project_name | clean_title) or alert.address or 'Project') | truncate(70) }}
       {% endif %}
     </h3>
     <p style="margin:0 0 10px">{{ alert.body | or_na }}</p>

@@ -234,6 +234,70 @@ class CompanyService:
 
         return summaries
 
+    def role_counts(self, *, q: str | None = None, city: str | None = None) -> dict[str, int]:
+        """Count companies observed in each stakeholder role, for the filter control.
+
+        A role with no companies is omitted from the result, so the control offers only roles the
+        data actually holds rather than an option that filters to nothing. Uses the same
+        eligibility rules as :meth:`list_companies`, so a count and a filtered list agree.
+        """
+        name_like = f"%{q.strip().lower()}%" if q and q.strip() else None
+        city_exact = city.strip().lower() if city and city.strip() else None
+
+        def branch(role_expr: str, name_expr: str) -> tuple[str, list[Any]]:
+            clauses = [
+                "p.classification IN ('HIGH', 'MEDIUM')",
+                f"{name_expr} IS NOT NULL",
+                f"LENGTH(TRIM({name_expr})) > 1",
+                f"LOWER(TRIM({name_expr})) NOT IN ('none', 'n/a', 'unknown', 'null', 'owner')",
+            ]
+            params: list[Any] = []
+            if name_like is not None:
+                clauses.append(f"LOWER({name_expr}) LIKE ?")
+                params.append(name_like)
+            if city_exact is not None:
+                clauses.append("LOWER(p.city) = ?")
+                params.append(city_exact)
+            return " AND ".join(clauses), params
+
+        def role_code(role_expr: str, column: str) -> str:
+            # project_party rows carry mixed roles; the direct columns are single-role.
+            if column == "name":
+                return f"CASE WHEN LOWER(TRIM({role_expr})) IN ('general_contractor','contractor') " \
+                       f"THEN 'contractor' ELSE LOWER(TRIM({role_expr})) END"
+            return f"'{column}'"
+
+        unions: list[str] = []
+        all_params: list[Any] = []
+        # project_party branch: one row per observed role, coded to a role key.
+        pp_where, pp_params = branch("pp.role", "pp.name")
+        unions.append(
+            f"SELECT {role_code('pp.role', 'name')} AS role_key, pp.name AS name "
+            f"FROM project p JOIN project_party pp ON pp.project_id = p.id WHERE {pp_where}"
+        )
+        all_params.extend(pp_params)
+        # Direct project columns.
+        for column, expr in (
+            ("contractor", "p.general_contractor"),
+            ("owner", "p.owner"),
+            ("architect", "p.architect"),
+            ("developer", "p.developer"),
+        ):
+            where, params = branch(expr, expr)
+            unions.append(
+                f"SELECT '{column}' AS role_key, {expr} AS name FROM project p WHERE {where}"
+            )
+            all_params.extend(params)
+
+        query = (
+            "WITH raw AS (" + " UNION ALL ".join(unions) + ") "
+            "SELECT role_key, COUNT(DISTINCT LOWER(TRIM(name))) AS n "
+            "FROM raw WHERE role_key IN ('contractor','owner','architect','developer') "
+            "GROUP BY role_key"
+        )
+        rows = self.db.conn.execute(query, tuple(all_params)).fetchall()
+        return {r["role_key"]: int(r["n"]) for r in rows if int(r["n"]) > 0}
+
     def get_company_profile(self, slug_or_name: str) -> CompanyProfile | None:
         """Retrieve full company intelligence dossier by slug or name."""
         all_companies = self.list_companies(limit=500)
