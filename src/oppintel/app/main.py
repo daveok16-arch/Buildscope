@@ -708,7 +708,7 @@ def create_app(config: AppConfig | None = None) -> Flask:
             cards=cards,
             coverage_summary=coverage_summary(g.db),
             page_title="Markets",
-            seo=g.seo_for_simple("Markets", "Markets covered by the platform."),
+            seo=g.seo_for_simple("Markets", "Markets covered by the platform.", path="/markets"),
         )
 
     @app.route("/markets/<market_slug>")
@@ -831,7 +831,7 @@ def create_app(config: AppConfig | None = None) -> Flask:
             trades=sorted(_trade_map().values(), key=lambda t: (not t.active, t.label)),
             page_title="Trades",
             seo=g.seo_for_simple(
-                "Trades", "Trades supported by the platform."
+                "Trades", "Trades supported by the platform.", path="/trades"
             ),
         )
 
@@ -955,6 +955,7 @@ def create_app(config: AppConfig | None = None) -> Flask:
             seo=g.seo_builder.simple(
                 "Guides",
                 "How to read permit evidence and evaluate a construction opportunity.",
+                path="/guides",
             ),
         )
 
@@ -986,6 +987,7 @@ def create_app(config: AppConfig | None = None) -> Flask:
             seo=g.seo_for_simple(
                 "How It Works",
                 "How public construction records become verified commercial opportunities.",
+                path="/how-it-works",
             ),
         )
 
@@ -1001,6 +1003,7 @@ def create_app(config: AppConfig | None = None) -> Flask:
             seo=g.seo_for_simple(
                 "Reports",
                 "Market summaries and opportunity briefs generated from verified permit data.",
+                path="/reports",
             ),
         )
 
@@ -1018,7 +1021,7 @@ def create_app(config: AppConfig | None = None) -> Flask:
             report=report,
             body=report["body"],
             page_title=report["title"],
-            seo=g.seo_for_simple(report["title"], report["summary"]),
+            seo=g.seo_for_simple(report["title"], report["summary"], path=f"/reports/{report_slug}"),
         )
 
     @app.route("/companies")
@@ -1040,6 +1043,7 @@ def create_app(config: AppConfig | None = None) -> Flask:
             seo=g.seo_builder.simple(
                 "Commercial Construction Companies & Stakeholders",
                 "Directory of verified general contractors, owners, developers, and architects across commercial projects.",
+                path="/companies",
             ),
         )
 
@@ -1056,6 +1060,7 @@ def create_app(config: AppConfig | None = None) -> Flask:
             seo=g.seo_builder.simple(
                 f"{profile.name} — Commercial Construction Profile",
                 f"Commercial construction projects, recurring partners, and market presence for {profile.name}.",
+                path=f"/companies/{slug}",
             ),
         )
 
@@ -1086,6 +1091,7 @@ def create_app(config: AppConfig | None = None) -> Flask:
                 "Market Change Audit",
                 "Audit log of differences detected between collection runs across commercial "
                 "construction and permit records.",
+                path="/changes",
             ),
         )
 
@@ -1179,6 +1185,7 @@ def create_app(config: AppConfig | None = None) -> Flask:
                 "Trend Radar",
                 "Observed changes in commercial construction records across configured markets, "
                 "with each metric defined and source-coverage limits stated.",
+                path="/trends",
             ),
         )
 
@@ -1198,6 +1205,7 @@ def create_app(config: AppConfig | None = None) -> Flask:
             seo=g.seo_builder.simple(
                 "Market Analytics",
                 "Drill-down market analytics across commercial construction opportunities, property types, and trade evidence.",
+                path="/analytics",
             ),
         )
 
