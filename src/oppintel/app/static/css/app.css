@@ -1417,6 +1417,13 @@ body.drawer-open .mobile-drawer {
   color: var(--navy-950);
 }
 
+/* Missing-fields line: names what the source did not publish, once, instead of repeating a
+   placeholder down every fact row. */
+.facts-missing {
+  margin: -4px 0 12px;
+  color: var(--slate-500);
+}
+
 /* Intelligence Scope / Excerpt Box */
 .why-matches {
   background: #ffffff;

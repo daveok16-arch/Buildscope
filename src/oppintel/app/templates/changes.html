@@ -91,9 +91,9 @@
               <td class="nowrap">{{ c.detected_at[:10] if c.detected_at else 'Recent' }}</td>
               <td>
                 {% if c.slug %}
-                  <a href="{{ url_for('opportunity_detail', slug=c.slug) }}">{{ c.project_name or c.address or 'Commercial Project' }}</a>
+                  <a href="{{ url_for('opportunity_detail', slug=c.slug) }}">{{ (c.project_name | titlecase) or c.address or 'Commercial Project' }}</a>
                 {% else %}
-                  {{ c.project_name or c.address or 'Commercial Project' }}
+                  {{ (c.project_name | titlecase) or c.address or 'Commercial Project' }}
                 {% endif %}
                 {% if c.city %}<div class="small muted">{{ c.city }}</div>{% endif %}
               </td>
@@ -127,9 +127,9 @@
             <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
               <strong>
                 {% if c.slug %}
-                  <a href="{{ url_for('opportunity_detail', slug=c.slug) }}">{{ c.project_name or c.address or 'Commercial Project' }}</a>
+                  <a href="{{ url_for('opportunity_detail', slug=c.slug) }}">{{ (c.project_name | titlecase) or c.address or 'Commercial Project' }}</a>
                 {% else %}
-                  {{ c.project_name or c.address or 'Commercial Project' }}
+                  {{ (c.project_name | titlecase) or c.address or 'Commercial Project' }}
                 {% endif %}
               </strong>:
               {{ c.summary }}

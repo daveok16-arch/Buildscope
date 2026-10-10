@@ -313,9 +313,12 @@ def create_app(config: AppConfig | None = None) -> Flask:
         """Values every template needs, resolved once per request."""
         market = getattr(g, "market", None)
         trade = getattr(g, "trade", None)
+        from .display import split_facts
+
         return {
             "market": market,
             "trade": trade,
+            "split_facts": split_facts,
             "all_markets": sorted(markets.values(), key=lambda m: (not m.active, m.name)),
             "all_trades": sorted(_trade_map().values(), key=lambda t: (not t.active, t.label)),
             "current_user": getattr(g, "user", None),
@@ -410,6 +413,28 @@ def create_app(config: AppConfig | None = None) -> Flask:
     @app.template_filter("month_year")
     def month_year_filter(value: Any) -> str:
         return OpportunityService.format_month(value)
+
+    @app.template_filter("titlecase")
+    def titlecase_filter(value: Any) -> str:
+        """Normalise shouting source text to display case, preserving acronyms and codes.
+
+        Display-only (see ``app.display``); never touches a stored value.
+        """
+        from .display import titlecase
+
+        return titlecase(value)
+
+    @app.template_filter("has_value")
+    def has_value_filter(value: Any) -> bool:
+        from .display import has_value
+
+        return has_value(value)
+
+    @app.template_filter("join_missing")
+    def join_missing_filter(value: Any) -> str:
+        from .display import join_missing
+
+        return join_missing(value or [])
 
     # --- error handling -------------------------------------------------------
 

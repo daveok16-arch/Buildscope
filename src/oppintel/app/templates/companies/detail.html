@@ -77,7 +77,7 @@
               {% for p in company.associated_projects %}
               <tr>
                 <td>
-                  <strong><a href="{{ url_for('opportunity_detail', slug=p.slug) }}">{{ p.project_name }}</a></strong>
+                  <strong><a href="{{ url_for('opportunity_detail', slug=p.slug) }}">{{ p.project_name | titlecase }}</a></strong>
                   {% if p.permit_number %}<div class="small muted">Permit #{{ p.permit_number }}</div>{% endif %}
                 </td>
                 <td>{{ p.address or 'Address on file' }}, {{ p.city }}</td>

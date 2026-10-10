@@ -128,10 +128,10 @@
           <li>
             {% if project.slug %}
               <a href="{{ url_for('opportunity_detail', slug=project.slug) }}" style="font-weight:700; color:var(--navy-950)">
-                {{ (project.project_name or project.address) | truncate(48) }}
+                {{ ((project.project_name | titlecase) or project.address) | truncate(48) }}
               </a>
             {% else %}
-              <strong>{{ (project.project_name or project.address) | truncate(48) }}</strong>
+              <strong>{{ ((project.project_name | titlecase) or project.address) | truncate(48) }}</strong>
             {% endif %}
             <span class="muted small">{{ project.city }} · {{ project.estimated_project_value | money }}</span>
           </li>
