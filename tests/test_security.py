@@ -353,6 +353,30 @@ def test_security_headers_are_present(secured_client):
     assert response.headers["Referrer-Policy"] == "same-origin"
 
 
+def test_private_pages_are_not_cacheable(client, session_client):
+    """A per-account or operator response must never be stored by a cache.
+
+    Regression for H8: no `Cache-Control` was emitted at all, so a shared cache or the
+    browser's back/forward cache could serve one account's saved list to the next visit.
+    """
+    # A signed-in account surface.
+    assert session_client.get("/saved").headers["Cache-Control"] == "private, no-store"
+    # The account surfaces are private even when signed out, because the redirect itself
+    # must not be cached for the next visitor.
+    for path in ("/signin", "/signup", "/dashboard", "/saved", "/admin/data"):
+        assert client.get(path).headers["Cache-Control"] == "private, no-store", path
+    # The API and the health probe are never cacheable.
+    for path in ("/api/statistics", "/healthz"):
+        assert client.get(path).headers["Cache-Control"] == "private, no-store", path
+
+
+def test_public_pages_get_a_short_public_cache(client, session_client):
+    response = client.get("/")
+    assert response.headers["Cache-Control"] == "public, max-age=60"
+    # A signed-in request is private even on a public path, because the header shows the account.
+    assert session_client.get("/").headers["Cache-Control"] == "private, no-store"
+
+
 def test_the_session_cookie_is_httponly_and_samesite(tmp_path):
     """The session cookie's flags come from the app configuration.
 
