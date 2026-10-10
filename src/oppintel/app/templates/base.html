@@ -31,6 +31,16 @@
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
 
+{% if preview_mode %}
+{# A preview build has no persistent disk, so a redeploy rebuilds the dataset. Say so plainly
+   rather than let a visitor mistake an empty or reset dataset for a broken product. #}
+<div class="preview-banner" role="status">
+  <div class="wrap">
+    <strong>Preview build:</strong> data may reset on redeploy.
+  </div>
+</div>
+{% endif %}
+
 {% include "partials/dialog_a11y.html" %}
 
 {# 1. Single Calm Professional Header #}
@@ -197,6 +207,7 @@
       <a href="{{ url_for('home') }}">Platform</a>
       <span>&copy; 2026 BuildScope</span>
     </div>
+    {% include "partials/collection_window.html" %}
   </div>
 </footer>
 {% else %}
@@ -278,6 +289,7 @@
         Permit filings represent public documentary records and do not imply active subcontract bidding or owner solicitation unless verified in official procurement documents.
         Confirm all valuations, specifications, and project statuses with issuing municipal jurisdictions and project authorities.
       </p>
+      {% include "partials/collection_window.html" %}
       <p class="muted">&copy; 2026 BuildScope. All rights reserved. Commercial Opportunity Intelligence.</p>
     </div>
   </div>

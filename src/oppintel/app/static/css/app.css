@@ -360,6 +360,18 @@ p:last-child {
    GLOBAL HEADER & SINGLE PROFESSIONAL BAR
    ========================================================================== */
 
+/* Preview-build banner (PREVIEW_MODE). Sits above the header, states the data caveat. */
+.preview-banner {
+  background: var(--gold-500);
+  color: var(--navy-950);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 7px 0;
+  text-align: center;
+}
+.preview-banner strong { font-weight: 800; }
+
 .site-header {
   background: var(--navy-950);
   border-bottom: 1px solid var(--line-dark);
@@ -932,8 +944,10 @@ body.drawer-open .mobile-drawer {
 }
 
 .hero-search-box button {
-  background: var(--gold-600);
-  color: #ffffff;
+  /* Button option B: brand gold-500 with navy-950 text (6.17:1, WCAG AA small text),
+     matching .btn-primary so the hero search action and the CTA are the same treatment. */
+  background: var(--gold-500);
+  color: var(--navy-950);
   font-weight: 700;
   font-size: 0.90rem;
   padding: 0 22px;
@@ -946,7 +960,13 @@ body.drawer-open .mobile-drawer {
 }
 
 .hero-search-box button:hover {
-  background: #92400e;
+  /* gold-400: navy-950 on #f59e0b is 9.16:1. */
+  background: var(--gold-400);
+}
+
+.hero-search-box button:focus-visible {
+  outline: 2px solid var(--navy-950);
+  outline-offset: 2px;
 }
 
 .hero-cta {

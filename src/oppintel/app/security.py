@@ -253,13 +253,20 @@ def apply_security_headers(response: Response) -> Response:
     return response
 
 
-def install_security(app: Any, *, enabled: bool = True) -> None:
+def install_security(
+    app: Any, *, enabled: bool = True, gzip_response: bool = False
+) -> None:
     """Register the CSRF check, rate limiter and header hook on an application.
 
     ``enabled`` gates the *request-blocking* protections (CSRF, rate limiting) so a debug
     process is not blocked locally. The response hardening headers — including the CSP — are
     always installed, so the policy the browser enforces is the same in dev, test and prod,
     and the browser-level tests exercise it rather than a permissive no-op.
+
+    ``gzip_response`` additionally compresses eligible text/JSON responses (see
+    ``app.compression``). It is opt-in so a debug process sees readable bytes, and it is
+    installed *after* the header hook: the headers must be set on the uncompressed response so
+    ``Vary``/``Content-Length`` are computed once and the body is encoded last.
     """
     from flask import current_app
 
@@ -275,6 +282,10 @@ def install_security(app: Any, *, enabled: bool = True) -> None:
     @app.after_request
     def _headers(response: Response) -> Response:
         apply_security_headers(response)
+        if gzip_response:
+            from .compression import compress_response
+
+            compress_response(response, request.headers.get("Accept-Encoding", ""))
         return response
 
     # Expose the token to templates for form embedding, and the per-request CSP nonce so

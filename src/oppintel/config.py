@@ -273,6 +273,30 @@ def load_sources(path: Path | None = None) -> dict[str, SourceConfig]:
     return {s["id"]: SourceConfig.from_dict(s) for s in raw["sources"]}
 
 
+def ingestion_window_since(
+    sources: dict[str, SourceConfig] | None = None, today: date | None = None
+) -> date | None:
+    """The earliest date any enabled source ingests from, or None for all history.
+
+    This is the one place the "since" a disclosure line shows is derived: each enabled source
+    resolves its own `since`/`since_months` bound (``SourceConfig.resolved_since``) and the
+    earliest of those is the collection window the site actually holds. A source with no bound
+    (all history) makes the result None, because the dataset then has no single lower bound to
+    state. Config-driven, so a source added or re-scoped changes the stated date with no code
+    change.
+    """
+    sources = sources if sources is not None else load_sources()
+    bounds: list[date] = []
+    for source in sources.values():
+        if not source.enabled:
+            continue
+        bound = source.resolved_since(today)
+        if bound is None:
+            return None
+        bounds.append(bound)
+    return min(bounds) if bounds else None
+
+
 @lru_cache(maxsize=1)
 def load_retention(path: Path | None = None) -> "RetentionSettings":
     """The raw-archive retention policy from `config/sources.yaml`.

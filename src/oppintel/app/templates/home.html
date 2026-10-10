@@ -67,6 +67,7 @@
       <span title="{{ defs.get('permit_records', '') }}">permit records</span> — computed from
       public records{% if stats.computed_at %}, as of {{ stats.computed_at[:16].replace('T', ' ') }} UTC{% endif %}.
     </p>
+    {% include "partials/collection_window.html" %}
   </div>
 </div>
 

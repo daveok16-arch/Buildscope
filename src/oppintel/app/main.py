@@ -332,6 +332,8 @@ def create_app(config: AppConfig | None = None) -> Flask:
             ),
             "firebase_config": _load_firebase_config(),
             "asset_url": asset_url,
+            "preview_mode": cfg.preview_mode,
+            "collection_since": _collection_since_label(),
         }
 
     @lru_cache(maxsize=None)
@@ -1786,7 +1788,7 @@ def create_app(config: AppConfig | None = None) -> Flask:
 
     # CSRF, rate limiting and response headers. Installed after the routes so every route it
     # protects is already registered, and before the first request either way.
-    install_security(app, enabled=cfg.csrf_enabled)
+    install_security(app, enabled=cfg.csrf_enabled, gzip_response=cfg.gzip_enabled)
 
     # Repair a missing/stale stats snapshot once, at boot, outside the request path: a deploy
     # that adds a canonical metric must not make the first visitor's GET perform the write.
@@ -2194,6 +2196,22 @@ def _private_seo(g: Any, title: str, description: str):
     seo = g.seo_for_simple(title, description)
     seo.noindex = True
     return seo
+
+
+def _collection_since_label() -> str | None:
+    """The "Permits filed since <date>" string, or None when the window is all history.
+
+    Derived from configuration (`config/sources.yaml`), not from a stored count, so the
+    disclosure is accurate the moment a source's window changes and can never disagree with
+    what the pipeline actually ingests. Returns None when no enabled source has a lower bound,
+    so a template renders nothing rather than inventing a date.
+    """
+    from ..config import ingestion_window_since
+
+    bound = ingestion_window_since()
+    if bound is None:
+        return None
+    return OpportunityService.format_date(bound)
 
 
 def _freshness_label(db: Database | None) -> dict[str, Any]:

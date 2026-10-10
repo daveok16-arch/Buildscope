@@ -1,0 +1,6 @@
+{# Coverage disclosure: the permit-date window the site actually holds, derived from
+   config/sources.yaml via the `collection_since` context value. Renders nothing when no
+   enabled source has a lower bound (all history), so no date is invented. #}
+{% if collection_since %}
+<p class="collection-window small muted">Permits filed since {{ collection_since }}.</p>
+{% endif %}

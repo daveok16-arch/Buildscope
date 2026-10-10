@@ -88,18 +88,38 @@ class AppConfig:
     #: again would disagree with the object the caller actually built.
     csrf_enabled: bool = True
 
+    #: Whether eligible text/JSON responses are compressed with gzip (or brotli when the
+    #: optional package is installed). Derived in `__post_init__` from `debug` unless
+    #: `GZIP_ENABLED` overrides it, so a debug process sees readable bytes and every other
+    #: process ships compressed.
+    gzip_enabled: bool = False
+
+    #: Preview build marker. When true, every page shows a fixed banner warning that the data
+    #: may reset on redeploy. Read from `PREVIEW_MODE`; the Render preview sets it, a real
+    #: deployment leaves it unset.
+    preview_mode: bool = field(
+        default_factory=lambda: _env_bool("PREVIEW_MODE", False)
+    )
+
     def __post_init__(self) -> None:
-        """Derive the security flag from the debug flag unless overridden explicitly.
+        """Derive the security flags from the debug flag unless overridden explicitly.
 
         A debug process runs with the protections off so local work is not blocked; every
         other process runs with them on. `CSRF_ENABLED` overrides both, for a test that needs
-        the protections against a debug-style configuration.
+        the protections against a debug-style configuration. `GZIP_ENABLED` overrides the
+        compression default the same way.
         """
         raw = os.environ.get("CSRF_ENABLED")
         if raw is None:
             self.csrf_enabled = not self.debug
         else:
             self.csrf_enabled = _env_bool("CSRF_ENABLED", True)
+
+        raw_gzip = os.environ.get("GZIP_ENABLED")
+        if raw_gzip is None:
+            self.gzip_enabled = not self.debug
+        else:
+            self.gzip_enabled = _env_bool("GZIP_ENABLED", True)
 
     #: Access levels the authorization layer understands. Payment is not implemented; this
     #: exists so monetization does not require redesigning authorization later.
