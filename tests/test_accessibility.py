@@ -120,6 +120,38 @@ def test_no_serious_or_critical_axe_violations(live_server, browser, route, view
         context.close()
 
 
+#: Rules that a "moderate" impact still makes a real defect: heading order,
+#: landmarks and dialog roles. The serious/critical gate above does not catch
+#: these, and a sidebar <h3> that precedes the results <h2> is exactly the kind
+#: of moderate regression that slipped through at desktop width.
+STRUCTURAL_RULES = (
+    "heading-order",
+    "landmark-one-main",
+    "landmark-unique",
+    "region",
+    "aria-allowed-role",
+    "aria-dialog-name",
+)
+
+
+@pytest.mark.parametrize("viewport_name", list(AXE_VIEWPORTS))
+@pytest.mark.parametrize("route", ROUTES)
+def test_structural_axe_rules_are_clean(live_server, browser, route, viewport_name):
+    context = browser.new_context(viewport=AXE_VIEWPORTS[viewport_name])
+    try:
+        page = context.new_page()
+        page.goto(live_server + route, wait_until="networkidle")
+        result = _axe(page)
+        offenders = [
+            (v["id"], v["nodes"][0]["target"])
+            for v in result["violations"]
+            if v["id"] in STRUCTURAL_RULES
+        ]
+        assert offenders == [], f"{route} @{viewport_name} structural a11y: {offenders}"
+    finally:
+        context.close()
+
+
 @pytest.mark.parametrize("width", OVERFLOW_VIEWPORTS)
 @pytest.mark.parametrize("route", ROUTES)
 def test_no_horizontal_overflow(live_server, browser, route, width):

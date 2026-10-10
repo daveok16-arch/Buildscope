@@ -1564,7 +1564,8 @@ body.drawer-open .mobile-drawer {
   border-bottom: 1px solid var(--line);
 }
 
-.filter-sidebar-head h3 {
+.filter-sidebar-head h3,
+.filter-sidebar-head h2.filter-panel-title {
   font-size: 0.96rem;
   margin: 0;
   text-transform: uppercase;
