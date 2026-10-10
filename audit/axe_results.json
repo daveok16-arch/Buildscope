@@ -1,0 +1,66 @@
+{
+ "/": {
+  "violations": [],
+  "count": 0
+ },
+ "/opportunities": {
+  "violations": [],
+  "count": 0
+ },
+ "/opportunities/new": {
+  "violations": [],
+  "count": 0
+ },
+ "/markets": {
+  "violations": [],
+  "count": 0
+ },
+ "/companies": {
+  "violations": [],
+  "count": 0
+ },
+ "/changes": {
+  "violations": [],
+  "count": 0
+ },
+ "/trends": {
+  "violations": [],
+  "count": 0
+ },
+ "/analytics": {
+  "violations": [],
+  "count": 0
+ },
+ "/reports": {
+  "violations": [],
+  "count": 0
+ },
+ "/how-it-works": {
+  "violations": [],
+  "count": 0
+ },
+ "/trades": {
+  "violations": [],
+  "count": 0
+ },
+ "/trades/commercial-hvac": {
+  "violations": [],
+  "count": 0
+ },
+ "/guides": {
+  "violations": [],
+  "count": 0
+ },
+ "/signin": {
+  "violations": [],
+  "count": 0
+ },
+ "/signup": {
+  "violations": [],
+  "count": 0
+ },
+ "/this-does-not-exist": {
+  "violations": [],
+  "count": 0
+ }
+}
