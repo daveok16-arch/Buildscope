@@ -97,33 +97,64 @@ def browser():
         b.close()
 
 
+def _inject_axe(page) -> None:
+    """Inject axe-core honouring the page's CSP.
+
+    The app now sends ``script-src ... 'nonce-...'`` with no ``'unsafe-inline'``, so
+    ``page.add_script_tag`` (which injects an un-nonced inline script) is blocked by the
+    browser. The nonce is readable from any of the app's own script tags, so reuse it — this
+    is also what proves the app's own inline scripts run under the strict policy.
+    """
+    nonce = page.evaluate(
+        "() => { const s = document.querySelector('script[nonce]'); "
+        "return s ? (s.nonce || s.getAttribute('nonce')) : null; }"
+    )
+    page.evaluate(
+        """({src, nonce}) => {
+             const s = document.createElement('script');
+             if (nonce) s.setAttribute('nonce', nonce);
+             s.textContent = src;
+             document.head.appendChild(s);
+           }""",
+        {"src": AXE_PATH.read_text(), "nonce": nonce},
+    )
+
+
 def _axe(page) -> dict:
-    page.add_script_tag(content=AXE_PATH.read_text())
+    _inject_axe(page)
     return page.evaluate("async () => await axe.run(document)")
+
+
+#: The full WCAG + best-practice tag set. The gate is zero violations across all of
+#: these, not a severity subset: a moderate `heading-order` regression is a real defect
+#: and previously slipped a serious/critical-only gate.
+AXE_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"]
 
 
 @pytest.mark.parametrize("viewport_name", list(AXE_VIEWPORTS))
 @pytest.mark.parametrize("route", ROUTES)
-def test_no_serious_or_critical_axe_violations(live_server, browser, route, viewport_name):
+def test_axe_zero_violations_all_rules(live_server, browser, route, viewport_name):
+    """Zero axe violations on every public route at both viewports, all rules enabled."""
     context = browser.new_context(viewport=AXE_VIEWPORTS[viewport_name])
     try:
         page = context.new_page()
         page.goto(live_server + route, wait_until="networkidle")
-        result = _axe(page)
-        blocking = [
-            (v["id"], v["impact"], v["nodes"][0]["target"])
-            for v in result["violations"]
-            if v["impact"] in ("serious", "critical")
+        _inject_axe(page)
+        result = page.evaluate(
+            "async (tags) => await axe.run(document, {runOnly: {type: 'tag', values: tags}})",
+            AXE_TAGS,
+        )
+        offenders = [
+            (v["id"], v["impact"], v["nodes"][0]["target"]) for v in result["violations"]
         ]
-        assert blocking == [], f"{route} @{viewport_name} has serious/critical a11y violations: {blocking}"
+        assert offenders == [], f"{route} @{viewport_name} axe violations: {offenders}"
     finally:
         context.close()
 
 
 #: Rules that a "moderate" impact still makes a real defect: heading order,
-#: landmarks and dialog roles. The serious/critical gate above does not catch
-#: these, and a sidebar <h3> that precedes the results <h2> is exactly the kind
-#: of moderate regression that slipped through at desktop width.
+#: landmarks and dialog roles. Retained as a named regression guard in addition to the
+#: zero-violation gate above, so a future axe tag change cannot quietly stop checking them.
 STRUCTURAL_RULES = (
     "heading-order",
     "landmark-one-main",
@@ -451,6 +482,39 @@ def test_filter_date_presets_and_native_inputs(live_server, browser):
 
         href = page.get_attribute(".date-presets a", "href")
         assert "date_from=" in href and "/opportunities?" in href, href
+    finally:
+        context.close()
+
+
+#: Substrings a Chromium CSP violation surfaces in the console or as a page error.
+CSP_MARKERS = ("Content Security Policy", "Refused to", "violates the following CSP")
+
+
+@pytest.mark.parametrize("viewport_name", list(AXE_VIEWPORTS))
+@pytest.mark.parametrize("route", ROUTES)
+def test_no_csp_violations_in_console(live_server, browser, route, viewport_name):
+    """Every inline script/style the app ships must satisfy its own CSP.
+
+    The policy is ``script-src 'self' 'nonce-...'`` with no ``'unsafe-inline'``, so a missed
+    nonce on any inline block, or a script from a host not listed, shows up here as a console
+    "Refused to ... Content Security Policy" message. This asserts there are none on any route.
+    """
+    context = browser.new_context(viewport=AXE_VIEWPORTS[viewport_name])
+    try:
+        page = context.new_page()
+        messages: list[str] = []
+        page.on("console", lambda m: messages.append(m.text))
+        page.on("pageerror", lambda e: messages.append(str(e)))
+        page.goto(live_server + route, wait_until="networkidle")
+        # The dialog/nav scripts run on load; exercise a filter sheet so its inline script
+        # is proven to run (not merely present) under the policy.
+        if route in ("/opportunities", "/companies"):
+            try:
+                page.click("#mobile-filter-btn", timeout=2000)
+            except Exception:  # button is mobile-only; absent at desktop width
+                pass
+        violations = [m for m in messages if any(k in m for k in CSP_MARKERS)]
+        assert violations == [], f"{route} @{viewport_name} CSP violations: {violations}"
     finally:
         context.close()
 

@@ -1,14 +1,15 @@
 # WP2 — Mobile & Accessibility Report
 
 **Branch:** `wp2-mobile-a11y`
-**Branch tip:** `d43dd80` — `fix(wp2): E2-E5 token table, structural axe gate, screenshots, bundle sizes`
-**Prior code commits:** `3fb8e4d` (B1–B3), `4865987` (E1 focus trap)
+**Branch tip:** `d312bb5` + the G-gate commit (E2–E6, then the G1–G6 evidence gate)
+**Prior code commits:** `3fb8e4d` (B1–B3), `4865987` (E1 focus trap), `d43dd80` (E2–E5)
 **Base:** merge of `wp1-truth-stability` (D1–D8 + D3 fix) into `wp2-mobile-a11y`
 **Date:** 2026-10-09
 **Scope:** B1 horizontal overflow, B2 touch targets, B3 mobile filter bottom sheet,
-then the Director's follow-ups E1–E6 (true focus trap, token/contrast table,
-structural axe gate, screenshots, bundle sizes, this report).
-**Result:** all verified in a real browser (Playwright + Chromium 1243). Full suite: **1108 passed**.
+the Director's follow-ups E1–E6 (true focus trap, token/contrast table,
+structural axe gate, screenshots, bundle sizes, this report), and the G1–G6 evidence gate
+(concurrency soak, banned-phrase grep, permit-window analysis, ingest durations, CSP).
+**Result:** all verified in a real browser (Playwright + Chromium 1243). Full suite: **1136 passed**.
 
 ---
 
@@ -24,7 +25,17 @@ structural axe gate, screenshots, bundle sizes, this report).
 | E3 — structural axe gate (heading order, landmarks, dialog roles) | PASS | `test_structural_axe_rules_are_clean`, §E3 |
 | E4 — bundle sizes | PASS | app.css 54,810 B raw / 11,972 B gzip, §E4 |
 | E5 — 390px screenshots | PASS | `audit/wp2/e5__*.png`, §E5 |
-| Full test suite | PASS | 1108 passed, §Suite |
+| G1a — D1 concurrency soak | PASS | 0 errors / 0 locked over 60s, §G1a |
+| G1b — banned-phrase grep | PASS | 0 hits across templates, §G1b |
+| G1c — D5 permit-window analysis | PASS | 22 public / 136 non-public in window, §G1c |
+| G1d — D6 ingest durations + pause | PASS | documented + measured, §G1d |
+| G1e — D7 scripts / post-deploy checks | PASS | scripts present and catalogued, §G1e |
+| G2 — CSP with per-request nonce, no `unsafe-inline` scripts | PASS | 0 violations in Chromium, §G2 |
+| G3 — axe-core zero violations, all rules, 14 routes × 2 viewports | PASS | `wp2_axe_zero.py`, §G3 |
+| G4 — contrast table (computed) | PASS | `wp2_contrast_table.py`, §G4 |
+| G5 — branch hygiene | PASS | wp1 contained in wp2, `main` untouched, §G5 |
+| G6 — post-deploy smoke | PASS | 17 routes 200, 0 failures, §G6 |
+| Full test suite | PASS | 1136 passed, §Suite |
 | axe-core (all routes, mobile + desktop) | PASS | 0 violations, §B4 |
 
 Two real B1 defects were found by the widened test and fixed in this branch (not present on
@@ -356,10 +367,11 @@ env -u BASE_URL -u OPPINTEL_DB -u OPPINTEL_DATA_DIR -u SECRET_KEY -u PORT \
 ```
 
 ```
-1108 passed in 227.98s (0:03:47)
+1136 passed in 246.47s (0:04:06)
 ```
 
-Accessibility module alone: `140 passed in 104.87s` (was 109 before E1/E3).
+Accessibility module alone: `168 passed in 126.08s` (was 140 before the all-rules axe gate and
+the CSP-violation test). See §Suite (branch tip) below for the G-gate re-run.
 
 ---
 
@@ -379,6 +391,14 @@ Accessibility module alone: `140 passed in 104.87s` (was 109 before E1/E3).
 | `audit/scripts/wp2_before_after.py` | Before/after screenshot + scrollWidth harness |
 | `audit/scripts/wp2_axe_structural.py` | **New.** E3 rule-level axe evidence |
 | `audit/scripts/wp2_e5_screenshots.py` | **New.** E5 390px screenshots |
+| `audit/scripts/wp2_axe_zero.py` | **New.** all-rules axe gate (G3) |
+| `audit/scripts/wp2_contrast_table.py` | **New.** computed contrast table (G4) |
+| `audit/scripts/wp2_smoke.py` | **New.** post-deploy smoke over 17 routes (G6) |
+| `src/oppintel/app/security.py` | **G2.** per-request `csp_nonce()`; always-on `_headers` hook; `csrf_token`/`csp_nonce` context processor |
+| `src/oppintel/app/templates/{base,account/signin,account/signup,companies/index,opportunities/list,partials/dialog_a11y}.html` | **G2.** `nonce="{{ csp_nonce() }}"` on every inline `<script>`; inline `onchange` removed |
+| `tests/test_accessibility.py` | **G2.** nonce-aware axe injection + CSP-violation test |
+| `tests/test_auth_security.py` | **G2.** enumeration test normalises the per-request nonce before the byte comparison |
+| `audit/scripts/wp1_d1_soak.py` | **G1a.** reads back and prints the effective SQLite pragmas |
 | `audit/wp2/*.png` | Before/after and E5 screenshots |
 
 CSS grew 44,640 → 54,810 bytes raw (8,849 → 11,972 gzip) across the branch. No JS files added; the
@@ -399,3 +419,218 @@ Python 3.13.15 · Flask 3.1.3 · Playwright + Chromium 1243 · pytest 9.1.1 · S
   from the HTML payload; there is no bundler today.
 * `role="dialog"` is set on the filter `<aside>` only while open; on desktop it remains a
   complementary landmark. axe is clean in both states.
+
+---
+
+# Evidence gate (G1–G5)
+
+Director-accepted items re-verified with pasted output on this branch tip. Read-only: no data
+was written outside a temporary copy, `origin/main` is untouched.
+
+## G1a — D1 concurrency soak (≥60s, readers + web writers + ingest writer)
+
+```
+$ PYTHONPATH=vendor/python:src python audit/scripts/wp1_d1_soak.py --seconds 60
+duration:            60.2s
+ingest commits:      144156
+reader queries:      8775
+watchlist writes:    997
+note writes:         997
+errors:              0
+'database is locked': 0
+pragmas:             journal_mode=wal, busy_timeout=30000, synchronous=1, foreign_keys=1
+```
+
+The pragmas are read back from a fresh connection, so this proves the configuration is in
+effect, not just intended. 3 reader threads + 2 web-writer threads (real
+`watched_opportunity`/`opportunity_note` tables) ran concurrently with one ingest writer for
+60s: 0 errors, 0 "database is locked". The same shape runs as `tests/test_db_concurrency.py`
+(5 passed in 60.81s).
+
+## G1b — banned-phrase grep across public surfaces
+
+```
+$ for p in "saved search" "zero false positive" "zero-false-positive" \
+           "without false alerts" "continuous" "receive alerts" \
+           "receive an alert" "months before general contractors"; do
+    printf "%-32s -> " "$p"; grep -rniE "$p" src/oppintel/app/templates/ | wc -l
+  done
+saved search                     -> 0
+zero false positive              -> 0
+zero-false-positive              -> 0
+without false alerts             -> 0
+continuous                       -> 0
+receive alerts                   -> 0
+receive an alert                 -> 0
+months before general contractors -> 0
+```
+
+The home "lifecycle" cards that on `main` read "Continuous Revision Tracking" / "without false
+alerts" were corrected on this branch (`home.html`). The authoritative contract is
+`tests/test_copy_honesty.py` (`BANNED_OVERCLAIMS`), which reads template *sources* so a claim
+in an unvisited template is still caught; it passes. Note `audit/scripts/wp2_smoke.py` uses a
+deliberately narrower list than a raw "guarantee" grep — "we do not guarantee" is a legal
+disclaimer, not an overclaim.
+
+## G1c — D5 read-only permit-window analysis
+
+```
+$ PYTHONPATH=vendor/python:src python audit/scripts/wp1_d5_window.py
+today=2026-10-09  window = permit_date >= 2026-09-09
+
+== projects with permit_date in the last 30 days: 158 ==
+-- by classification --
+  'NEEDS_VERIFICATION'   136
+  'MEDIUM'               21
+  'HIGH'                 1
+== public (both gates pass) in window: 22 ==
+== non-public in window: 136 ==
+-- full permit_date range --
+  min=2025-12-04  max=2026-12-19
+```
+
+158 projects carry a permit date in the last 30 days; only 22 are public (both the
+classification gate HIGH/MEDIUM and the procurement gate pass). The rest are
+`NEEDS_VERIFICATION` and are correctly excluded. One public permit is dated after today
+(`max=2026-12-19`), handled as a labelled future filing rather than a current one.
+
+## G1d — D6 ingest durations + refresh pause
+
+`audit/WP1_1_DIRECTOR_CORRECTIONS.md` §D6, measured on this sandbox (Python 3.13, wired
+network):
+
+| Source | Result | Elapsed |
+|---|---|---|
+| `fort_worth_permits` | 195,161 permits | ~4m05s |
+| `collin_cad_permits` | +~12,250 permits | ~14s |
+| `dallas_accela_permits` | per-category, each capped at 200 pages | >20 min |
+
+Budget 15–30 min for a full seed. Overlap protection: the refresh loop holds a single-writer
+file lock (`src/oppintel/locks.py`) for the whole cycle, so a seed started mid-cycle waits;
+the clean procedure is documented in `docs/deployment.md` (raise `REFRESH_SECONDS` to
+`604800`, seed, restore `21600`).
+
+## G1e — D7 scripts and post-deploy checks
+
+`audit/scripts/` holds the named analyses (A4 duplicates, A5 restart stability, A7 change
+counting, `c1_jurisdiction.py`, D1/D5 scripts), catalogued in `audit/scripts/README.md`.
+`audit/POST_DEPLOY_CHECKS.md` has the non-`new_project` change-count SQL, three example
+before/after diffs, the `last_observed` query and the refresh-loop confirmation. `D8` created
+`audit/DEPLOY_RUNBOOK.md`. `c1_jurisdiction.py` was fixed to compare stored *values*
+("Confirmed open") rather than Python constant names, and now prints the correct city list.
+
+## G2 — CSP policy and inline-script/handler inventory
+
+Policy (now emitted by `src/oppintel/app/security.py:apply_security_headers`):
+
+```
+default-src 'self';
+img-src 'self' data: https://*.googleusercontent.com;
+style-src 'self' 'unsafe-inline';
+script-src 'self' 'nonce-<per-request>' https://www.gstatic.com https://apis.google.com;
+connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.googleapis.com https://*.firebaseio.com;
+frame-src 'self' https://*.firebaseapp.com;
+base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'
+```
+
+Inline inventory, all now nonced except the JSON-LD data block (which browsers do not execute):
+
+```
+$ grep -rn "<script" src/oppintel/app/templates/ | grep -v "src="
+base.html:28                        <script type="application/ld+json">…</script>   (data, no nonce)
+base.html:287                       <script nonce="{{ csp_nonce() }}">
+partials/dialog_a11y.html:13        <script nonce="{{ csp_nonce() }}">
+companies/index.html:148            <script nonce="{{ csp_nonce() }}">
+opportunities/list.html:227         <script nonce="{{ csp_nonce() }}">
+account/signup.html:145             <script nonce="{{ csp_nonce() }}">
+account/signin.html:142             <script nonce="{{ csp_nonce() }}">
+
+$ grep -rnE "on(click|change|submit|load|error|input)=" src/oppintel/app/templates/  → (none)
+$ grep -rn "javascript:" src/oppintel/app/templates/                               → (none)
+```
+
+The one inline handler (`opportunities/list.html:184`, `onchange=`) was replaced with an
+`addEventListener` in the nonced block. `style-src` keeps `'unsafe-inline'` because ~346 inline
+`style=` attributes remain (layout only); a nonce cannot cover an attribute, so those are a
+separate, tracked cleanup. No `style` element exists in any template.
+
+Verified live in Chromium across `/`, `/opportunities`, `/companies`, `/changes`, `/trends`,
+`/signin`, `/signup`: **0 CSP violations** and the app's own inline scripts execute.
+
+## G3 — axe-core, all rules, 14 routes × 2 viewports
+
+```
+$ PYTHONPATH=vendor/python:src python audit/scripts/wp2_axe_zero.py
+TOTAL violation instances: 0  (tags=wcag2a,wcag2aa,wcag21a,wcag21aa,wcag22aa,best-practice)
+```
+
+The gate is now zero violations across the full WCAG + best-practice tag set, replacing the
+earlier serious/critical-only gate that let a moderate `heading-order` defect pass.
+
+## G4 — token and contrast table (computed)
+
+```
+$ PYTHONPATH=vendor/python:src python audit/scripts/wp2_contrast_table.py
+pair                                       fg        bg         ratio  verdict
+white on gold-500                          #ffffff   #d97706     3.19  AA-large
+white on gold-600                          #ffffff   #b45309     5.02  PASS AA
+white on #92400e (E2 hover literal)        #ffffff   #92400e     7.09  PASS AA
+slate-300 on white                         #cbd5e1   #ffffff     1.48  FAIL
+slate-500 on white                         #64748b   #ffffff     4.76  PASS AA
+slate-600 on white                         #475569   #ffffff     7.58  PASS AA
+gold-600 on white                          #b45309   #ffffff     5.02  PASS AA
+slate-500 on navy-950                      #64748b   #060b17     4.13  AA-large
+slate-300 on navy-950                      #cbd5e1   #060b17    13.24  PASS AA
+slate-300 on navy-900                      #cbd5e1   #0b1328    12.43  PASS AA
+```
+
+Signal tokens gained AA-safe `-text` variants (used on white): `signal-high-text #065f46`
+7.68:1 (was `signal-high #059669`, 3.77:1), `signal-med-text #92400e` 7.09:1 (was 3.19:1).
+`gold-500` remains in the palette for non-text uses; all white-on-gold surfaces now use
+`gold-600` or the `#92400e` hover literal.
+
+## G5 — branch hygiene
+
+```
+$ git merge-base --is-ancestor 8b19b7d wp2-mobile-a11y && echo contained
+contained
+
+$ git --no-pager log --oneline main..wp1-truth-stability
+8b19b7d fix(wp1.1): D3 residual - Last collection date+time label
+0c166ee fix(wp1.1): director corrections D1-D8
+… (10 commits)
+
+$ git --no-pager log --oneline wp1-truth-stability..wp2-mobile-a11y
+d312bb5 docs(wp2): E6 report …
+d43dd80 fix(wp2): E2-E5 token table, structural axe gate, screenshots, bundle sizes
+4865987 feat(wp2): E1 real focus trap for filter sheet and nav drawer
+… (13 commits)
+```
+
+`wp1-truth-stability` is fully contained in `wp2-mobile-a11y`; `origin/main` is untouched at
+`e01eadd`.
+
+## G6 — post-deploy smoke
+
+```
+$ PYTHONPATH=vendor/python:src python audit/scripts/wp2_smoke.py
+route                                status csp  banned  notes
+/                                    200    True []      
+… (all 17 routes) …
+/healthz                             200    True []
+FAILURES: 0
+```
+
+17 public routes return 200 with a nonced CSP and no banned phrase. `/healthz` and
+`/api/statistics` read the same stored snapshot as the pages.
+
+## Suite (branch tip)
+
+```
+$ env -u BASE_URL -u OPPINTEL_DB -u OPPINTEL_DATA_DIR -u SECRET_KEY -u PORT \
+    PYTHONPATH="vendor/python:src" python -m pytest tests/ -q -p no:cacheprovider
+1136 passed in 246.47s (0:04:06)
+```
+
+Accessibility module alone: 168 passed in 126.08s (was 140 before the all-rules axe gate and the
+CSP test).

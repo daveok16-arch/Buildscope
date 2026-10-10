@@ -37,12 +37,24 @@ def main() -> int:
         "INSERT INTO source (id, name, kind, market_coverage, updated_at) "
         "VALUES ('s1', 'Source', 'arcgis', 'DFW', '2026-10-09T00:00:00+00:00')"
     )
+    # A user and a project so the web writers hit the real watchlist/notes tables, which is
+    # what a signed-in request actually writes (not a generic analytics row).
+    db.conn.execute(
+        "INSERT INTO app_user (id, email, password_hash, created_at) "
+        "VALUES (1, 'soak@example.com', 'x', '2026-10-09T00:00:00+00:00')"
+    )
+    db.conn.execute(
+        "INSERT INTO project (id, project_key, trade, city, permit_date, "
+        "classification, procurement_status, created_at, updated_at) "
+        "VALUES (1, 'soak-1', 'commercial_hvac', 'Dallas', '2026-10-01', "
+        "'HIGH', 'Confirmed open', '2026-10-09T00:00:00+00:00', '2026-10-09T00:00:00+00:00')"
+    )
     db.conn.commit()
     db.close()
 
     errors: list[str] = []
     stop = threading.Event()
-    counters = {"ingest_commits": 0, "reads": 0, "web_writes": 0}
+    counters = {"ingest_commits": 0, "reads": 0, "watchlist_writes": 0, "note_writes": 0}
     duration = args.seconds
 
     def ingest_writer() -> None:
@@ -79,16 +91,27 @@ def main() -> int:
             conn.close()
 
     def web_write() -> None:
+        """A watchlist toggle and a note insert, alternating - the two writes a signed-in
+        user's request actually performs against the app tables."""
         conn = Database(path)
         try:
             n = 0
             while not stop.is_set():
-                conn.conn.execute(
-                    "INSERT INTO analytics_event (event_name, created_at) VALUES ('soak', ?)",
-                    (f"2026-10-09T00:00:{n % 60:02d}+00:00",),
-                )
+                if n % 2 == 0:
+                    conn.conn.execute(
+                        "INSERT OR REPLACE INTO watched_opportunity "
+                        "(user_id, project_id, watched_at) VALUES (1, 1, ?)",
+                        (f"2026-10-09T00:00:{n % 60:02d}+00:00",),
+                    )
+                    counters["watchlist_writes"] += 1
+                else:
+                    conn.conn.execute(
+                        "INSERT INTO opportunity_note (user_id, project_id, body, created_at) "
+                        "VALUES (1, 1, ?, ?)",
+                        (f"note {n}", f"2026-10-09T00:00:{n % 60:02d}+00:00"),
+                    )
+                    counters["note_writes"] += 1
                 conn.conn.commit()
-                counters["web_writes"] += 1
                 n += 1
                 time.sleep(0.05)
         except Exception as exc:  # noqa: BLE001
@@ -109,12 +132,22 @@ def main() -> int:
     elapsed = time.monotonic() - started
 
     locked = [e for e in errors if "database is locked" in e]
+    # Read the pragmas back from a fresh connection so the run proves the WAL/busy_timeout
+    # configuration is actually in effect, not merely what db.py intends to set.
+    probe = Database(path)
+    pragmas = {
+        name: probe.conn.execute(f"PRAGMA {name}").fetchone()[0]
+        for name in ("journal_mode", "busy_timeout", "synchronous", "foreign_keys")
+    }
+    probe.close()
     print(f"duration:            {elapsed:.1f}s")
     print(f"ingest commits:      {counters['ingest_commits']}")
     print(f"reader queries:      {counters['reads']}")
-    print(f"web writes:          {counters['web_writes']}")
+    print(f"watchlist writes:    {counters['watchlist_writes']}")
+    print(f"note writes:         {counters['note_writes']}")
     print(f"errors:              {len(errors)}")
     print(f"'database is locked': {len(locked)}")
+    print("pragmas:             " + ", ".join(f"{k}={v}" for k, v in pragmas.items()))
     for e in errors:
         print("  ", e)
     return 1 if errors else 0

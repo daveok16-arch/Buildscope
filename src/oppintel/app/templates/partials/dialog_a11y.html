@@ -10,7 +10,7 @@
 
    `inert` is supported in current Chrome/Edge/Firefox/Safari; where it is not, the Tab trap
    still keeps keyboard focus inside the dialog. The helper degrades rather than throwing. #}
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   'use strict';
 

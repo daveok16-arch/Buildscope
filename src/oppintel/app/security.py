@@ -182,6 +182,20 @@ def check_rate_limit(req: Request) -> Response | None:
     return None
 
 
+def csp_nonce() -> str:
+    """The per-request CSP nonce, generated once and reused.
+
+    A nonce is the only way to allow the app's inline blocks (the JSON-LD, the small
+    dialog/nav scripts) without ``'unsafe-inline'``, which would let any injected script run.
+    Stored on ``g`` so the header hook and every template read the same value for one response.
+    """
+    nonce = getattr(g, "csp_nonce", None)
+    if nonce is None:
+        nonce = secrets.token_urlsafe(16)
+        g.csp_nonce = nonce
+    return nonce
+
+
 def apply_security_headers(response: Response) -> Response:
     """Attach the standard hardening headers to an outgoing response."""
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
@@ -190,11 +204,16 @@ def apply_security_headers(response: Response) -> Response:
     response.headers.setdefault(
         "Permissions-Policy", "geolocation=(), microphone=(), camera=()"
     )
-    # The CSP allows the app's own stylesheet, inline JSON-LD blocks, and Firebase/Google Auth.
+    # The CSP allows the app's own stylesheet, inline JSON-LD and inline dialog/nav scripts by
+    # per-request nonce (never 'unsafe-inline' for scripts), and the Firebase/Google Auth CDN.
+    # style-src keeps 'unsafe-inline': the templates carry ~350 inline style= attributes (layout
+    # only), and a nonce cannot cover an attribute. Moving those to classes is tracked separately.
+    nonce = csp_nonce()
     response.headers.setdefault(
         "Content-Security-Policy",
-        "default-src 'self'; img-src 'self' data: https://*.googleusercontent.com; style-src 'self' 'unsafe-inline'; "
-        "script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com; "
+        "default-src 'self'; img-src 'self' data: https://*.googleusercontent.com; "
+        "style-src 'self' 'unsafe-inline'; "
+        f"script-src 'self' 'nonce-{nonce}' https://www.gstatic.com https://apis.google.com; "
         "connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.googleapis.com https://*.firebaseio.com; "
         "frame-src 'self' https://*.firebaseapp.com; "
         "base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'",
@@ -203,7 +222,13 @@ def apply_security_headers(response: Response) -> Response:
 
 
 def install_security(app: Any, *, enabled: bool = True) -> None:
-    """Register the CSRF check, rate limiter and header hook on an application."""
+    """Register the CSRF check, rate limiter and header hook on an application.
+
+    ``enabled`` gates the *request-blocking* protections (CSRF, rate limiting) so a debug
+    process is not blocked locally. The response hardening headers — including the CSP — are
+    always installed, so the policy the browser enforces is the same in dev, test and prod,
+    and the browser-level tests exercise it rather than a permissive no-op.
+    """
     from flask import current_app
 
     @app.before_request
@@ -220,10 +245,12 @@ def install_security(app: Any, *, enabled: bool = True) -> None:
         apply_security_headers(response)
         return response
 
-    # Expose the token to templates for form embedding.
+    # Expose the token to templates for form embedding, and the per-request CSP nonce so
+    # inline <script> blocks can carry the matching nonce attribute. Both are injected as
+    # callables; the templates call them, so one value is read per render and cached on `g`.
     @app.context_processor
     def _csrf_context() -> dict[str, Any]:
-        return {"csrf_token": csrf_token}
+        return {"csrf_token": csrf_token, "csp_nonce": csp_nonce}
 
 
 def require_entitlement(feature: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:

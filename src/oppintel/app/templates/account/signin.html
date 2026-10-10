@@ -139,7 +139,7 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function() {
   var btn = document.getElementById('google-auth-btn');
   var errorEl = document.getElementById('auth-client-error');

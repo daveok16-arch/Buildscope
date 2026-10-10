@@ -181,7 +181,7 @@
 
         <div class="feed-sort-block">
           <label for="sort-inline">Sort:</label>
-          <select id="sort-inline" class="feed-sort-select" onchange="window.location.href=this.value">
+          <select id="sort-inline" class="feed-sort-select">
             {% for key, meta in sort_options.items() %}
               {% set query_args = request.args.copy() %}
               {% set _ = query_args.setlist('sort', [key]) %}
@@ -224,8 +224,11 @@
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function() {
+  var sort = document.getElementById('sort-inline');
+  if (sort) sort.addEventListener('change', function() { window.location.href = this.value; });
+
   var btn = document.getElementById('mobile-filter-btn');
   var sidebar = document.getElementById('filter-sidebar-panel');
   var backdrop = document.getElementById('filter-sheet-backdrop');

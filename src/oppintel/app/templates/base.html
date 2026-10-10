@@ -284,7 +284,7 @@
 </footer>
 {% endif %}
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function() {
   var openBtn = document.getElementById('mobile-menu-open-btn');
   var closeBtn = document.getElementById('mobile-menu-close-btn');
