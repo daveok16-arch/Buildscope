@@ -244,6 +244,26 @@ def load_sources(path: Path | None = None) -> dict[str, SourceConfig]:
 
 
 @lru_cache(maxsize=1)
+def load_retention(path: Path | None = None) -> "RetentionSettings":
+    """The raw-archive retention policy from `config/sources.yaml`.
+
+    Absent or partial configuration is "do nothing": the dataclass defaults keep every file, so
+    a missing block can never cause a delete.
+    """
+    from .retention import RetentionSettings
+
+    path = path or (CONFIG_DIR / "sources.yaml")
+    raw = yaml.safe_load(path.read_text()) or {}
+    block = raw.get("retention") or {}
+    return RetentionSettings(
+        enabled=bool(block.get("enabled", False)),
+        keep_last=block.get("keep_last"),
+        keep_days=block.get("keep_days"),
+        gzip_after_days=block.get("gzip_after_days"),
+    )
+
+
+@lru_cache(maxsize=1)
 def load_trades(path: Path | None = None) -> dict[str, TradeConfig]:
     path = path or (CONFIG_DIR / "trades.yaml")
     raw = yaml.safe_load(path.read_text())
@@ -579,5 +599,6 @@ def reset_config_cache() -> None:
     load_markets.cache_clear()
     _active_market_id.cache_clear()
     load_sources.cache_clear()
+    load_retention.cache_clear()
     load_trades.cache_clear()
     load_keyword_map.cache_clear()

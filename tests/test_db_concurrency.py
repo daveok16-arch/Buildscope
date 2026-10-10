@@ -118,6 +118,60 @@ def test_writer_lock_is_reentrant_in_one_thread(tmp_path):
             assert inner is True  # held, not blocked
 
 
+def test_a_dead_process_releases_the_writer_lock(tmp_path):
+    """Stale-lock recovery: a process killed while holding the lock does not wedge it.
+
+    The lock is an ``flock`` on ``<db>.writelock``. The kernel releases an flock when the
+    holding file descriptor is closed, and process death closes it, so a crashed ingest leaves
+    no lock behind. This runs a real child process that takes the lock, confirms the parent
+    cannot take it while the child lives, kills the child, and confirms the parent acquires it
+    without waiting for the timeout.
+    """
+    import os
+    import signal
+    import subprocess
+    import sys
+    import textwrap
+    from pathlib import Path
+
+    from oppintel.locks import lock_path_for, writer_lock
+
+    repo = Path(__file__).resolve().parents[1]
+    path = tmp_path / "stale.db"
+    lock_file = lock_path_for(path)
+    child = subprocess.Popen(
+        [sys.executable, "-c", textwrap.dedent(f"""
+            import sys, time
+            sys.path.insert(0, {str(repo / 'src')!r})
+            from oppintel.locks import writer_lock
+            with writer_lock({str(path)!r}, timeout=5):
+                print("held", flush=True)
+                time.sleep(60)
+        """)],
+        stdout=subprocess.PIPE,
+        text=True,
+    )
+    try:
+        assert child.stdout.readline().strip() == "held"
+        assert lock_file.exists()
+        # While the child holds it, a second writer times out quickly rather than acquiring.
+        from oppintel.locks import WriterLockBusy
+        try:
+            with writer_lock(path, timeout=0.3):
+                raise AssertionError("lock was acquired while a live process held it")
+        except WriterLockBusy:
+            pass
+    finally:
+        os.kill(child.pid, signal.SIGKILL)
+        child.wait(timeout=10)
+
+    # The child is dead; the lock must be free immediately (no stale file blocks it).
+    t0 = time.monotonic()
+    with writer_lock(path, timeout=5) as held:
+        assert held is True
+    assert time.monotonic() - t0 < 2.0, "acquiring a dead holder's lock should be immediate"
+
+
 def test_concurrent_readers_and_web_writes_against_an_ingest_writer(tmp_path):
     """D1 soak: readers + short web-style writes survive a long writer with zero lock errors.
 

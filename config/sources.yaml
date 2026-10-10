@@ -116,3 +116,18 @@ sources:
     jurisdiction_state: "TX"
     reliability: 0.8
     notes: "Historical only. Enable with --source dallas_permits_socrata for trend work."
+
+# Raw-archive retention. INERT BY DEFAULT: with no block, or `enabled: false`, every landed
+# JSONL file is kept and `oppintel prune-raw` only prints a plan. Nothing is deleted until
+# `enabled: true` here AND `oppintel prune-raw --apply` is run. A file is removed only when it
+# is beyond the newest `keep_last` files of its source AND older than `keep_days`; either rule
+# keeping it wins. `gzip_after_days` compresses aged files that are kept, never removes them.
+#
+# Sized for the D6 measurements (Fort Worth ~195k permits): a full seed writes ~197 MB and a
+# 6-hourly refresh adds ~7.6 MB, so an unmanaged archive grows ~916 MB/month. keep_last=8
+# retains ~2 days of refreshes per source; keep_days=30 keeps a month regardless of count.
+retention:
+  enabled: false
+  keep_last: 8
+  keep_days: 30
+  gzip_after_days: 2
