@@ -38,34 +38,41 @@
 
 {% block content %}
 
-{# 1. Restrained Evidence Strip (Quiet Trust Baseline — NOT giant dashboard cards) #}
+{# 1. Metric band — the headline numbers, from one snapshot (stat_snapshot.py).
+   Each figure animates up on view via data-count but the HTML already contains the exact
+   value, so it is correct with JS off and never invents a number. #}
 <div class="evidence-strip-container">
   <div class="wrap">
-    <div class="evidence-strip">
-      <div class="evidence-stat-item">
-        <span class="evidence-stat-num">{{ "{:,}".format(stats.public_projects) }}</span>
-        <span class="evidence-stat-label">Public projects</span>
+    <div class="metric-band" role="group" aria-label="BuildScope coverage at a glance">
+      <div class="metric-cell" data-reveal>
+        <span class="metric-num" data-count="{{ stats.public_projects }}" data-count-grouped="1">{{ "{:,}".format(stats.public_projects) }}</span>
+        <span class="metric-label">Public projects</span>
+        <span class="metric-sub">Discoverable commercial projects</span>
       </div>
-      <div class="evidence-stat-item">
-        <span class="evidence-stat-num">{{ "{:,}".format(stats.projects_with_mechanical_evidence) }}</span>
-        <span class="evidence-stat-label">Projects with mechanical evidence</span>
+      <div class="metric-cell" data-reveal>
+        <span class="metric-num" data-count="{{ stats.projects_with_mechanical_evidence }}" data-count-grouped="1">{{ "{:,}".format(stats.projects_with_mechanical_evidence) }}</span>
+        <span class="metric-label">With mechanical evidence</span>
+        <span class="metric-sub">Tier 1 permit or Tier 2 scope text</span>
       </div>
-      <div class="evidence-stat-item">
-        <span class="evidence-stat-num">{{ "{:,}".format(stats.active_jurisdictions) }}</span>
-        <span class="evidence-stat-label">Cities with at least one public project</span>
+      <div class="metric-cell" data-reveal>
+        <span class="metric-num" data-count="{{ stats.permit_records }}" data-count-grouped="1">{{ "{:,}".format(stats.permit_records) }}</span>
+        <span class="metric-label">Permit records</span>
+        <span class="metric-sub">Public permit rows, linked</span>
       </div>
-      <div class="evidence-stat-item">
-        <span class="evidence-stat-num">{{ "{:,}".format(stats.permit_records) }}</span>
-        <span class="evidence-stat-label">Permit records</span>
+      <div class="metric-cell" data-reveal>
+        <span class="metric-num" data-count="{{ stats.active_jurisdictions }}" data-count-grouped="1">{{ "{:,}".format(stats.active_jurisdictions) }}</span>
+        <span class="metric-label">Cities with projects</span>
+        <span class="metric-sub">Of {{ stats.configured_jurisdictions }} configured</span>
       </div>
     </div>
     <p class="evidence-strip-asof small muted">
       {% set defs = stat_definitions or {} %}
       <span title="{{ defs.get('public_projects', '') }}">Public projects</span>,
       <span title="{{ defs.get('projects_with_mechanical_evidence', '') }}">mechanical evidence</span>,
-      <span title="{{ defs.get('active_jurisdictions', '') }}">cities with at least one public project</span> and
-      <span title="{{ defs.get('permit_records', '') }}">permit records</span> — computed from
-      public records{% if stats.computed_at %}, as of {{ stats.computed_at[:16].replace('T', ' ') }} UTC{% endif %}.
+      <span title="{{ defs.get('permit_records', '') }}">permit records</span> and
+      <span title="{{ defs.get('active_jurisdictions', '') }}">cities with at least one public project</span>
+      — one snapshot per refresh cycle{% if stats.computed_at %}, as of {{ stats.computed_at[:16].replace('T', ' ') }} UTC{% endif %}.
+      <a href="{{ url_for('trends_view') }}">See how they change over time &rarr;</a>
     </p>
     {% include "partials/collection_window.html" %}
   </div>

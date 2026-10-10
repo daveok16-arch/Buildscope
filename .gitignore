@@ -37,3 +37,8 @@ firebase-applet-config.json
 
 # Generated report output (the /reports page reads the database, not this directory).
 reports/
+
+# Audit artifacts: keep text/reports, ignore bulk screenshots and scratch.
+audit/screenshots/
+audit/releases/**/*.png
+audit/live/*.png

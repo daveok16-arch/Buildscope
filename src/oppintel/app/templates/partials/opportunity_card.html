@@ -122,6 +122,13 @@
         <span class="muted small" style="display:block; margin-bottom:2px">Other records share this street address; likely separate suites.</span>
       {% endif %}
       <span>Verified {{ project.last_verified | month_year }}</span>
+      {% if project.source_name %}
+        <span class="card-source">· Source:
+          {% if project.source_url %}
+            <a href="{{ project.source_url }}" target="_blank" rel="noopener nofollow">{{ project.source_name }}</a>
+          {% else %}{{ project.source_name }}{% endif %}
+        </span>
+      {% endif %}
     </div>
 
     <div class="card-actions">

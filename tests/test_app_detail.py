@@ -51,6 +51,19 @@ def test_last_verified_is_displayed(client, app_db):
     assert "Last verified" in body
 
 
+# --- WP3 M4: the dossier states facts, not a generated interpretation --------------
+
+def test_detail_does_not_invent_an_interpretation(client, app_db):
+    """A timeline entry is a stored difference; the page must not paraphrase it as a claim."""
+    body = _body(client, _slug_for(app_db, address="10 ROSS AVE"))
+    assert "BuildScope Interpretation" not in body
+
+
+def test_detail_has_sticky_action_bar_markup(client, app_db):
+    body = _body(client, _slug_for(app_db, address="10 ROSS AVE"))
+    assert "action-row" in body
+
+
 # --- missing fields ------------------------------------------------------------
 
 def test_missing_fields_render_as_not_verified(client, app_db):

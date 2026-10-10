@@ -2783,3 +2783,151 @@ body.drawer-open .mobile-drawer {
     font-size: 1rem;
   }
 }
+
+/* ==========================================================================
+   WP3 M1 — Motion tokens + custom controls (kill native black dropdowns)
+   ========================================================================== */
+:root {
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+  --dur-120: 120ms; --dur-200: 200ms; --dur-320: 320ms; --dur-480: 480ms;
+  --sheet-radius: 20px;
+}
+
+/* Reveal: resting state is visible; only when JS is present do we start hidden. */
+.bs-js [data-reveal]:not(.bs-in),
+.bs-js .card:not(.bs-in) { opacity: 0; }
+.bs-anim-on { will-change: transform, opacity; }
+@media (prefers-reduced-motion: reduce) {
+  .bs-js [data-reveal]:not(.bs-in), .bs-js .card:not(.bs-in) { opacity: 1 !important; }
+  .bs-compact { transition: none !important; }
+}
+
+/* Sticky header compaction */
+.site-header { transition: box-shadow var(--dur-200) var(--ease-out), background var(--dur-200) var(--ease-out); }
+.site-header.bs-compact { box-shadow: 0 6px 20px rgba(2, 6, 23, .28); }
+.site-header.bs-compact .header-inner { padding-top: 6px; padding-bottom: 6px; }
+
+/* Hover lift + press feedback */
+.card, .opportunity-card, .lifecycle-card { transition: transform var(--dur-200) var(--ease-out), box-shadow var(--dur-200) var(--ease-out); }
+@media (hover: hover) and (pointer: fine) {
+  .card:hover, .opportunity-card:hover, .lifecycle-card:hover { transform: translateY(-3px); box-shadow: 0 14px 34px rgba(2, 6, 23, .14); }
+}
+.btn:active { transform: translateY(1px); }
+
+/* --- Combobox / listbox replacing the native <select> popup --- */
+.bs-select-native { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.bs-combobox { position: relative; }
+.bs-combobox-trigger {
+  width: 100%; text-align: left; display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; padding: 11px 14px; min-height: 44px; font: inherit; color: var(--ink);
+  background: var(--white); border: 1px solid var(--slate-300); border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.bs-combobox-trigger:hover { border-color: var(--slate-400); }
+.bs-combobox-trigger:focus-visible { outline: 2px solid var(--navy-700); outline-offset: 2px; border-color: var(--navy-700); }
+.bs-combobox-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bs-combobox-caret { flex: 0 0 auto; width: 9px; height: 9px; border-right: 2px solid var(--slate-500); border-bottom: 2px solid var(--slate-500); transform: rotate(45deg) translateY(-2px); transition: transform var(--dur-200) var(--ease-out); }
+.bs-combobox.is-open .bs-combobox-caret { transform: rotate(-135deg) translateY(-2px); }
+
+.bs-combobox-pop {
+  z-index: 60; background: var(--white); border: 1px solid var(--slate-200);
+  border-radius: var(--radius-md); box-shadow: 0 18px 48px rgba(2, 6, 23, .22);
+  padding: 6px; margin-top: 6px; max-height: 340px; overflow: auto;
+}
+.bs-combobox-pop[hidden] { display: none; }
+.bs-combobox-searchwrap { position: sticky; top: 0; background: var(--white); padding: 6px 6px 10px; }
+.bs-combobox-search { width: 100%; padding: 10px 12px; min-height: 44px; font: inherit; border: 1px solid var(--slate-300); border-radius: var(--radius-sm); }
+.bs-listbox { list-style: none; margin: 0; padding: 0; }
+.bs-option { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 12px; border-radius: var(--radius-sm); cursor: pointer; }
+.bs-option.is-active, .bs-option:hover { background: var(--slate-100); }
+.bs-option[aria-selected="true"] { font-weight: 650; }
+.bs-option-check { width: 16px; height: 16px; flex: 0 0 auto; }
+.bs-option[aria-selected="true"] .bs-option-check::after { content: "\2713"; color: var(--gold-600); font-weight: 700; }
+.bs-option-label { flex: 1 1 auto; }
+.bs-option-count { flex: 0 0 auto; color: var(--slate-500); font-variant-numeric: tabular-nums; font-size: .85em; }
+.bs-combobox-footer { display: flex; gap: 8px; justify-content: flex-end; padding: 8px 6px 4px; border-top: 1px solid var(--slate-200); margin-top: 6px; }
+
+/* Mobile: the popup becomes a branded bottom sheet (light surface, not the black system list) */
+@media (max-width: 720px) {
+  .bs-combobox-pop { position: fixed; left: 0; right: 0; bottom: 0; margin: 0; max-height: 80vh;
+    border-radius: var(--sheet-radius) var(--sheet-radius) 0 0; padding: 10px 10px calc(10px + env(safe-area-inset-bottom)); }
+  body.sheet-open .bs-combobox-pop { animation: bs-sheet-up var(--dur-320) var(--ease-out); }
+  .bs-combobox-pop::before { content: ""; display: block; width: 40px; height: 4px; border-radius: 999px; background: var(--slate-300); margin: 2px auto 8px; }
+}
+@keyframes bs-sheet-up { from { transform: translateY(16px); opacity: .6; } to { transform: translateY(0); opacity: 1; } }
+
+/* Applied-filter chips */
+.applied-filter-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0 4px; }
+.filter-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px;
+  background: var(--slate-100); border: 1px solid var(--slate-200); color: var(--ink-soft); font-size: .82rem; }
+.filter-chip-x { border: 0; background: transparent; color: var(--slate-500); cursor: pointer; font-size: 1rem; line-height: 1; padding: 2px 2px; }
+.filter-chip-x:hover { color: var(--slate-900); }
+.filter-chip-clear { background: transparent; border-color: transparent; color: var(--navy-700); text-decoration: underline; }
+
+/* ==========================================================================
+   WP3 M2 — Home metric band
+   ========================================================================== */
+.metric-band {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+  background: var(--line); border: 1px solid var(--line); border-radius: var(--radius-lg, 14px);
+  overflow: hidden; margin: 4px 0 12px;
+}
+.metric-cell { background: var(--white); padding: 22px 20px; display: flex; flex-direction: column; gap: 3px; }
+.metric-num {
+  font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; letter-spacing: -0.02em;
+  color: var(--navy-900); font-variant-numeric: tabular-nums; line-height: 1.05;
+}
+.metric-label { font-weight: 650; color: var(--ink); font-size: .95rem; }
+.metric-sub { color: var(--ink-muted); font-size: .82rem; }
+.metric-cell + .metric-cell { border-left: 1px solid var(--line); }
+@media (max-width: 720px) {
+  .metric-band { grid-template-columns: repeat(2, 1fr); }
+  .metric-cell { padding: 16px 14px; }
+  .metric-cell:nth-child(3), .metric-cell:nth-child(4) { border-top: 1px solid var(--line); }
+}
+
+.evidence-strip-asof a { text-decoration: underline; text-underline-offset: 2px; }
+
+/* ==========================================================================
+   WP3 M3 — Opportunity card: source provenance line + foot wrapping
+   ========================================================================== */
+.card-foot { flex-wrap: wrap; row-gap: 8px; }
+.card-foot > div:first-child { min-width: 0; }
+.card-foot .card-source {
+  display: block; margin-top: 2px; overflow-wrap: anywhere; color: var(--slate-500);
+}
+.card-foot .card-source a {
+  color: inherit; text-decoration: underline; text-underline-offset: 2px;
+}
+.card:hover {
+  transform: translateY(-2px);
+  transition: transform .13s ease, box-shadow .13s ease, border-color .13s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .card:hover { transform: none; }
+}
+
+/* ==========================================================================
+   WP3 M4 — Dossier: sticky mobile action bar, tighter timeline
+   ========================================================================== */
+.timeline { list-style: none; margin: 0; padding: 0; }
+.timeline > li { padding: 12px 0; border-bottom: 1px solid var(--slate-150); }
+.timeline > li:last-child { border-bottom: 0; }
+@media (max-width: 720px) {
+  .dossier-head .action-row {
+    position: sticky; top: 0; z-index: 20;
+    background: var(--white); border-bottom: 1px solid var(--line);
+    padding: 10px 0; margin: 0 -16px 4px; padding-left: 16px; padding-right: 16px;
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .dossier-head .action-row .inline-form { margin: 0; }
+}
+
+/* ==========================================================================
+   WP3 M4 — Dossier: stop long unbreakable source URLs from widening the grid.
+   A grid item's default min-width is auto, so a long URL in the sidebar forced
+   the single-column track wider than the viewport (mobile horizontal scroll).
+   ========================================================================== */
+.detail-grid > * { min-width: 0; }
+.src-url { overflow-wrap: anywhere; word-break: break-word; }
+.detail-panel dd, .detail-panel dt { overflow-wrap: anywhere; }

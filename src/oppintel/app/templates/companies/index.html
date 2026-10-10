@@ -7,8 +7,10 @@
     <div class="hero-tagline-kicker">Relationship Intelligence</div>
     <h1>Companies &amp; Project Stakeholders</h1>
     <p class="lede">
-      Verified commercial general contractors, owners, developers, and architects active across {{ market.name }}.
-      Track who is building, what project types they specialize in, and their recurring partner networks.
+      Stakeholders named in the public commercial permit record across {{ market.name }} —
+      project owners today, plus general contractors, developers and architects where an
+      issuing source publishes them. Track who is building, what project types they are
+      associated with, and their recurring presence across records.
     </p>
   </div>
 </section>
@@ -44,7 +46,7 @@
         <a class="btn btn-small btn-ghost" href="{{ url_for('companies_index') }}">Reset</a>
       </div>
 
-      <div class="filter-stack">
+      <div class="filter-stack" data-bs-control>
         <div class="field">
           <label for="q">Company Name</label>
           <input type="search" id="q" name="q" value="{{ q or '' }}" placeholder="Search company name…">

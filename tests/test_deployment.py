@@ -334,3 +334,32 @@ def test_start_script_can_pin_the_depth(tmp_path, monkeypatch):
 
     assert result.returncode == 0, result.stderr
     assert "--grow-backfill" not in result.stdout
+
+
+def test_health_reports_the_release_marker_when_configured(client):
+    """A deploy must be able to prove which revision it is serving.
+
+    Silent when unset (nothing invented); present when the config carries a release id.
+    """
+    from oppintel.app.config import AppConfig
+    from oppintel.app.main import create_app
+
+    app = create_app(
+        AppConfig(database_path=client.application.config["APP_CONFIG"].database_path,
+                  secret_key="test", debug=True, release="abc1234")
+    )
+    payload = json.loads(app.test_client().get("/healthz").get_data(as_text=True))
+    assert payload["release"] == "abc1234"
+
+
+def test_health_omits_the_release_marker_when_unset(client):
+    """Nothing is invented: an unconfigured release is absent, not an empty string claim."""
+    from oppintel.app.config import AppConfig
+    from oppintel.app.main import create_app
+
+    app = create_app(
+        AppConfig(database_path=client.application.config["APP_CONFIG"].database_path,
+                  secret_key="test", debug=True, release="")
+    )
+    payload = json.loads(app.test_client().get("/healthz").get_data(as_text=True))
+    assert "release" not in payload

@@ -61,6 +61,23 @@ def test_canonical_url_is_present_on_public_pages(client):
         assert 'rel="canonical"' in body, path
 
 
+def test_canonical_url_is_self_referential(client):
+    """Every indexable page must point its canonical at itself, never at the home page.
+
+    Regression: all ``SeoBuilder.simple`` pages used the default path ``/``, so a crawler saw
+    e.g. /companies, /trends, /changes declaring the homepage as canonical and dropped them.
+    """
+    for path in (
+        "/", "/companies", "/changes", "/trends", "/analytics", "/reports",
+        "/how-it-works", "/guides", "/trades", "/markets", "/markets/dfw",
+    ):
+        body = client.get(path).get_data(as_text=True)
+        m = re.search(r'<link rel="canonical" href="([^"]*)"', body)
+        assert m, path
+        href = m.group(1)
+        assert href.rstrip("/") == path.rstrip("/"), f"{path} -> canonical {href}"
+
+
 def test_opportunity_page_has_unique_metadata(client, app_db):
     slug = _slug(app_db, "10 ROSS")
     body = client.get(f"/opportunities/{slug}").get_data(as_text=True)

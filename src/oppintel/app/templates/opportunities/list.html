@@ -47,7 +47,7 @@
           <a class="btn btn-small btn-ghost" href="{{ url_for('opportunities') }}">Reset</a>
         </div>
 
-        <div class="filter-stack">
+        <div class="filter-stack" data-bs-control>
           <div class="field">
             <label for="q">Search Keyword</label>
             <input type="search" id="q" name="q" value="{{ filters.q or '' }}"
@@ -137,6 +137,7 @@
 
     {# --- 2. Feed Results Workspace --- #}
     <div class="feed-main-content">
+      <div class="applied-filter-bar" data-applied-filters hidden></div>
       {% if interpreted and interpreted.has_structured_intent %}
         <div class="interpreted-filters-panel" style="background:#ffffff; border:1px solid #cbd5e1; border-left:4px solid var(--gold-500); border-radius:var(--radius-sm); padding:14px 18px; margin-bottom:18px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
@@ -171,7 +172,7 @@
           {% if result.total %}
             Showing <strong>{{ result.first_index }}–{{ result.last_index }}</strong> of <strong>{{ result.total }}</strong> opportunities
             <span class="small muted" style="display:block; margin-top:3px">
-              {{ tier1_n.count }} Tier-1 mechanical permits · {{ tier2_n.count }} Tier-2 scope text · {{ unverified_n.count }} commercial base
+              On this page: {{ tier1_n.count }} Tier-1 mechanical permit{{ '' if tier1_n.count == 1 else 's' }} · {{ tier2_n.count }} Tier-2 scope text · {{ unverified_n.count }} commercial base
             </span>
           {% else %}
             <strong>0</strong> opportunities found
