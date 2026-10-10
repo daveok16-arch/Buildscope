@@ -66,6 +66,18 @@
   --ink-quiet:    #94a3b8;
   --muted:        #64748b;
 
+  /* Evidence badge (card signal). AA-safe text on tinted fills: tier-1 green >=7:1,
+     tier-2 amber >=4.6:1, none slate >=8:1. */
+  --evidence-strong-bg:     #ecfdf5;
+  --evidence-strong-border: #a7f3d0;
+  --evidence-strong-text:   #065f46;
+  --evidence-mid-bg:        #fffbeb;
+  --evidence-mid-border:    #fde68a;
+  --evidence-mid-text:      #92400e;
+  --evidence-none-bg:       #f1f5f9;
+  --evidence-none-border:   #cbd5e1;
+  --evidence-none-text:     #334155;
+
   --bg:           #ffffff;
   --bg-soft:      #f8fafc;
   --bg-tint:      #f1f5f9;
@@ -1337,6 +1349,47 @@ body.drawer-open .mobile-drawer {
 .signal-indicator.signal-medium { color: var(--signal-med-text); }
 .signal-indicator.signal-low { color: var(--signal-low-text); }
 .signal-indicator.signal-closed { color: var(--signal-closed-text); }
+
+/* Evidence badge: the one proof-state badge on a card. It leads, so it is a pill with a
+   status dot rather than a bare coloured word. */
+.evidence-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 9px 2px 7px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+}
+.evidence-badge .evidence-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+.evidence-badge.evidence-tier-1 {
+  background: var(--evidence-strong-bg);
+  border-color: var(--evidence-strong-border);
+  color: var(--evidence-strong-text);
+}
+.evidence-badge.evidence-tier-2 {
+  background: var(--evidence-mid-bg);
+  border-color: var(--evidence-mid-border);
+  color: var(--evidence-mid-text);
+}
+.evidence-badge.evidence-tier-none {
+  background: var(--evidence-none-bg);
+  border-color: var(--evidence-none-border);
+  color: var(--evidence-none-text);
+}
+/* Confidence is a quiet word after the evidence, not a second coloured badge. */
+.confidence {
+  color: var(--slate-600);
+  font-weight: 650;
+}
 
 /* Card Title & Address */
 .card-header-block {

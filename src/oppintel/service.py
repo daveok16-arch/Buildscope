@@ -83,6 +83,15 @@ SORT_OPTIONS = {
         "Project status",
         f"p.project_status ASC, {_recent_order('p')}",
     ),
+    # "Best evidence" is a factual ordering, not a judgement: it ranks by the stored evidence
+    # tier (Tier 1 official permit, then Tier 2 documented scope, then none) and breaks ties by
+    # the most recent usable permit date. It is order by what the data records, never by an
+    # opinion of value.
+    "evidence": (
+        "Best evidence",
+        "CASE p.mechanical_evidence_tier WHEN 1 THEN 0 WHEN 2 THEN 1 ELSE 2 END ASC, "
+        + _recent_order("p"),
+    ),
 }
 
 DEFAULT_SORT = "recent"

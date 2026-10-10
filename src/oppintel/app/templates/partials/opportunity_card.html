@@ -1,20 +1,30 @@
 {# Reusable opportunity card. Used by the directory, homepage, dashboard and landing pages. #}
 <article class="card">
-  {# 1. Zero-Pill Scannable Signal & Scope Metadata Line #}
+  {# 1. Evidence-led signal line. The proof state leads, as one badge: the trade-signal label the
+     service already derives from the stored evidence tier (strong official permit -> documented
+     scope -> "Trade not verified"). Classification is a confidence word after the evidence, not a
+     competing coloured badge, and procurement status is stated once, factually. Nothing here is
+     invented: every clause is a stored field or a service helper. #}
+  {% set evidence_tier = project.mechanical_evidence_tier %}
   <div class="card-meta-line">
-    <span class="signal-indicator signal-{{ project.classification | lower | replace('_','-') }}">
-      {{ project.classification | replace('_',' ') }}
+    <span class="evidence-badge evidence-tier-{{ evidence_tier or 'none' }}">
+      <span class="evidence-dot" aria-hidden="true"></span>{{ project.trade_signal or project.evidence_label }}
     </span>
-    <span class="meta-dot">·</span>
-    <span class="trade-signal-text">{{ project.trade_signal or project.evidence_label }}</span>
-    {% if project.procurement_status == 'Closed' %}
+    {% if project.classification == 'HIGH' %}
+      <span class="meta-dot">·</span>
+      <span class="confidence">High confidence</span>
+    {% elif project.classification == 'MEDIUM' %}
+      <span class="meta-dot">·</span>
+      <span class="confidence">Medium confidence</span>
+    {% endif %}
+    {% if project.is_closed %}
       <span class="meta-dot">·</span>
       <span class="muted">Closed</span>
-    {% elif project.procurement_status %}
+    {% elif project.procurement_status and project.procurement_status != 'Not verified' %}
       <span class="meta-dot">·</span>
-      <span>{{ project.procurement_status }}</span>
+      <span class="procurement-note">{{ project.procurement_status }}</span>
     {% endif %}
-    {% if not project.is_report_eligible and project.procurement_status != 'Closed' %}
+    {% if not project.is_report_eligible and not project.is_closed %}
       <span class="meta-dot">·</span>
       <span class="muted">Lead only</span>
     {% endif %}
