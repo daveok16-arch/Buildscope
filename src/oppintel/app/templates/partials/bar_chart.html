@@ -1,0 +1,67 @@
+{# Inline SVG bar chart. No charting library: the series is small and server-rendered, so an
+   <svg> of <rect>s is the whole dependency. It carries one accessible table alternative, a
+   <title> per bar for hover, and a <figcaption> stating the count and the exclusions, so the
+   chart can never tell a different story from the metrics. #}
+{% set series = report.activity_series %}
+{% if series %}
+{% set ns = namespace(max=0) %}
+{% for point in series %}{% if point.count > ns.max %}{% set ns.max = point.count %}{% endif %}{% endfor %}
+{% set top = ns.max if ns.max > 0 else 1 %}
+{% set total = series | sum(attribute='count') %}
+<figure class="chart-figure" style="margin-top:24px">
+  <figcaption>
+    <strong>Permit activity, last {{ series | length }} months</strong>
+    <span class="small muted" style="display:block; margin-top:2px">
+      Distinct projects with a usable permit date in each month ({{ "{:,}".format(total) }} in the
+      trailing year). Future-dated and malformed dates are excluded, as in every metric above.
+    </span>
+  </figcaption>
+  <svg class="bar-chart" viewBox="0 0 720 200" role="img"
+       aria-label="Bar chart of distinct projects per month for the last {{ series | length }} months">
+    <title>Permit activity by month</title>
+    {% set chart_left = 8 %}
+    {% set chart_right = 712 %}
+    {% set chart_bottom = 172 %}
+    {% set chart_top = 12 %}
+    {% set chart_height = chart_bottom - chart_top %}
+    {% set slot = (chart_right - chart_left) / (series | length) %}
+    {% set bar_w = slot * 0.62 %}
+    {% for point in series %}
+      {% set bar_h = (point.count / top) * chart_height %}
+      {% set x = chart_left + loop.index0 * slot + (slot - bar_w) / 2 %}
+      {% set y = chart_bottom - bar_h %}
+      <rect x="{{ '%.1f'|format(x) }}" y="{{ '%.1f'|format(y) }}"
+            width="{{ '%.1f'|format(bar_w) }}" height="{{ '%.1f'|format(bar_h) }}"
+            rx="3" fill="var(--gold-500,#d97706)">
+        <title>{{ point.label }}: {{ point.count }} project{{ '' if point.count == 1 else 's' }}</title>
+      </rect>
+      <rect x="{{ '%.1f'|format(chart_left + loop.index0 * slot) }}" y="{{ chart_top }}"
+            width="{{ '%.1f'|format(slot) }}" height="{{ chart_height }}" fill="transparent">
+        <title>{{ point.label }}: {{ point.count }} project{{ '' if point.count == 1 else 's' }}</title>
+      </rect>
+      {% if loop.last or loop.first or loop.index0 % 2 == 0 %}
+      <text x="{{ '%.1f'|format(x + bar_w / 2) }}" y="{{ chart_bottom + 16 }}"
+            text-anchor="middle" font-size="11" fill="var(--slate-500,#64748b)">
+        {{ point.label.split(' ')[0] }}
+      </text>
+      {% endif %}
+    {% endfor %}
+    <line x1="{{ chart_left }}" y1="{{ chart_bottom }}" x2="{{ chart_right }}" y2="{{ chart_bottom }}"
+          stroke="var(--slate-200,#e2e8f0)" stroke-width="1" />
+  </svg>
+
+  <details class="chart-data">
+    <summary>View the numbers as a table</summary>
+    <div class="table-scroll" tabindex="0" role="region" aria-label="Monthly project counts">
+      <table class="table" style="width:100%; margin-top:10px">
+        <thead><tr><th>Month</th><th>Projects</th></tr></thead>
+        <tbody>
+          {% for point in series %}
+          <tr><td>{{ point.label }}</td><td>{{ point.count }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </details>
+</figure>
+{% endif %}

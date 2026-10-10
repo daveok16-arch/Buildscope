@@ -187,6 +187,9 @@ class TrendReport:
     malformed_dates: int = 0
     generated_at: str = ""
     ingestion_window: dict = field(default_factory=dict)
+    #: Trailing monthly counts of usable permits, for the page's activity chart. Derived from
+    #: the same rows and the same exclusions as every other metric here.
+    activity_series: list[dict] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
 
     @property
@@ -647,6 +650,7 @@ def build_trend_report(
         malformed_dates=malformed,
         generated_at=datetime.now(timezone.utc).isoformat(),
         ingestion_window=_ingestion_window(db, trade=trade, today=reference_day),
+        activity_series=monthly_project_series(db, trade=trade, today=reference_day),
         notes=[n for n in notes if n],
     )
 
@@ -655,3 +659,54 @@ def format_period(period: Period) -> str:
     """A human label for a period, used in the page and in tests."""
     last_day = period.end - timedelta(days=1)
     return f"{period.start.isoformat()} to {last_day.isoformat()}"
+
+
+#: Number of trailing months shown in the activity chart. A fixed span keeps the chart honest:
+#: it is a recent view of the same stored rows, not a rescaled window.
+CHART_MONTHS = 12
+
+
+def monthly_project_series(
+    db: Database, *, trade: str, today: date | None = None, months: int = CHART_MONTHS
+) -> list[dict[str, Any]]:
+    """Counts of usable permits per calendar month, for the trailing ``months`` months.
+
+    A chart is a metric, so it obeys the same rules as the rest of the report: a future-dated
+    permit is excluded (it cannot evidence work already filed) and a malformed date is excluded.
+    Each row is ``{"month": "YYYY-MM", "label": "Oct 2026", "count": N}``. The series is derived
+    purely from stored ``permit_date`` values — nothing is projected.
+    """
+    reference = today or datetime.now(timezone.utc).date()
+    first_of_month = reference.replace(day=1)
+    # Walk back months by hand so the series has a stable length even across a year boundary.
+    start_year, start_month = first_of_month.year, first_of_month.month
+    total = start_year * 12 + (start_month - 1) - (months - 1)
+    start_year, start_month = divmod(total, 12)
+    start_month += 1
+    start = date(start_year, start_month, 1)
+    rows = db.conn.execute(
+        "SELECT substr(p.permit_date, 1, 7) AS ym, COUNT(DISTINCT p.id) AS n "
+        "FROM project p "
+        "WHERE p.trade = ? "
+        f"AND {_VALID_DATE} "
+        "AND p.permit_date >= ? AND p.permit_date <= ? "
+        "GROUP BY ym",
+        (trade, start.isoformat(), reference.isoformat()),
+    ).fetchall()
+    counts = {str(r["ym"]): int(r["n"]) for r in rows}
+    series: list[dict[str, Any]] = []
+    y, m = start_year, start_month
+    for _ in range(months):
+        key = f"{y:04d}-{m:02d}"
+        series.append(
+            {
+                "month": key,
+                "label": date(y, m, 1).strftime("%b %Y"),
+                "count": counts.get(key, 0),
+            }
+        )
+        m += 1
+        if m > 12:
+            m = 1
+            y += 1
+    return series

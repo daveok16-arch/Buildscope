@@ -98,6 +98,9 @@
     {% endfor %}
   </div>
 
+  {# Activity chart: the same stored rows as the metrics, drawn as inline SVG. #}
+  {% include "partials/bar_chart.html" %}
+
   {# What the data can and cannot say #}
   <div class="detail-panel" style="margin-top:28px; padding:20px 24px">
     <h3 style="margin-top:0">How to read these figures</h3>

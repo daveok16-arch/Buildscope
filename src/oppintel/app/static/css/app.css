@@ -1396,6 +1396,34 @@ body.drawer-open .mobile-drawer {
   margin-bottom: 14px;
 }
 
+/* Inline SVG activity chart: no charting library. Bars scale to the figure, the table is the
+   accessible alternative, and nothing is drawn that the metrics do not already count. */
+.chart-figure {
+  margin: 0;
+  background: #ffffff;
+  border: 1px solid var(--slate-150);
+  border-radius: var(--radius-sm);
+  padding: 18px 20px 10px;
+}
+.chart-figure figcaption {
+  margin-bottom: 10px;
+}
+.bar-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.chart-data {
+  margin-top: 8px;
+}
+.chart-data summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--slate-600);
+  padding: 6px 0;
+}
+
+
 .card-header-block h3 {
   font-size: 1.15rem;
   margin-bottom: 6px;
