@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from datetime import date, timedelta
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -38,6 +39,12 @@ class SourceConfig:
     jurisdiction_state: str = "TX"
     reliability: float = 0.8
     notes: str = ""
+    #: Lower bound for ingestion. `since` is an explicit ISO date; `since_months` is a rolling
+    #: window measured back from today. Precedence: CLI `--since` > `since` > `since_months` >
+    #: None (all history). All three current sources filter by date at the source, so the bound
+    #: cuts the download as well as the stored rows.
+    since: str | None = None
+    since_months: int | None = None
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> SourceConfig:
@@ -48,17 +55,60 @@ class SourceConfig:
     def is_current(self) -> bool:
         return self.market_coverage == "current"
 
+    def resolved_since(self, today: date | None = None) -> date | None:
+        """The configured lower bound as a date, or None for all history.
+
+        Precedence: an explicit `since` wins; otherwise `since_months` is measured back from
+        `today`. Sub-day units are not supported, so 1 month means "same day, previous month".
+        """
+        if self.since:
+            return date.fromisoformat(self.since)
+        if self.since_months:
+            today = today or date.today()
+            month_index = today.month - 1 - int(self.since_months)
+            year = today.year + month_index // 12
+            month = month_index % 12 + 1
+            day = min(today.day, _days_in_month(year, month))
+            return date(year, month, day)
+        return None
+
+
+def _days_in_month(year: int, month: int) -> int:
+    if month == 12:
+        return 31
+    return (date(year + month // 12, month % 12 + 1, 1) - timedelta(days=1)).day
+
 
 @dataclass
 class CityConfig:
-    """A city inside a market. `slug` addresses it in URLs; `name` matches source values."""
+    """A city inside a market. `slug` addresses it in URLs; `name` matches source values.
+
+    `aliases` are alternative spellings the sources publish for the same city (for example
+    "Mckinney" for "McKinney"). They are configuration, not code, so a new source spelling is a
+    config edit. Matching stays exact (case-insensitive) against the name or an alias: no fuzzy
+    matching, because a wrong merge is worse than a separate row.
+    """
 
     slug: str
     name: str
+    aliases: list[str] = field(default_factory=list)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> CityConfig:
-        return cls(slug=str(data["slug"]), name=str(data["name"]))
+        return cls(
+            slug=str(data["slug"]),
+            name=str(data["name"]),
+            aliases=[str(a) for a in data.get("aliases") or []],
+        )
+
+    def matches(self, value: str | None) -> bool:
+        """True when a source's city value is this city, by name or a declared alias."""
+        if not value:
+            return False
+        wanted = value.strip().lower()
+        return wanted == self.name.strip().lower() or any(
+            wanted == a.strip().lower() for a in self.aliases
+        )
 
 
 @dataclass
@@ -99,12 +149,11 @@ class MarketConfig:
         return [c.name for c in self.cities]
 
     def city_slug(self, name: str | None) -> str | None:
-        """Reverse lookup: city name to URL slug."""
+        """Reverse lookup: a source's city value to its URL slug, honouring aliases."""
         if not name:
             return None
-        wanted = name.strip().lower()
         for city in self.cities:
-            if city.name.lower() == wanted:
+            if city.matches(name):
                 return city.slug
         return None
 
@@ -222,6 +271,50 @@ def load_sources(path: Path | None = None) -> dict[str, SourceConfig]:
     path = path or (CONFIG_DIR / "sources.yaml")
     raw = yaml.safe_load(path.read_text())
     return {s["id"]: SourceConfig.from_dict(s) for s in raw["sources"]}
+
+
+def ingestion_window_since(
+    sources: dict[str, SourceConfig] | None = None, today: date | None = None
+) -> date | None:
+    """The earliest date any enabled source ingests from, or None for all history.
+
+    This is the one place the "since" a disclosure line shows is derived: each enabled source
+    resolves its own `since`/`since_months` bound (``SourceConfig.resolved_since``) and the
+    earliest of those is the collection window the site actually holds. A source with no bound
+    (all history) makes the result None, because the dataset then has no single lower bound to
+    state. Config-driven, so a source added or re-scoped changes the stated date with no code
+    change.
+    """
+    sources = sources if sources is not None else load_sources()
+    bounds: list[date] = []
+    for source in sources.values():
+        if not source.enabled:
+            continue
+        bound = source.resolved_since(today)
+        if bound is None:
+            return None
+        bounds.append(bound)
+    return min(bounds) if bounds else None
+
+
+@lru_cache(maxsize=1)
+def load_retention(path: Path | None = None) -> "RetentionSettings":
+    """The raw-archive retention policy from `config/sources.yaml`.
+
+    Absent or partial configuration is "do nothing": the dataclass defaults keep every file, so
+    a missing block can never cause a delete.
+    """
+    from .retention import RetentionSettings
+
+    path = path or (CONFIG_DIR / "sources.yaml")
+    raw = yaml.safe_load(path.read_text()) or {}
+    block = raw.get("retention") or {}
+    return RetentionSettings(
+        enabled=bool(block.get("enabled", False)),
+        keep_last=block.get("keep_last"),
+        keep_days=block.get("keep_days"),
+        gzip_after_days=block.get("gzip_after_days"),
+    )
 
 
 @lru_cache(maxsize=1)
@@ -560,5 +653,6 @@ def reset_config_cache() -> None:
     load_markets.cache_clear()
     _active_market_id.cache_clear()
     load_sources.cache_clear()
+    load_retention.cache_clear()
     load_trades.cache_clear()
     load_keyword_map.cache_clear()

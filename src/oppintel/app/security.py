@@ -16,6 +16,14 @@ documented production deployment puts a real limiter in front of the app.
 **Headers.** A conservative set that does not break the app: no sniffing, no framing, a
 referrer policy, and a content security policy that permits only same-origin assets and the
 inline JSON-LD the SEO layer emits.
+
+**Cacheability.** Anything that can vary per visitor — HTML (the header shows "Sign in" or the
+account name; a per-request CSP nonce is embedded; a session cookie may be set) and JSON (the
+API and the health probe) — is sent `private, no-store`. A shared or back/forward cache must
+never replay one visitor's page to another. Only truly static assets, which Flask's file
+handler gives its own long `Cache-Control`, keep a public cache; the app fingerprints the
+stylesheet URL so a new build is not served from an old cache. There is therefore **no public
+HTML cache at all** — the nonce and the cookie make it unsafe by construction.
 """
 
 from __future__ import annotations
@@ -182,19 +190,62 @@ def check_rate_limit(req: Request) -> Response | None:
     return None
 
 
+def csp_nonce() -> str:
+    """The per-request CSP nonce, generated once and reused.
+
+    A nonce is the only way to allow the app's inline blocks (the JSON-LD, the small
+    dialog/nav scripts) without ``'unsafe-inline'``, which would let any injected script run.
+    Stored on ``g`` so the header hook and every template read the same value for one response.
+    """
+    nonce = getattr(g, "csp_nonce", None)
+    if nonce is None:
+        nonce = secrets.token_urlsafe(16)
+        g.csp_nonce = nonce
+    return nonce
+
+
+def _is_private_response(response: Response) -> bool:
+    """Whether a response may be stored by a cache. Only static assets may.
+
+    The decision is made from the response, not a hand-maintained path list, so a new HTML or
+    JSON route is private by default rather than by remembering to register it:
+
+    * a `Set-Cookie` means the response is establishing per-visitor state;
+    * an HTML or JSON content type can carry a CSP nonce, the "Sign in"/account header and a
+      CSRF token — all per-visitor;
+    * everything else (a CSS/JS/image static file) is safe to cache publicly.
+    """
+    if response.headers.get("Set-Cookie"):
+        return True
+    content_type = (response.headers.get("Content-Type") or "").lower()
+    return "text/html" in content_type or "application/json" in content_type
+
+
 def apply_security_headers(response: Response) -> Response:
     """Attach the standard hardening headers to an outgoing response."""
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
     response.headers.setdefault("X-Frame-Options", "DENY")
     response.headers.setdefault("Referrer-Policy", "same-origin")
+    # Cacheability: every HTML or JSON response and anything that sets a cookie is private;
+    # only static files keep a public cache (Flask's static handler sets its own max-age, and
+    # the templates fingerprint asset URLs, so a rebuild is picked up).
+    if _is_private_response(response):
+        response.headers.setdefault("Cache-Control", "private, no-store")
+    else:
+        response.headers.setdefault("Cache-Control", "public, max-age=31536000")
     response.headers.setdefault(
         "Permissions-Policy", "geolocation=(), microphone=(), camera=()"
     )
-    # The CSP allows the app's own stylesheet, inline JSON-LD blocks, and Firebase/Google Auth.
+    # The CSP allows the app's own stylesheet, inline JSON-LD and inline dialog/nav scripts by
+    # per-request nonce (never 'unsafe-inline' for scripts), and the Firebase/Google Auth CDN.
+    # style-src keeps 'unsafe-inline': the templates carry ~350 inline style= attributes (layout
+    # only), and a nonce cannot cover an attribute. Moving those to classes is tracked separately.
+    nonce = csp_nonce()
     response.headers.setdefault(
         "Content-Security-Policy",
-        "default-src 'self'; img-src 'self' data: https://*.googleusercontent.com; style-src 'self' 'unsafe-inline'; "
-        "script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com; "
+        "default-src 'self'; img-src 'self' data: https://*.googleusercontent.com; "
+        "style-src 'self' 'unsafe-inline'; "
+        f"script-src 'self' 'nonce-{nonce}' https://www.gstatic.com https://apis.google.com; "
         "connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.googleapis.com https://*.firebaseio.com; "
         "frame-src 'self' https://*.firebaseapp.com; "
         "base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'",
@@ -202,8 +253,21 @@ def apply_security_headers(response: Response) -> Response:
     return response
 
 
-def install_security(app: Any, *, enabled: bool = True) -> None:
-    """Register the CSRF check, rate limiter and header hook on an application."""
+def install_security(
+    app: Any, *, enabled: bool = True, gzip_response: bool = False
+) -> None:
+    """Register the CSRF check, rate limiter and header hook on an application.
+
+    ``enabled`` gates the *request-blocking* protections (CSRF, rate limiting) so a debug
+    process is not blocked locally. The response hardening headers — including the CSP — are
+    always installed, so the policy the browser enforces is the same in dev, test and prod,
+    and the browser-level tests exercise it rather than a permissive no-op.
+
+    ``gzip_response`` additionally compresses eligible text/JSON responses (see
+    ``app.compression``). It is opt-in so a debug process sees readable bytes, and it is
+    installed *after* the header hook: the headers must be set on the uncompressed response so
+    ``Vary``/``Content-Length`` are computed once and the body is encoded last.
+    """
     from flask import current_app
 
     @app.before_request
@@ -218,12 +282,18 @@ def install_security(app: Any, *, enabled: bool = True) -> None:
     @app.after_request
     def _headers(response: Response) -> Response:
         apply_security_headers(response)
+        if gzip_response:
+            from .compression import compress_response
+
+            compress_response(response, request.headers.get("Accept-Encoding", ""))
         return response
 
-    # Expose the token to templates for form embedding.
+    # Expose the token to templates for form embedding, and the per-request CSP nonce so
+    # inline <script> blocks can carry the matching nonce attribute. Both are injected as
+    # callables; the templates call them, so one value is read per render and cached on `g`.
     @app.context_processor
     def _csrf_context() -> dict[str, Any]:
-        return {"csrf_token": csrf_token}
+        return {"csrf_token": csrf_token, "csp_nonce": csp_nonce}
 
 
 def require_entitlement(feature: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:

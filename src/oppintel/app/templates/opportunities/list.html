@@ -3,15 +3,14 @@
 {% block hero %}
 <section class="hero hero-compact">
   <div class="wrap">
-    <p class="crumb"><a href="{{ url_for('home') }}">Home</a> · Opportunity Feed</p>
+    <p class="crumb"><a href="{{ url_for('home') }}">Home</a> · {{ feed_kicker | default('Opportunity Feed') }}</p>
     <div class="hero-tagline-kicker">
       <span class="bs-motif" aria-hidden="true"><span></span><span></span><span></span></span>
-      Commercial Intelligence Feed
+      {{ feed_eyebrow | default('Commercial Intelligence Feed') }}
     </div>
-    <h1>Opportunity Feed</h1>
+    <h1>{{ feed_heading | default('Opportunity Feed') }}</h1>
     <p class="lede">
-      Verified commercial construction opportunities across {{ market.name }} with documentary public record evidence.
-      Every project links to its official source records.
+      {{ feed_lede | default('Verified commercial construction opportunities across ' ~ market.name ~ ' with documentary public record evidence. Every project links to its official source records.') }}
     </p>
   </div>
 </section>
@@ -20,24 +19,31 @@
 {% block content %}
 <div class="wrap">
   {# Mobile Filter Expand Button #}
-  <div style="display:none; margin:16px 0 8px;" class="mobile-filter-bar">
-    <button type="button" class="btn btn-outline" id="mobile-filter-btn" style="width:100%; justify-content:space-between">
-      <span>
+  <div class="mobile-filter-bar">
+    <button type="button" class="btn btn-outline filter-toggle" id="mobile-filter-btn"
+            aria-expanded="false" aria-controls="filter-sidebar-panel">
+      <span class="filter-toggle-label">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px">
           <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
         </svg>
-        Filter Opportunities
+        Filters{% if active_filter_count %} ({{ active_filter_count }}){% endif %}
       </span>
       <span class="small muted">Adjust criteria &darr;</span>
     </button>
   </div>
 
+  <div class="filter-sheet-backdrop" id="filter-sheet-backdrop" hidden></div>
+
   <div class="feed-workspace-layout">
-    {# --- 1. Filter Sidebar --- #}
-    <aside class="filter-sidebar" id="filter-sidebar-panel">
+    {# --- 1. Filter Sidebar (a bottom sheet on mobile) --- #}
+    <aside class="filter-sidebar" id="filter-sidebar-panel" aria-label="Filter opportunities">
+      <div class="filter-sheet-handle" aria-hidden="true"></div>
+      <button type="button" class="btn btn-small btn-outline filter-sheet-close" id="filter-sheet-close">
+        Close filters
+      </button>
       <form method="get" action="{{ url_for('opportunities') }}">
         <div class="filter-sidebar-head">
-          <h3>Filter Opportunities</h3>
+          <h2 class="filter-panel-title">Filter Opportunities</h2>
           <a class="btn btn-small btn-ghost" href="{{ url_for('opportunities') }}">Reset</a>
         </div>
 
@@ -87,15 +93,24 @@
             </select>
           </div>
 
-          <div class="field">
-            <label for="date_from">Permit Date From</label>
-            <input type="date" id="date_from" name="date_from" value="{{ filters.date_from or '' }}">
-          </div>
-
-          <div class="field">
-            <label for="date_to">Permit Date To</label>
-            <input type="date" id="date_to" name="date_to" value="{{ filters.date_to or '' }}">
-          </div>
+          <fieldset class="field date-range-field">
+            <legend>Permit Date Range</legend>
+            <div class="date-presets" role="group" aria-label="Permit date presets">
+              <a class="btn btn-small btn-outline" href="{{ url_for('opportunities', q=filters.q, city=filters.city, project_type=filters.project_type, classification=filters.classification, procurement_status=filters.procurement_status, date_from=date_presets.last_7, sort=filters.sort) }}">Last 7 days</a>
+              <a class="btn btn-small btn-outline" href="{{ url_for('opportunities', q=filters.q, city=filters.city, project_type=filters.project_type, classification=filters.classification, procurement_status=filters.procurement_status, date_from=date_presets.last_30, sort=filters.sort) }}">Last 30 days</a>
+              <a class="btn btn-small btn-outline" href="{{ url_for('opportunities', q=filters.q, city=filters.city, project_type=filters.project_type, classification=filters.classification, procurement_status=filters.procurement_status, date_from=date_presets.this_year, sort=filters.sort) }}">This year</a>
+            </div>
+            <div class="date-inputs">
+              <div class="date-input">
+                <label for="date_from">From</label>
+                <input type="date" id="date_from" name="date_from" value="{{ filters.date_from or '' }}">
+              </div>
+              <div class="date-input">
+                <label for="date_to">To</label>
+                <input type="date" id="date_to" name="date_to" value="{{ filters.date_to or '' }}">
+              </div>
+            </div>
+          </fieldset>
 
           <div class="field">
             <label for="sort">Sort Order</label>
@@ -165,7 +180,7 @@
 
         <div class="feed-sort-block">
           <label for="sort-inline">Sort:</label>
-          <select id="sort-inline" class="feed-sort-select" onchange="window.location.href=this.value">
+          <select id="sort-inline" class="feed-sort-select">
             {% for key, meta in sort_options.items() %}
               {% set query_args = request.args.copy() %}
               {% set _ = query_args.setlist('sort', [key]) %}
@@ -179,6 +194,10 @@
       </div>
 
       {% if result.items %}
+        {# The filter sidebar (which carries the next heading) is hidden on
+           mobile, so the card <h3> would follow the <h1> directly. This h2
+           keeps the outline h1 -> h2 -> h3 at every viewport. #}
+        <h2 class="sr-only">Matching opportunities</h2>
         <div class="card-grid" style="margin-top:0">
           {% for project in result.items %}
             {% include "partials/opportunity_card.html" %}
@@ -204,16 +223,25 @@
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function() {
+  var sort = document.getElementById('sort-inline');
+  if (sort) sort.addEventListener('change', function() { window.location.href = this.value; });
+
   var btn = document.getElementById('mobile-filter-btn');
   var sidebar = document.getElementById('filter-sidebar-panel');
-  if (btn && sidebar) {
-    btn.addEventListener('click', function() {
-      var isHidden = window.getComputedStyle(sidebar).display === 'none';
-      sidebar.style.display = isHidden ? 'block' : 'none';
-    });
-  }
+  var backdrop = document.getElementById('filter-sheet-backdrop');
+  var closeBtn = document.getElementById('filter-sheet-close');
+  if (!btn || !sidebar || !window.BSDialog) return;
+
+  // The filter panel is a modal bottom sheet on mobile: BSDialog traps Tab inside it, marks the
+  // page behind it inert, locks body scroll, closes on Escape/backdrop/Close, and returns focus
+  // to the "Filters" button. On desktop the panel is a static sidebar and the button is hidden.
+  window.BSDialog.register(btn, sidebar, backdrop, {
+    bodyClass: 'filter-sheet-open',
+    closeEls: [closeBtn],
+    dialogRole: true
+  });
 })();
 </script>
 {% endblock %}

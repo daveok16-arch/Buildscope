@@ -28,7 +28,7 @@ markets:
       - {slug: fort-worth, name: "Fort Worth"}
       - {slug: plano, name: "Plano"}
       - {slug: frisco, name: "Frisco"}
-      - {slug: mckinney, name: "McKinney"}
+      - {slug: mckinney, name: "McKinney", aliases: ["Mckinney"]}
       - {slug: allen, name: "Allen"}
       - {slug: wylie, name: "Wylie"}
       - {slug: celina, name: "Celina"}

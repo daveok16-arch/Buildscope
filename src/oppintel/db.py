@@ -514,6 +514,24 @@ CREATE INDEX IF NOT EXISTS idx_project_public_updated
 CREATE INDEX IF NOT EXISTS idx_project_type_public
     ON project(project_type, classification, procurement_status);
 
+-- One row per market+trade holding the computed public headline statistics for the last
+-- refresh. The application reads every headline figure from here, so routes never run their
+-- own COUNT(*) and two pages cannot disagree. `metrics` is a JSON blob so the metric set can
+-- grow without a schema migration; `computed_at` and `last_observed` make a figure's as-of
+-- time explicit. Declared here (not in a migration) because it is additive and idempotent.
+CREATE TABLE IF NOT EXISTS market_stat_snapshot (
+    id             INTEGER PRIMARY KEY,
+    market_id      TEXT NOT NULL,
+    trade_id       TEXT NOT NULL,
+    metrics        TEXT NOT NULL,
+    computed_at    TEXT NOT NULL,
+    last_observed  TEXT,
+    UNIQUE (market_id, trade_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_market_stat_snapshot_market
+    ON market_stat_snapshot(market_id, trade_id);
+
 -- =====================================================================
 -- Organizations and entitlement
 -- =====================================================================
@@ -685,10 +703,21 @@ class Database:
     def __init__(self, path: str | Path):
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.conn = sqlite3.connect(str(self.path))
+        self.conn = sqlite3.connect(str(self.path), timeout=30.0)
         self.conn.row_factory = sqlite3.Row
         self.conn.execute("PRAGMA foreign_keys = ON")
         self.conn.execute("PRAGMA journal_mode = WAL")
+        # WAL lets readers proceed during a write, but two writers still serialize. The refresh
+        # thread writes while web requests may write (watch, save, notes, migrations), so a lock
+        # must be waited out rather than surfaced as "database is locked". 30s covers a long
+        # assembly commit; the driver default of 5s does not.
+        self.conn.execute("PRAGMA busy_timeout = 30000")
+        # NORMAL is the safe pairing with WAL: a commit is durable across an application crash
+        # (only an OS/power loss can lose the last transaction) and it avoids an fsync per
+        # commit, which is what keeps a short web write fast while a long refresh holds the lock.
+        # A single writer means a checkpoint cannot race another writer, so the default
+        # autocheckpoint (1000 pages) is left in place.
+        self.conn.execute("PRAGMA synchronous = NORMAL")
 
     def close(self) -> None:
         self.conn.close()
@@ -1256,14 +1285,15 @@ class Database:
         row = self.conn.execute(
             """
             SELECT MIN(permit_date) AS earliest,
-                   MAX(permit_date) AS latest,
+                   MAX(CASE WHEN permit_date IS NULL OR permit_date <= ? THEN permit_date END)
+                       AS latest,
                    COUNT(*) AS records,
                    SUM(CASE WHEN is_commercial = 1 THEN 1 ELSE 0 END) AS commercial,
                    SUM(CASE WHEN LOWER(COALESCE(permit_type,'')) LIKE '%mechanical%'
                             THEN 1 ELSE 0 END) AS mechanical
               FROM permit WHERE source_id = ?
             """,
-            (source_id,),
+            (datetime.now(timezone.utc).date().isoformat(), source_id),
         ).fetchone()
 
         now = datetime.now(timezone.utc).isoformat()

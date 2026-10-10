@@ -78,6 +78,58 @@ def cmd_ingest(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_prune_raw(args: argparse.Namespace) -> int:
+    """Plan (and optionally apply) the raw-archive retention policy.
+
+    Prints the plan by default so it can be reviewed before anything is removed. Deletion
+    requires both `retention.enabled: true` in config/sources.yaml and `--apply` here.
+    """
+    from .config import load_retention
+    from .retention import apply_plan, plan_prune
+
+    settings = load_retention()
+    raw_dir = DATA_DIR / "raw"
+    files = sorted(raw_dir.glob("*.jsonl")) + sorted(raw_dir.glob("*.jsonl.gz"))
+    plan = plan_prune(files, settings)
+
+    print(f"raw dir : {raw_dir}")
+    print(f"policy  : enabled={settings.enabled} keep_last={settings.keep_last} "
+          f"keep_days={settings.keep_days} gzip_after_days={settings.gzip_after_days}")
+    print(f"files   : {len(files)}  keep={len(plan.keep)} compress={len(plan.compress)} "
+          f"delete={len(plan.delete)}")
+    for path in plan.compress:
+        print(f"  compress  {path.name}")
+    for path in plan.delete:
+        print(f"  delete    {path.name}")
+
+    if not args.apply:
+        print("\n(dry run; pass --apply to act)")
+        return 0
+    if not settings.enabled:
+        print("\nretention.enabled is false; refusing to delete. Set it true first.",
+              file=sys.stderr)
+        return 1
+    counts = apply_plan(plan, settings=settings)
+    print(f"\napplied: {counts['compressed']} compressed, {counts['deleted']} deleted")
+    return 0
+
+
+def cmd_backup(args: argparse.Namespace) -> int:
+    """Write a dated SQLite snapshot into <data_dir>/backups and keep the last `--keep`."""
+    from .backup import create_backup
+    from .config import DATA_DIR
+
+    backup_dir = Path(args.dir) if args.dir else (DATA_DIR / "backups")
+    target = create_backup(Path(args.db), backup_dir, keep=args.keep)
+    size = target.stat().st_size
+    print(f"backup written: {target} ({size:,} bytes)")
+    kept = sorted(p.name for p in backup_dir.glob("oppintel-*.db"))
+    print(f"retained      : {len(kept)} file(s) in {backup_dir}")
+    for name in kept:
+        print(f"  {name}")
+    return 0
+
+
 def cmd_assemble(args: argparse.Namespace) -> int:
     from .pipeline import Pipeline
 
@@ -280,6 +332,22 @@ def build_parser() -> argparse.ArgumentParser:
     ingest.add_argument("--since", help="Only ingest records on/after this date (YYYY-MM-DD)")
     ingest.add_argument("--max-pages", type=int, help="Cap pages per source (for smoke tests)")
     ingest.set_defaults(func=cmd_ingest)
+
+    prune = sub.add_parser(
+        "prune-raw",
+        help="Plan (and with --apply, carry out) the raw-archive retention policy",
+    )
+    prune.add_argument("--apply", action="store_true",
+                       help="Act on the plan; requires retention.enabled in config/sources.yaml")
+    prune.set_defaults(func=cmd_prune_raw)
+
+    backup = sub.add_parser(
+        "backup",
+        help="Write a dated SQLite snapshot into <data_dir>/backups (keep the last N)",
+    )
+    backup.add_argument("--dir", help="Destination directory (default: data/backups)")
+    backup.add_argument("--keep", type=int, default=3, help="How many backups to retain")
+    backup.set_defaults(func=cmd_backup)
 
     sub.add_parser("assemble", help="Assemble permits into projects and classify"
                    ).set_defaults(func=cmd_assemble)

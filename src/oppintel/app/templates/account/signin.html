@@ -18,7 +18,7 @@
         <div class="auth-intelligence-panel">
           <div class="auth-panel-heading">
             <span class="pulse-dot"></span>
-            <span>Live Market Intelligence Signals</span>
+            <span>Market Intelligence Signals</span>
           </div>
 
           <div class="auth-stats-strip">
@@ -139,7 +139,7 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function() {
   var btn = document.getElementById('google-auth-btn');
   var errorEl = document.getElementById('auth-client-error');

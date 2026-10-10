@@ -7,7 +7,9 @@
     <div class="hero-tagline-kicker">Event-Driven Notifications</div>
     <h1>System Alerts</h1>
     <p class="lede">
-      Every alert below is triggered by a verified change detected in a watched public permit record. We never generate synthetic or promotional notifications.
+      Every alert below points at a specific event in the record: a detected difference between
+      collection runs, or a first match against your saved preferences. No alert is generated
+      without an underlying event.
     </p>
   </div>
 </section>
@@ -43,10 +45,10 @@
     <h3 style="margin:8px 0 6px">
       {% if alert.slug %}
         <a href="{{ url_for('opportunity_detail', slug=alert.slug) }}">
-          {{ (alert.project_name or alert.address or 'Project') | truncate(70) }}
+          {{ ((alert.project_name | titlecase) or alert.address or 'Project') | truncate(70) }}
         </a>
       {% else %}
-        {{ (alert.project_name or alert.address or 'Project') | truncate(70) }}
+        {{ ((alert.project_name | titlecase) or alert.address or 'Project') | truncate(70) }}
       {% endif %}
     </h3>
     <p style="margin:0 0 10px">{{ alert.body | or_na }}</p>
@@ -91,7 +93,7 @@
 {% else %}
   {% with heading = "No alerts",
           message = "Alerts appear when a project you watch changes. Nothing has changed yet.",
-          suggestions = ["Watch opportunities you care about to receive alerts about them.",
+          suggestions = ["Watch opportunities you care about to get in-app alerts about them.",
                          "Alerts are driven by recorded changes, so they are never invented."],
           reset_url = url_for('watching') %}
     {% include "partials/empty_state.html" %}

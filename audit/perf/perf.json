@@ -1,0 +1,74 @@
+{
+ "/": {
+  "ttfb": 329,
+  "domContentLoaded": 521,
+  "loadEvent": 521,
+  "transferSize": 6462,
+  "fcp": 544,
+  "resources": 1,
+  "resTransfer": 9746,
+  "cssBytes": 9746,
+  "jsBytes": 0,
+  "lcp": null,
+  "request_types": {
+   "document": 1,
+   "stylesheet": 1
+  },
+  "total_requests": 2,
+  "route": "/"
+ },
+ "/opportunities": {
+  "ttfb": 113,
+  "domContentLoaded": 282,
+  "loadEvent": 287,
+  "transferSize": 7846,
+  "fcp": 300,
+  "resources": 1,
+  "resTransfer": 300,
+  "cssBytes": 300,
+  "jsBytes": 0,
+  "lcp": null,
+  "request_types": {
+   "document": 1,
+   "stylesheet": 1
+  },
+  "total_requests": 2,
+  "route": "/opportunities"
+ },
+ "/trends": {
+  "ttfb": 167,
+  "domContentLoaded": 315,
+  "loadEvent": 315,
+  "transferSize": 4835,
+  "fcp": 328,
+  "resources": 1,
+  "resTransfer": 300,
+  "cssBytes": 300,
+  "jsBytes": 0,
+  "lcp": null,
+  "request_types": {
+   "document": 1,
+   "stylesheet": 1
+  },
+  "total_requests": 2,
+  "route": "/trends"
+ },
+ "/companies": {
+  "ttfb": 105,
+  "domContentLoaded": 283,
+  "loadEvent": 284,
+  "transferSize": 7320,
+  "fcp": 296,
+  "resources": 1,
+  "resTransfer": 300,
+  "cssBytes": 300,
+  "jsBytes": 0,
+  "lcp": null,
+  "request_types": {
+   "document": 1,
+   "stylesheet": 1
+  },
+  "total_requests": 2,
+  "route": "/companies"
+ }
+}

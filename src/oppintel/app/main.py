@@ -8,12 +8,14 @@ layer and applying them twice would let the two disagree.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import os
 import secrets
 import urllib.request
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
+from functools import lru_cache
 
 import click
 from typing import Any
@@ -239,6 +241,9 @@ def create_app(config: AppConfig | None = None) -> Flask:
         template_folder=str(cfg.templates_dir),
         static_folder=str(cfg.static_dir),
     )
+    # Static assets are content-fingerprinted in the templates (`app.css?v=<hash>`), so a long
+    # public cache is safe and a rebuild is still picked up. Without this Flask sends `no-cache`.
+    app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 31536000
     app.config.update(
         SECRET_KEY=cfg.secret_key,
         SESSION_COOKIE_HTTPONLY=True,
@@ -308,9 +313,12 @@ def create_app(config: AppConfig | None = None) -> Flask:
         """Values every template needs, resolved once per request."""
         market = getattr(g, "market", None)
         trade = getattr(g, "trade", None)
+        from .display import split_facts
+
         return {
             "market": market,
             "trade": trade,
+            "split_facts": split_facts,
             "all_markets": sorted(markets.values(), key=lambda m: (not m.active, m.name)),
             "all_trades": sorted(_trade_map().values(), key=lambda t: (not t.active, t.label)),
             "current_user": getattr(g, "user", None),
@@ -326,7 +334,30 @@ def create_app(config: AppConfig | None = None) -> Flask:
                 else 0
             ),
             "firebase_config": _load_firebase_config(),
+            "asset_url": asset_url,
+            "preview_mode": cfg.preview_mode,
+            "collection_since": _collection_since_label(),
         }
+
+    @lru_cache(maxsize=None)
+    def asset_version(filename: str) -> str:
+        """A short fingerprint of a static file (mtime + size), or empty when it is absent.
+
+        Versions the stylesheet URL so a long public cache stays safe: a new build changes the
+        fingerprint and the browser fetches the new file instead of reusing the old one.
+        """
+        try:
+            stat = (cfg.static_dir / filename).stat()
+        except OSError:
+            return ""
+        digest = hashlib.sha256(f"{int(stat.st_mtime)}:{stat.st_size}".encode()).hexdigest()
+        return digest[:12]
+
+    def asset_url(filename: str) -> str:
+        """`url_for('static', filename=...)` with a content fingerprint query appended."""
+        base = url_for("static", filename=filename)
+        version = asset_version(filename)
+        return f"{base}?v={version}" if version else base
 
     @app.template_filter("money")
     def money_filter(value: Any) -> str:
@@ -362,9 +393,48 @@ def create_app(config: AppConfig | None = None) -> Flask:
     def nice_date_filter(value: Any) -> str:
         return OpportunityService.format_date(value)
 
+    @app.template_filter("filing_date")
+    def filing_date_filter(value: Any) -> str:
+        """Render a permit/filing date, marking a future value as an unverified date.
+
+        A permit cannot be filed after the record observing it, so a future date is not
+        presented as a filing date. The source's value is still shown, labelled, rather than
+        hidden or corrected.
+        """
+        from ..dates import occurrence_is_future
+
+        if not value:
+            return "Not verified"
+        rendered = OpportunityService.format_date(value)
+        if occurrence_is_future(value):
+            return f"{rendered} (date unverified — after today)"
+        return rendered
+
     @app.template_filter("month_year")
     def month_year_filter(value: Any) -> str:
         return OpportunityService.format_month(value)
+
+    @app.template_filter("titlecase")
+    def titlecase_filter(value: Any) -> str:
+        """Normalise shouting source text to display case, preserving acronyms and codes.
+
+        Display-only (see ``app.display``); never touches a stored value.
+        """
+        from .display import titlecase
+
+        return titlecase(value)
+
+    @app.template_filter("has_value")
+    def has_value_filter(value: Any) -> bool:
+        from .display import has_value
+
+        return has_value(value)
+
+    @app.template_filter("join_missing")
+    def join_missing_filter(value: Any) -> str:
+        from .display import join_missing
+
+        return join_missing(value or [])
 
     # --- error handling -------------------------------------------------------
 
@@ -436,6 +506,8 @@ def create_app(config: AppConfig | None = None) -> Flask:
 
     @app.route("/")
     def home() -> str:
+        from .stat_snapshot import METRIC_DEFINITIONS
+
         stats = g.service.market_statistics()
         latest = g.service.list_opportunities(
             OpportunityFilters(page_size=6, sort=DEFAULT_SORT)
@@ -443,6 +515,7 @@ def create_app(config: AppConfig | None = None) -> Flask:
         return render_template(
             "home.html",
             stats=stats,
+            stat_definitions={k: v[1] for k, v in METRIC_DEFINITIONS.items()},
             latest=latest.items,
             recent_changes=g.service.recent_changes(limit=4, days=30),
             cities=g.service.city_statistics()[:8],
@@ -530,10 +603,54 @@ def create_app(config: AppConfig | None = None) -> Flask:
             project_types=g.service.available_project_types(),
             procurement_options=g.service.procurement_options(),
             sort_options=SORT_OPTIONS,
+            active_filter_count=_active_filter_count(filters),
+            date_presets=_date_presets(),
             page_title=(
                 f"{g.market.short_name} Commercial {g.trade.short_label} Opportunities"
             ),
             seo=g.seo_for_directory(filters, is_canonical, result.total),
+        )
+
+    @app.route("/opportunities/new")
+    def new_filings() -> str:
+        """New filings that are not yet trade-verified.
+
+        A record whose stored `updated_at` is within a short window and which carries no
+        mechanical evidence tier is a *new sample*, not a confirmed trade opportunity: the
+        permit may or may not carry mechanical scope, and the pipeline has not (yet) found any.
+        This view surfaces that fresh, unverified set explicitly, labelled as such, so a
+        contractor can see the newest filings without the site ever claiming trade evidence
+        the data does not support. Ordered by most recent usable permit date.
+        """
+        window_days = 21
+        filters = OpportunityFilters(
+            freshness_days=window_days, without_mechanical=True, sort="recent"
+        )
+        result = g.service.list_opportunities(filters)
+        record_landing(g.db, LANDING_DIRECTORY, market_id=g.market.id, trade_id=g.trade.id)
+        return render_template(
+            "opportunities/list.html",
+            result=result,
+            filters=filters,
+            interpreted=None,
+            evidence_breakdown={"tier1": 0, "tier2": 0, "base": result.total},
+            cities=g.service.available_cities(),
+            project_types=g.service.available_project_types(),
+            procurement_options=g.service.procurement_options(),
+            sort_options=SORT_OPTIONS,
+            active_filter_count=0,
+            date_presets=_date_presets(),
+            pagination_endpoint="new_filings",
+            feed_kicker="New Filings",
+            feed_eyebrow="Fresh Public Record — Trade Not Yet Verified",
+            feed_heading="New filings, not yet trade-verified",
+            feed_lede=(
+                f"Commercial permits observed in the last {window_days} days for which the "
+                "pipeline has not confirmed mechanical scope. These are the newest filings in "
+                "the market — shown as an unverified sample, never as a trade opportunity."
+            ),
+            page_title="New filings — trade not yet verified",
+            seo=_new_filings_seo(g),
         )
 
     @app.route("/opportunities/<slug>")
@@ -858,8 +975,13 @@ def create_app(config: AppConfig | None = None) -> Flask:
 
     @app.route("/how-it-works")
     def how_it_works() -> str:
+        # The ingest funnel is shown here so the "Collect -> Normalize -> Assemble" claim is
+        # accountable: the visitor sees how many raw permits landed, how many were linked to a
+        # project, and how many dropped. It reads the same stored snapshot as every headline.
+        stats = g.service.market_statistics()
         return render_template(
             "how_it_works.html",
+            stats=stats,
             page_title="How It Works",
             seo=g.seo_for_simple(
                 "How It Works",
@@ -912,6 +1034,7 @@ def create_app(config: AppConfig | None = None) -> Flask:
             selected_role=role,
             q=q,
             selected_city=city,
+            active_filter_count=sum(bool(v) for v in (q, role, city)),
             cities=g.service.available_cities(),
             page_title=f"{g.market.short_name} Commercial Construction Companies & Stakeholders",
             seo=g.seo_builder.simple(
@@ -939,15 +1062,30 @@ def create_app(config: AppConfig | None = None) -> Flask:
     @app.route("/changes")
     def changes_feed() -> str:
         days = _safe_int(request.args.get("days"), 60)
-        recent_changes = g.service.recent_changes(limit=60, days=days)
+        page = max(_safe_int(request.args.get("page"), 1), 1)
+        page_size = 25
+        total = g.service.recent_changes_count(days=days)
+        breakdown = g.service.recent_changes_breakdown(days=days)
+        recent_changes = g.service.recent_changes(
+            limit=page_size, days=days, offset=(page - 1) * page_size
+        )
+        total_pages = max((total + page_size - 1) // page_size, 1)
+        freshness = g.service.data_freshness()
         return render_template(
             "changes.html",
             changes=recent_changes,
             days=days,
-            page_title=f"Continuous Market Audit — Detected Project Changes in {g.market.short_name}",
+            total=total,
+            breakdown=breakdown,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
+            freshness=freshness,
+            page_title=f"Market Change Audit — Detected Project Changes in {g.market.short_name}",
             seo=g.seo_builder.simple(
-                "Continuous Market Audit",
-                "Live audit log of detected differences across commercial construction and permit records.",
+                "Market Change Audit",
+                "Audit log of differences detected between collection runs across commercial "
+                "construction and permit records.",
             ),
         )
 
@@ -1066,11 +1204,17 @@ def create_app(config: AppConfig | None = None) -> Flask:
     @app.route("/sitemap.xml")
     def sitemap() -> Any:
         xml = g.seo_builder.sitemap()
-        return app.response_class(xml, mimetype="application/xml")
+        response = app.response_class(xml, mimetype="application/xml")
+        # Generated from the database, so a year-long cache would keep a stale route list. A day
+        # is short enough that a rebuild is picked up and long enough to spare the crawler.
+        response.headers["Cache-Control"] = "public, max-age=86400"
+        return response
 
     @app.route("/robots.txt")
     def robots() -> Any:
-        return app.response_class(g.seo_builder.robots(), mimetype="text/plain")
+        response = app.response_class(g.seo_builder.robots(), mimetype="text/plain")
+        response.headers["Cache-Control"] = "public, max-age=86400"
+        return response
 
     @app.route("/healthz")
     def healthz() -> Any:
@@ -1089,12 +1233,19 @@ def create_app(config: AppConfig | None = None) -> Flask:
         """
         payload: dict[str, Any] = {"status": "ok", "database": str(cfg.database_path)}
         try:
-            row = g.db.conn.execute(
-                "SELECT (SELECT COUNT(*) FROM project) AS projects,"
-                "       (SELECT COUNT(*) FROM permit) AS permits"
-            ).fetchone()
+            # Counts come from the stats snapshot, not a fresh COUNT(*), so the probe and the
+            # pages agree and the probe does not race the refresh loop.
+            from .stat_snapshot import read_snapshot
+
+            metrics = read_snapshot(g.db, g.market, g.trade)
+            row = {
+                "projects": metrics.get("projects_total", 0),
+                "permits": metrics.get("permit_records_all", 0),
+            }
             payload["projects"] = row["projects"]
             payload["permits"] = row["permits"]
+            # The public jurisdiction count, so the probe and the pages agree on the same word.
+            payload["cities_with_public_projects"] = metrics.get("active_jurisdictions", 0)
             # Coverage state is reported so an operator can distinguish "the process is up" from
             # "the market is actually served". Counts only; never project content.
             try:
@@ -1704,13 +1855,73 @@ def create_app(config: AppConfig | None = None) -> Flask:
 
     # CSRF, rate limiting and response headers. Installed after the routes so every route it
     # protects is already registered, and before the first request either way.
-    install_security(app, enabled=cfg.csrf_enabled)
+    install_security(app, enabled=cfg.csrf_enabled, gzip_response=cfg.gzip_enabled)
+
+    # Repair a missing/stale stats snapshot once, at boot, outside the request path: a deploy
+    # that adds a canonical metric must not make the first visitor's GET perform the write.
+    _heal_stat_snapshots_on_startup(cfg)
 
     _register_cli(app, cfg)
     return app
 
 
 # --- module helpers -----------------------------------------------------------
+
+
+def _refresh_stat_snapshots(db: Database) -> dict[str, Any]:
+    """Recompute and store the public headline statistics for every active market+trade.
+
+    Called at the end of a refresh (``build-search-index`` is the last pipeline step) so one
+    snapshot covers a whole refresh cycle. Runs under the single-writer lock so it cannot race
+    a concurrent ingest, and is idempotent: re-running with unchanged data writes the same
+    numbers with a new ``computed_at``.
+    """
+    from .stat_snapshot import write_snapshot
+    from oppintel.locks import writer_lock
+
+    written: dict[str, Any] = {}
+    with writer_lock(db.path):
+        for market in load_markets().values():
+            if not market.active:
+                continue
+            for trade in _trade_map().values():
+                if not trade.active:
+                    continue
+                written[f"{market.id}:{trade.id}"] = write_snapshot(db, market, trade)
+    return written
+
+
+def _heal_stat_snapshots_on_startup(cfg: AppConfig) -> None:
+    """Repair a missing or stale stat snapshot at boot, outside the request path.
+
+    A deploy that adds a canonical metric leaves the stored snapshot (written by the previous
+    code) missing that key. Healing here — once, under the writer lock — means no visitor's
+    page load has to write. Never fatal: a locked or read-only database must not stop the app
+    from serving, so a failure is logged and the read path recomputes without persisting.
+    """
+    from .stat_snapshot import heal_snapshot
+    from oppintel.locks import writer_lock
+
+    try:
+        db = Database(cfg.database_path)
+    except Exception as exc:  # pragma: no cover - defensive
+        log.warning("startup snapshot heal skipped: %s", exc)
+        return
+    try:
+        db.init_schema()
+        db.init_app_schema()
+        with writer_lock(cfg.database_path, timeout=60):
+            for market in load_markets().values():
+                if not market.active:
+                    continue
+                for trade in _trade_map().values():
+                    if not trade.active:
+                        continue
+                    heal_snapshot(db, market, trade)
+    except Exception as exc:  # pragma: no cover - a locked DB must not stop startup
+        log.warning("startup snapshot heal skipped: %s", exc)
+    finally:
+        db.close()
 
 
 def _service(
@@ -1866,6 +2077,57 @@ def _filter_summary(filters: OpportunityFilters) -> str | None:
     return ",".join(sorted(names)) or None
 
 
+def _new_filings_seo(g: Any) -> Any:
+    """SEO for the new-filings view: a real route, but a fresh, non-canonical sample.
+
+    It is reachable and titleable, and it must not be indexed, because it describes a moving
+    subset (the last few weeks of filings) rather than a stable canonical list.
+    """
+    seo = g.seo_builder.simple(
+        "New commercial filings — trade not yet verified",
+        "The newest commercial permit filings for which mechanical scope is not yet confirmed. "
+        "A fresh sample, not a verified trade opportunity.",
+        path="/opportunities/new",
+    )
+    seo.noindex = True
+    return seo
+
+
+def _date_presets() -> dict[str, str]:
+    """Native date-input presets for the permit-date range.
+    Computed server-side so the preset links work with no JavaScript, and so each preset resolves
+    to a real calendar date the database can compare rather than a relative token.
+    """
+    today = date.today()
+    return {
+        "last_7": (today - timedelta(days=7)).isoformat(),
+        "last_30": (today - timedelta(days=30)).isoformat(),
+        "this_year": date(today.year, 1, 1).isoformat(),
+    }
+
+
+def _active_filter_count(filters: OpportunityFilters) -> int:
+    """How many deliberate filters a request applied.
+
+    Counts only narrowing choices the visitor made, so the mobile "Filters (n)" button reflects
+    the real state of the form. Sort and pagination are excluded because neither narrows results.
+    A permit-date range counts once even when both ends are set.
+    """
+    return sum(
+        [
+            bool(filters.q),
+            bool(filters.city),
+            bool(filters.project_type),
+            bool(filters.classification),
+            bool(filters.procurement_status),
+            bool(filters.date_from or filters.date_to),
+            bool(filters.mechanical_only),
+            bool(filters.include_unverified),
+            bool(filters.min_value or filters.max_value),
+        ]
+    )
+
+
 def _wants_json() -> bool:
     """Whether the caller expects a JSON reply rather than a redirect.
 
@@ -2018,12 +2280,38 @@ def _private_seo(g: Any, title: str, description: str):
     return seo
 
 
+def _collection_since_label() -> str | None:
+    """The "Permits filed since <date>" string, or None when the window is all history.
+
+    Derived from configuration (`config/sources.yaml`), not from a stored count, so the
+    disclosure is accurate the moment a source's window changes and can never disagree with
+    what the pipeline actually ingests. Returns None when no enabled source has a lower bound,
+    so a template renders nothing rather than inventing a date.
+    """
+    from ..config import ingestion_window_since
+
+    bound = ingestion_window_since()
+    if bound is None:
+        return None
+    return OpportunityService.format_date(bound)
+
+
 def _freshness_label(db: Database | None) -> dict[str, Any]:
     if db is None:
-        return {"display": "Not verified", "retrieval_date": None}
-    row = db.conn.execute("SELECT MAX(retrieval_date) AS d FROM source_coverage").fetchone()
+        return {"display": "Not verified", "display_time": "Not verified", "retrieval_date": None}
+    row = db.conn.execute(
+        "SELECT MAX(retrieval_date) AS d, MAX(updated_at) AS u FROM source_coverage"
+    ).fetchone()
     value = row["d"] if row else None
-    return {"display": OpportunityService.format_month(value), "retrieval_date": value}
+    # `updated_at` is the moment the collection run wrote coverage; `retrieval_date` is only the
+    # calendar day. Prefer the timestamp so the label can state a time, falling back to the date
+    # when a row predates the timestamp column.
+    stamped = (row["u"] if row else None) or value
+    return {
+        "display": OpportunityService.format_month(value),
+        "display_time": OpportunityService.format_date_time(stamped),
+        "retrieval_date": value,
+    }
 
 
 def _detail_title(project: dict[str, Any], g: Any) -> str:
@@ -2228,6 +2516,7 @@ def _register_cli(app: Flask, cfg: AppConfig) -> None:
         db.init_app_schema()
         print(f"slugs created: {ensure_slugs(db)}")
         print(f"projects indexed: {rebuild_index(db)}")
+        _refresh_stat_snapshots(db)
 
     @app.cli.command("grant-admin")
     @click.argument("email")

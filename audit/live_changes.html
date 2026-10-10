@@ -1,0 +1,2624 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Continuous Market Audit</title>
+<meta name="description" content="Live audit log of detected differences across commercial construction and permit records.">
+<link rel="canonical" href="https://buildscope-xppz.onrender.com/">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#060b17">
+
+
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Continuous Market Audit">
+<meta property="og:description" content="Live audit log of detected differences across commercial construction and permit records.">
+<meta property="og:url" content="https://buildscope-xppz.onrender.com/">
+<meta property="og:site_name" content="BuildScope — Construction Opportunity Intelligence">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Continuous Market Audit">
+<meta name="twitter:description" content="Live audit log of detected differences across commercial construction and permit records.">
+
+
+<link rel="stylesheet" href="/static/css/app.css">
+
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    
+    <a class="brand" href="/" aria-label="BuildScope Home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg class="brand-logo-svg" viewBox="0 0 24 24">
+          <path d="M12 2L2 7l10 5 10-5-10-5z" />
+          <path d="M2 17l10 5 10-5" />
+          <path d="M2 12l10 5 10-5" />
+          <circle cx="12" cy="12" r="3" class="brand-logo-accent" />
+        </svg>
+      </span>
+      <span class="brand-text">
+        <strong>BUILD SCOPE<span class="brand-dot">.</span></strong>
+        <small>Construction Opportunity Intelligence</small>
+      </span>
+    </a>
+
+    
+    <nav class="site-nav" aria-label="Main navigation">
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/opportunities">Opportunities</a></li>
+        <li><a href="/markets">Markets</a></li>
+        <li><a href="/companies">Companies</a></li>
+        <li><a href="/changes">Changes</a></li>
+        <li><a href="/trends">Trends</a></li>
+        <li><a href="/analytics">Analytics</a></li>
+        <li><a href="/reports">Reports</a></li>
+        <li><a href="/how-it-works">How It Works</a></li>
+      </ul>
+
+      <div class="nav-account">
+        <a class="nav-search-trigger" href="/opportunities" aria-label="Search opportunities">
+          <svg class="nav-search-icon" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <span>Search projects...</span>
+        </a>
+
+        
+          <a class="btn btn-small btn-ghost" href="/signin">Sign In</a>
+          <a class="btn btn-small btn-primary" href="/signup">Get Access</a>
+        
+      </div>
+    </nav>
+
+    
+    <button type="button" class="mobile-menu-btn" id="mobile-menu-open-btn" aria-label="Open Navigation Menu" aria-expanded="false" aria-controls="mobile-nav-drawer">
+      <div class="mobile-menu-icon" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </button>
+  </div>
+</header>
+
+
+<div class="mobile-drawer-backdrop" id="mobile-drawer-backdrop" aria-hidden="true"></div>
+<aside class="mobile-drawer" id="mobile-nav-drawer" role="dialog" aria-modal="true" aria-label="Mobile Navigation" tabindex="-1">
+  <div class="drawer-header">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg class="brand-logo-svg" viewBox="0 0 24 24">
+          <path d="M12 2L2 7l10 5 10-5-10-5z" />
+          <path d="M2 17l10 5 10-5" />
+          <path d="M2 12l10 5 10-5" />
+          <circle cx="12" cy="12" r="3" class="brand-logo-accent" />
+        </svg>
+      </span>
+      <span class="brand-text">
+        <strong>BUILD SCOPE<span class="brand-dot">.</span></strong>
+        <small>Construction Opportunity Intelligence</small>
+      </span>
+    </div>
+    <button type="button" class="drawer-close-btn" id="mobile-menu-close-btn" aria-label="Close Navigation Menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+  </div>
+
+  <nav class="drawer-nav" aria-label="Mobile main navigation">
+    <a href="/">Home</a>
+    <a href="/opportunities">Opportunities</a>
+    <a href="/markets">Markets</a>
+    <a href="/companies">Companies</a>
+    <a href="/changes">Changes</a>
+    <a href="/trends">Trends</a>
+    <a href="/analytics">Analytics</a>
+    <a href="/reports">Reports</a>
+    <a href="/how-it-works">How It Works</a>
+  </nav>
+
+  <div class="drawer-divider"></div>
+
+  <div class="drawer-account">
+    
+      <a class="btn btn-outline" href="/signin">Sign In</a>
+      <a class="btn btn-primary" href="/signup">Get Access</a>
+    
+  </div>
+
+  <div class="drawer-footer-status">
+    <div><strong>Active Market:</strong> Dallas–Fort Worth</div>
+    <div class="muted">Data freshness: October 2026</div>
+  </div>
+</aside>
+
+
+<section class="hero hero-compact">
+  <div class="wrap">
+    <p class="crumb"><a href="/">Home</a> · Continuous Monitoring</p>
+    <div class="hero-tagline-kicker">Continuous Audit Log</div>
+    <h1>Detected Project Changes</h1>
+    <p class="lede">
+      Real differences detected between consecutive collection passes across Dallas–Fort Worth.
+      Every entry represents a verified change in permit status, mechanical evidence, declared valuation, or project scope.
+    </p>
+  </div>
+</section>
+
+
+<main id="main">
+  
+    
+  
+  
+<div class="wrap" style="padding-top:24px; padding-bottom:56px">
+<div class="feed-workspace-layout">
+  
+  <aside class="filter-sidebar">
+    <div class="filter-sidebar-head">
+      <h3>Audit Scope</h3>
+    </div>
+    <div class="filter-stack">
+      <div class="field">
+        <label>Time Window</label>
+        <div style="display:flex; flex-direction:column; gap:8px; margin-top:6px">
+          <a class="btn btn-small btn-outline" href="/changes?days=7">Last 7 Days</a>
+          <a class="btn btn-small btn-outline" href="/changes?days=30">Last 30 Days</a>
+          <a class="btn btn-small btn-primary" href="/changes?days=60">Last 60 Days</a>
+          <a class="btn btn-small btn-outline" href="/changes?days=90">Last 90 Days</a>
+        </div>
+      </div>
+      <div class="notice" style="margin-top:16px; font-size:0.85rem">
+        <strong>Zero-False-Positive Guarantee:</strong>
+        A pipeline re-run with unchanged data produces zero events. The timeline fills only when the municipal record itself moves.
+      </div>
+    </div>
+  </aside>
+
+  
+  <div class="feed-results-area">
+    <div class="results-header-bar">
+      <div>
+        <h2>60 Differences Detected in Last 60 Days</h2>
+        <p class="results-count-sub">Continuous change detection tracking status transitions, scope additions, and valuation updates.</p>
+      </div>
+    </div>
+
+    
+      <div class="detail-panel" style="padding:20px 24px">
+        <ol class="timeline" style="margin:0">
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Allen</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/999-state-hwy-121-allen-tx-75013-allen-0a4236">NORTH WATTERS RETAIL</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: NORTH WATTERS RETAIL</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/999-state-hwy-121-allen-tx-75013-allen-0a4236">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Fort Worth</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/9915-ray-white-rd-fort-worth-098a1d">(Post Public Frontage Road Widening project) - Remediation, repairs, and renovation to the Church front yard area, including selective demo, limited grading adjustments, replacement sidewalks, paving, and curbs, as well as replacement of monument sign, and site light poles, with landscape and irrigation to clean up and return the site to equal or better than before the public works project impacted the front yard.</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: (Post Public Frontage Road Widening project) - Remediation, repairs, and renovation to the Church front yard area, including selective demo, limited grading adjustments, replacement sidewalks, paving, and curbs, as well as replacement of monument sign, and site light poles, with landscape and irrigation to clean up and return the site to equal or better than before the public works project impacted the front yard.</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/9915-ray-white-rd-fort-worth-098a1d">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Fort Worth</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/9636-white-settlement-rd-fort-worth-675d0a">Enterprise Rent-A-Car Remodel / 3rd Party Plan Review &amp; Inspections / Winston Services</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: Enterprise Rent-A-Car Remodel / 3rd Party Plan Review &amp; Inspections / Winston Services</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/9636-white-settlement-rd-fort-worth-675d0a">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Anna</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/951-s-buddy-hayes-blvd-anna-tx-75409-anna-0f0e8b">ANNA RETAIL ADDITION</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: ANNA RETAIL ADDITION</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/951-s-buddy-hayes-blvd-anna-tx-75409-anna-0f0e8b">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">McKinney</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/901-harry-mckillop-blvd-mckinney-tx-75069-mckinney-1cb487">MCKINNEY INDUSTRIAL PARK NO 2</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: MCKINNEY INDUSTRIAL PARK NO 2</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/901-harry-mckillop-blvd-mckinney-tx-75069-mckinney-1cb487">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Fort Worth</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/9000-north-city-dr-fort-worth-856660">X TEAM /// INTERIOR BUILD OUT OF A RETAIL SPECIALITY GROCERY STORE, SALES FLOOR WILL
+INCLUDE STORE FIXTURIZATION AND CUSTOMER RESTROOOMS.
+BACK OF HOUSE WILL INCLUDE EMPLOUEE RESTROOMS BREAKROOM, PREP ROOM, WALK-INSTORAGE , ETC.</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: X TEAM /// INTERIOR BUILD OUT OF A RETAIL SPECIALITY GROCERY STORE, SALES FLOOR WILL
+INCLUDE STORE FIXTURIZATION AND CUSTOMER RESTROOOMS.
+BACK OF HOUSE WILL INCLUDE EMPLOUEE RESTROOMS BREAKROOM, PREP ROOM, WALK-INSTORAGE , ETC.</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/9000-north-city-dr-fort-worth-856660">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Dallas</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/8825-clark-rd-dallas-01beae">Standard Review: Ground-up construction of a new 2,765 SF Jack in the Box restaurant, including architectural, structural, mechanical, electrical, plumbing, commercial kitchen, drive-thru, parking, exterior lighting, and associated site development.</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: Standard Review: Ground-up construction of a new 2,765 SF Jack in the Box restaurant, including architectural, structural, mechanical, electrical, plumbing, commercial kitchen, drive-thru, parking, exterior lighting, and associated site development.</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/8825-clark-rd-dallas-01beae">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Dallas</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/8687-n-central-expy-2316-dallas-83f188">Commercial tenant improvement of an existing 1190 square foot gross area, located on the second floor of the NorthPark Center Shopping Mall. Scope includes interior demolition, new partition walls, fixtures, finishes, relocate existing restroom, remodel existing storefront. No change in building area, no change in use. Improvements to existing Mechanical, Electrical, Plumbing and Structural as part of tenant move in.</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: Commercial tenant improvement of an existing 1190 square foot gross area, located on the second floor of the NorthPark Center Shopping Mall. Scope includes interior demolition, new partition walls, fixtures, finishes, relocate existing restroom, remodel existing storefront. No change in building area, no change in use. Improvements to existing Mechanical, Electrical, Plumbing and Structural as part of tenant move in.</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/8687-n-central-expy-2316-dallas-83f188">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">McKinney</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/851-harry-mckillop-blvd-mckinney-tx-75069-mckinney-2d96ea">MCKINNEY INDUSTRIAL PARK NO 2</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: MCKINNEY INDUSTRIAL PARK NO 2</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/851-harry-mckillop-blvd-mckinney-tx-75069-mckinney-2d96ea">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Plano</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/8375-dominion-pkwy-ii-plano-tx-75024-plano-70ffb2">DFW 3 EXPANSION CONDOMINIUM</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: DFW 3 EXPANSION CONDOMINIUM</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/8375-dominion-pkwy-ii-plano-tx-75024-plano-70ffb2">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Allen</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/820-cottonwood-dr-allen-tx-75002-allen-dcd9b6">MAX O VAUGHAN ELEMENTARY SCHOOL</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: MAX O VAUGHAN ELEMENTARY SCHOOL</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/820-cottonwood-dr-allen-tx-75002-allen-dcd9b6">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Fort Worth</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/816-w-cannon-st-fort-worth-655cf8">Remodel to demo partition walls and revert to shell building what is currently a vacant building. Previous use medical office building / 3RD PTY PR AND INSP - METRO CODE</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: Remodel to demo partition walls and revert to shell building what is currently a vacant building. Previous use medical office building / 3RD PTY PR AND INSP - METRO CODE</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/816-w-cannon-st-fort-worth-655cf8">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Dallas</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/8130-meadow-rd-dallas-ac4b2a">Renovation of HVAC system</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: Renovation of HVAC system</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/8130-meadow-rd-dallas-ac4b2a">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Fort Worth</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/801-7th-ave-fort-worth-ac986a">Remodel space into residents lounge in existing hospital // 3rd party plan review and inspections // Bureau Veritas // TMS  2026-028446</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: Remodel space into residents lounge in existing hospital // 3rd party plan review and inspections // Bureau Veritas // TMS  2026-028446</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/801-7th-ave-fort-worth-ac986a">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">McKinney</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/8000-eldorado-pkwy-mckinney-tx-75070-mckinney-d65f1e">METHODIST MCKINNEY MEDICAL CAMPUS ADDITION</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: METHODIST MCKINNEY MEDICAL CAMPUS ADDITION</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/8000-eldorado-pkwy-mckinney-tx-75070-mckinney-d65f1e">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">McKinney</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/7850-collin-mckinney-pkwy-mckinney-tx-75070-mckinney-903745">COOPER CLINIC ADDITION</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: COOPER CLINIC ADDITION</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/7850-collin-mckinney-pkwy-mckinney-tx-75070-mckinney-903745">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Frisco</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/7700-preston-rd-1002-frisco-tx-75035-frisco-4939c8">OFFICES AT PRESTONBROOK THE</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: OFFICES AT PRESTONBROOK THE</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/7700-preston-rd-1002-frisco-tx-75035-frisco-4939c8">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Plano</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/7609-preston-rd-plano-tx-75024-plano-57ee62">CHILDRENS MEDICAL CENTER LEGACY CAMPUS</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: CHILDRENS MEDICAL CENTER LEGACY CAMPUS</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/7609-preston-rd-plano-tx-75024-plano-57ee62">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Frisco</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/7600-better-way-frisco-tx-75033-frisco-9951cf">FRISCO HOSPITAL ADDITION</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: FRISCO HOSPITAL ADDITION</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/7600-better-way-frisco-tx-75033-frisco-9951cf">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Allen</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/715-duchess-dr-allen-tx-75013-allen-748bd0">BEVERLY ELEMENTARY SCHOOL</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: BEVERLY ELEMENTARY SCHOOL</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/715-duchess-dr-allen-tx-75013-allen-748bd0">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Frisco</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/7101-custer-rd-10-frisco-tx-75035-frisco-481d88">CUSTER ROLATER PHASE 2 RETAIL CONDOMINIUMS</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: CUSTER ROLATER PHASE 2 RETAIL CONDOMINIUMS</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/7101-custer-rd-10-frisco-tx-75035-frisco-481d88">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Frisco</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/6960-parkwood-blvd-frisco-tx-75034-frisco-66d3b1">PARKWOOD OFFICES ADDITION</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: PARKWOOD OFFICES ADDITION</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/6960-parkwood-blvd-frisco-tx-75034-frisco-66d3b1">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">McKinney</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/6800-weiskopf-ave-00150-mckinney-tx-75070-mckinney-95dc55">VANTRUST OFFICE COMPLEX</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: VANTRUST OFFICE COMPLEX</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/6800-weiskopf-ave-00150-mckinney-tx-75070-mckinney-95dc55">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Plano</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/6800-preston-rd-plano-tx-75024-plano-f144b5">CHARTER MEDICAL CENTER</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: CHARTER MEDICAL CENTER</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/6800-preston-rd-plano-tx-75024-plano-f144b5">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Fort Worth</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/6732-blue-mound-rd-fort-worth-6ade65">Express oil change / quick lube vehicle service facility (auto-related use).
+Oil change service bays with service pits; no auto sales, body work or car wash.
+Accessory office, break area, back room (storage) and restroom.</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: Express oil change / quick lube vehicle service facility (auto-related use).
+Oil change service bays with service pits; no auto sales, body work or car wash.
+Accessory office, break area, back room (storage) and restroom.</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/6732-blue-mound-rd-fort-worth-6ade65">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">McKinney</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/6625-eldorado-pkwy-mckinney-tx-75070-mckinney-069228">ELDORADO OFFICE PARK ADDITION</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: ELDORADO OFFICE PARK ADDITION</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/6625-eldorado-pkwy-mckinney-tx-75070-mckinney-069228">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Fort Worth</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/6612-brentwood-stair-rd-fort-worth-419a26">INTERIOR REMODEL
+
+3700 SF, EXISTING NON-STRUCTURAL INTERIOR PARTITIONS, CEILING, FLOORING TO BE COMPLETELY DEMO AND REMOVED TO CLEAR OUT FOR NEW TENANT</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: INTERIOR REMODEL
+
+3700 SF, EXISTING NON-STRUCTURAL INTERIOR PARTITIONS, CEILING, FLOORING TO BE COMPLETELY DEMO AND REMOVED TO CLEAR OUT FOR NEW TENANT</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/6612-brentwood-stair-rd-fort-worth-419a26">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Plano</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/6601-cloverhaven-way-plano-tx-75074-plano-1c522d">DAVID MCCALL ELEMENTARY SCHOOL</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: DAVID MCCALL ELEMENTARY SCHOOL</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/6601-cloverhaven-way-plano-tx-75074-plano-1c522d">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Plano</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/6275-w-plano-pkwy-plano-tx-75093-plano-7bfea3">BILLINGSLEY OFFICE BUILDING</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: BILLINGSLEY OFFICE BUILDING</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/6275-w-plano-pkwy-plano-tx-75093-plano-7bfea3">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Murphy</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/623-w-fm-544-murphy-tx-75094-murphy-b47ecc">MURPHY MEDICAL CENTER ADDITION</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: MURPHY MEDICAL CENTER ADDITION</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/623-w-fm-544-murphy-tx-75094-murphy-b47ecc">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Plano</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/6200-w-parker-rd-plano-tx-75093-plano-7e73dc">PRESBYTERIAN HOSPITAL OF PLANO</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: PRESBYTERIAN HOSPITAL OF PLANO</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/6200-w-parker-rd-plano-tx-75093-plano-7e73dc">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Plano</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/620-shiloh-rd-plano-tx-75074-plano-f9a474">FLEXTRONICS CAMPUS ADDITION</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: FLEXTRONICS CAMPUS ADDITION</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/620-shiloh-rd-plano-tx-75074-plano-f9a474">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Fort Worth</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/6133-elizabeth-rd-fort-worth-4f180e">Remove tar and gravel roof, 1&#34; Fesco down to steel deck over non conditioned air space. Replace with a 1&#34; ISO and 1/2&#34; high density cover board. Install new GAF 60 mil TPO roof system per manufacturer specifications.</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: Remove tar and gravel roof, 1&#34; Fesco down to steel deck over non conditioned air space. Replace with a 1&#34; ISO and 1/2&#34; high density cover board. Install new GAF 60 mil TPO roof system per manufacturer specifications.</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/6133-elizabeth-rd-fort-worth-4f180e">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Fort Worth</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/6100-harris-pkwy-fort-worth-3d1008">6 Story Patient Tower Building</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: 6 Story Patient Tower Building</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/6100-harris-pkwy-fort-worth-3d1008">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Celina</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/605-w-ownsby-pkwy-celina-tx-75009-celina-25a2c9">OWNSBY FARMS MULTIFAMILY ADDITION</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: OWNSBY FARMS MULTIFAMILY ADDITION</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/605-w-ownsby-pkwy-celina-tx-75009-celina-25a2c9">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Prosper</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/605-e-seventh-st-prosper-tx-75078-prosper-d50e1c">PROSPER HIGH SCHOOL &amp; MIDDLE SCHOOL ADDITION</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: PROSPER HIGH SCHOOL &amp; MIDDLE SCHOOL ADDITION</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/605-e-seventh-st-prosper-tx-75078-prosper-d50e1c">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Plano</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/601-north-star-rd-plano-tx-75074-plano-cc51e7">FLEXTRONICS CAMPUS ADDITION</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: FLEXTRONICS CAMPUS ADDITION</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/601-north-star-rd-plano-tx-75074-plano-cc51e7">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Celina</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/590-w-frontier-pkwy-prosper-tx-75078-celina-3eae6f">SAGE RETAIL ADDITION</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: SAGE RETAIL ADDITION</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/590-w-frontier-pkwy-prosper-tx-75078-celina-3eae6f">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Frisco</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/5757-warren-pkwy-frisco-tx-75034-frisco-0f3601">FRISCO MEDICAL CENTER</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: FRISCO MEDICAL CENTER</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/5757-warren-pkwy-frisco-tx-75034-frisco-0f3601">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Dallas</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/575-w-illinois-ave-dallas-04e97d">QTEAM MEETING 10.27.2026 (9AM) - New Construction of a Full Service Restaurant with associated site work in the building pad area.</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: QTEAM MEETING 10.27.2026 (9AM) - New Construction of a Full Service Restaurant with associated site work in the building pad area.</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/575-w-illinois-ave-dallas-04e97d">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Allen</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/5730-wilford-dr-mckinney-tx-75070-allen-a858f3">ALLEN ELEMENTARY SCHOOL NO 7</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: ALLEN ELEMENTARY SCHOOL NO 7</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/5730-wilford-dr-mckinney-tx-75070-allen-a858f3">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Allen</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/5705-cheyenne-dr-parker-tx-75002-allen-95e6d1">LUTHER AND ANNA MAE BOLIN ELEMENTARY SCHOOL</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: LUTHER AND ANNA MAE BOLIN ELEMENTARY SCHOOL</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/5705-cheyenne-dr-parker-tx-75002-allen-95e6d1">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Frisco</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/5700-warren-pkwy-frisco-tx-75034-frisco-ec3eab">MEDICAL OFFICE AT FRISCO STATION</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: MEDICAL OFFICE AT FRISCO STATION</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/5700-warren-pkwy-frisco-tx-75034-frisco-ec3eab">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Dallas</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/5659-lemmon-ave-dallas-07bfbd">QTEAM - COM-NEW-26-000307 - QTeam project. Site Plan Review for new construction of motor vehicle fueling station and convenience store. 12,508 sf.</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: QTEAM - COM-NEW-26-000307 - QTeam project. Site Plan Review for new construction of motor vehicle fueling station and convenience store. 12,508 sf.</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/5659-lemmon-ave-dallas-07bfbd">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Celina</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/565-s-preston-rd-celina-tx-75009-celina-53d7d8">COLLIN COUNTY SCHOOL LAND #14 SURVEY</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: COLLIN COUNTY SCHOOL LAND #14 SURVEY</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/565-s-preston-rd-celina-tx-75009-celina-53d7d8">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Plano</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/5505-w-plano-pkwy-plano-tx-75093-plano-63f8a3">SHEPTON HIGH SCHOOL ADDITION</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: SHEPTON HIGH SCHOOL ADDITION</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/5505-w-plano-pkwy-plano-tx-75093-plano-63f8a3">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Frisco</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/5500-frisco-square-blvd-frisco-tx-75034-frisco-331658">FRISCO SQUARE BOULEVARD MEDICAL CONDOS</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: FRISCO SQUARE BOULEVARD MEDICAL CONDOS</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/5500-frisco-square-blvd-frisco-tx-75034-frisco-331658">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Plano</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/5425-w-spring-creek-pkwy-plano-tx-75024-plano-f78c47">STREAM DATA CENTER</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: STREAM DATA CENTER</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/5425-w-spring-creek-pkwy-plano-tx-75024-plano-f78c47">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Celina</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/540-w-frontier-pkwy-prosper-tx-75078-celina-8c2cae">SAGE RETAIL ADDITION</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: SAGE RETAIL ADDITION</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/540-w-frontier-pkwy-prosper-tx-75078-celina-8c2cae">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">McKinney</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/5252-w-university-dr-mckinney-tx-75071-mckinney-246ea9">BAYLOR MEDICAL CENTER AT MCKINNEY</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: BAYLOR MEDICAL CENTER AT MCKINNEY</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/5252-w-university-dr-mckinney-tx-75071-mckinney-246ea9">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">McKinney</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/5236-w-university-dr-mckinney-tx-75071-mckinney-5875f8">BAYLOR MEDICAL CENTER AT MCKINNEY</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: BAYLOR MEDICAL CENTER AT MCKINNEY</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/5236-w-university-dr-mckinney-tx-75071-mckinney-5875f8">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Celina</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/512-n-oklahoma-dr-celina-tx-75009-celina-f807ae">COLLIN COUNTY SCHOOL LAND #15 SURVEY</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: COLLIN COUNTY SCHOOL LAND #15 SURVEY</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/512-n-oklahoma-dr-celina-tx-75009-celina-f807ae">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Plano</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/5115-w-park-blvd-plano-tx-75093-plano-9d13aa">FIRE STATION NO 5 ADDITION</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: FIRE STATION NO 5 ADDITION</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/5115-w-park-blvd-plano-tx-75093-plano-9d13aa">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Celina</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/505-s-preston-rd-celina-tx-75009-celina-0baf88">COLLIN COUNTY SCHOOL LAND #14 SURVEY</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: COLLIN COUNTY SCHOOL LAND #14 SURVEY</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/505-s-preston-rd-celina-tx-75009-celina-0baf88">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Plano</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/504-north-star-rd-plano-tx-75075-plano-0f3808">DOUGLAS OTTO MIDDLE SCHOOL</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: DOUGLAS OTTO MIDDLE SCHOOL</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/504-north-star-rd-plano-tx-75075-plano-0f3808">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Farmersville</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/501-s-collin-pkwy-farmersville-tx-75442-farmersville-053bfb">COLLIN COLLEGE FARMERSVILLE</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: COLLIN COLLEGE FARMERSVILLE</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/501-s-collin-pkwy-farmersville-tx-75442-farmersville-053bfb">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Plano</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/4716-alliance-blvd-plano-tx-75093-plano-5284f1">BAYLOR MEDICAL CENTER AT PLANO</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: BAYLOR MEDICAL CENTER AT PLANO</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/4716-alliance-blvd-plano-tx-75093-plano-5284f1">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Plano</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/4708-alliance-blvd-plano-tx-75093-plano-891346">BAYLOR MEDICAL CENTER AT PLANO</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: BAYLOR MEDICAL CENTER AT PLANO</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/4708-alliance-blvd-plano-tx-75093-plano-891346">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Plano</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/4700-alliance-blvd-plano-tx-75093-plano-7aea39">BAYLOR MEDICAL CENTER</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: BAYLOR MEDICAL CENTER</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/4700-alliance-blvd-plano-tx-75093-plano-7aea39">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+          <li style="padding-bottom:20px; border-bottom:1px solid var(--slate-150); margin-bottom:16px">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px">
+              <span class="timeline-date" style="font-weight:700; color:var(--navy-900)">
+                2026-10-09 ·
+                <span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">
+                  new project
+                </span>
+              </span>
+              
+                <span class="small muted">Fort Worth</span>
+              
+            </div>
+
+            <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
+              <strong>
+                
+                  <a href="/opportunities/4551-sycamore-school-rd-fort-worth-971390">7000sf expansion of the retail sales area</a>
+                
+              </strong>:
+              Project first entered the system.
+            </div>
+
+            
+            <div style="margin-top:8px; display:inline-flex; gap:12px; background:var(--slate-50); border:1px solid var(--slate-200); padding:6px 12px; border-radius:var(--radius-sm); font-size:0.8rem">
+              
+              
+                <span style="color:var(--signal-high-text); font-weight:600">Updated: 7000sf expansion of the retail sales area</span>
+              
+            </div>
+            
+
+            
+            <div style="margin-top:10px">
+              <a class="btn btn-small btn-outline" href="/opportunities/4551-sycamore-school-rd-fort-worth-971390">Open Project Dossier &rarr;</a>
+            </div>
+            
+          </li>
+          
+        </ol>
+      </div>
+    
+  </div>
+</div>
+</div>
+
+</main>
+
+
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand-title">
+          <span class="bs-motif" aria-hidden="true"><span></span><span></span><span></span></span>
+          BUILD SCOPE
+        </div>
+        <p class="footer-brand-descriptor">
+          <strong>See the work before the work begins.</strong><br>
+          Commercial construction opportunity intelligence built directly from official public records.
+        </p>
+        <p class="small muted" style="margin-top:12px">
+          Live Market: Dallas–Fort Worth (DFW)<br>
+          Continuous Ingestion: October 2026
+        </p>
+      </div>
+
+      <div>
+        <h4>Product</h4>
+        <ul>
+          <li><a href="/opportunities">Opportunities</a></li>
+          <li><a href="/markets">Markets</a></li>
+          <li><a href="/companies">Companies</a></li>
+          <li><a href="/changes">Changes</a></li>
+          <li><a href="/trends">Trends</a></li>
+          <li><a href="/analytics">Analytics</a></li>
+          <li><a href="/reports">Reports</a></li>
+          <li><a href="/commercial-construction-leads">Commercial Construction Leads</a></li>
+          <li><a href="/guides">Guides</a></li>
+          <li><a href="/how-it-works">How It Works</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4>Coverage</h4>
+        <ul>
+          
+          <li>
+            <a href="/markets/dfw">
+              Dallas–Fort Worth
+            </a>
+          </li>
+          
+          <li>
+            <a href="/markets/austin">
+              Austin (Planned)
+            </a>
+          </li>
+          
+          <li>
+            <a href="/markets/houston">
+              Greater Houston (Planned)
+            </a>
+          </li>
+          
+          
+          <li>
+            <a href="/trades/commercial-hvac">
+              Commercial HVAC / Mechanical
+            </a>
+          </li>
+          
+        </ul>
+      </div>
+
+      <div>
+        <h4>Workspace</h4>
+        <ul>
+          
+            <li><a href="/signin">Sign In</a></li>
+            <li><a href="/signup">Get Access</a></li>
+          
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-legal">
+      <p>
+        <strong>Evidence &amp; Reliability Notice:</strong> BuildScope indexes and clusters public commercial construction records, municipal permit filings, and trade scope data.
+        Permit filings represent public documentary records and do not imply active subcontract bidding or owner solicitation unless verified in official procurement documents.
+        Confirm all valuations, specifications, and project statuses with issuing municipal jurisdictions and project authorities.
+      </p>
+      <p class="muted">&copy; 2026 BuildScope. All rights reserved. Commercial Opportunity Intelligence.</p>
+    </div>
+  </div>
+</footer>
+
+
+<script>
+(function() {
+  var openBtn = document.getElementById('mobile-menu-open-btn');
+  var closeBtn = document.getElementById('mobile-menu-close-btn');
+  var backdrop = document.getElementById('mobile-drawer-backdrop');
+  var drawer = document.getElementById('mobile-nav-drawer');
+
+  function openDrawer() {
+    document.body.classList.add('drawer-open');
+    if (openBtn) openBtn.setAttribute('aria-expanded', 'true');
+    if (drawer) drawer.focus();
+  }
+
+  function closeDrawer() {
+    document.body.classList.remove('drawer-open');
+    if (openBtn) openBtn.setAttribute('aria-expanded', 'false');
+  }
+
+  if (openBtn) openBtn.addEventListener('click', openDrawer);
+  if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+  if (backdrop) backdrop.addEventListener('click', closeDrawer);
+
+  window.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && document.body.classList.contains('drawer-open')) {
+      closeDrawer();
+      if (openBtn) openBtn.focus();
+    }
+  });
+})();
+</script>
+</body>
+</html>

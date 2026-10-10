@@ -289,12 +289,15 @@ def trends() -> Any:
                     "key": m.key,
                     "label": m.label,
                     "definition": m.definition,
+                    "basis": m.basis,
                     "value": m.value,
                     "previous": m.previous,
                     "comparison_available": m.comparison_available,
                     "direction": m.direction,
                     "change_ratio": m.change_ratio,
                     "excluded_future": m.excluded_future,
+                    "cumulative": m.cumulative,
+                    "windows": list(m.windows),
                 }
                 for m in report.metrics
             ],

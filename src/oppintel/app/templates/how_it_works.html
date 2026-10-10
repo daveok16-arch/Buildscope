@@ -12,6 +12,7 @@
     <p class="lede">
       From public municipal permit records to verified commercial opportunities, with the evidence trail kept auditable at every step.
     </p>
+    {% include "partials/collection_window.html" %}
   </div>
 </section>
 {% endblock %}
@@ -57,9 +58,61 @@
       <article class="card">
         <div class="chain-step-num">Stage 06</div>
         <h3>6. Report &amp; Monitor</h3>
-        <p class="small muted">Verified projects populate the opportunity feed, dossiers, and customer reports. Automation diffs records between runs to detect changes and notify watched projects.</p>
+        <p class="small muted">Verified projects populate the opportunity feed, dossiers, and customer reports. Automation diffs records between runs to detect changes and raises an in-app alert on a watched project.</p>
       </article>
     </div>
+
+    {% if stats and stats.funnel %}
+    <div class="detail-panel" style="margin-top:24px">
+      <h3 style="margin-top:0">The ingest funnel, stated plainly</h3>
+      <p class="small muted">
+        The pipeline above is not a claim about volume; it is a description of what happens to a
+        record. These are the current counts, from the same stored snapshot every headline uses.
+        A raw permit that is never linked to an assembled project is counted as dropped rather
+        than hidden.
+      </p>
+      <div class="stat-strip" style="margin-top:14px; flex-wrap:wrap; gap:16px">
+        <div class="stat" style="flex:1 1 200px; min-width:180px">
+          <span class="stat-value">{{ "{:,}".format(stats.funnel.permits_landed) }}</span>
+          <span class="stat-label">Permits landed</span>
+        </div>
+        <div class="stat" style="flex:1 1 200px; min-width:180px">
+          <span class="stat-value">{{ "{:,}".format(stats.funnel.permits_linked) }}</span>
+          <span class="stat-label">Linked to a project</span>
+        </div>
+        <div class="stat" style="flex:1 1 200px; min-width:180px">
+          <span class="stat-value">{{ "{:,}".format(stats.funnel.permits_dropped) }}</span>
+          <span class="stat-label">Dropped (not assembled)</span>
+        </div>
+        <div class="stat" style="flex:1 1 200px; min-width:180px">
+          <span class="stat-value">{{ "{:,}".format(stats.funnel.public_projects) }}</span>
+          <span class="stat-label">Public projects</span>
+        </div>
+      </div>
+      {% if stats.funnel.by_source %}
+      <div class="table-scroll" style="margin-top:16px" tabindex="0" role="region" aria-label="Ingest funnel by source">
+      <table class="table" style="width:100%">
+        <thead>
+          <tr><th>Source</th><th>Landed</th><th>Linked</th><th>Dropped</th></tr>
+        </thead>
+        <tbody>
+          {% for row in stats.funnel.by_source %}
+          <tr>
+            <td>{{ row.source_name }}</td>
+            <td>{{ "{:,}".format(row.landed) }}</td>
+            <td>{{ "{:,}".format(row.linked) }}</td>
+            <td>{{ "{:,}".format(row.dropped) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+      {% endif %}
+      {% if stats.computed_at %}
+      <p class="small muted" style="margin-top:10px">As of {{ stats.computed_at }}.</p>
+      {% endif %}
+    </div>
+    {% endif %}
   </div>
 </section>
 
@@ -119,7 +172,7 @@
 <section class="section" style="padding-top:0">
   <div class="wrap">
     <div class="notice notice-warn">
-      <h4 style="margin-top:0; color:var(--gold-600)">Important Procurement Notice</h4>
+      <p class="panel-eyebrow" style="margin-top:0; color:var(--gold-600)">Important Procurement Notice</p>
       <p class="small" style="margin:0">
         Permit evidence does not confirm that a project is currently accepting bids for any trade. Confirm procurement status directly with the project owner or general contractor, and verify all plans and requirements with the issuing jurisdiction prior to commercial commitment.
       </p>

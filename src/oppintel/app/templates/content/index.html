@@ -14,6 +14,9 @@
 {% endblock %}
 
 {% block content %}
+{# Guide cards use h3; an intervening h2 keeps the outline valid (h1 -> h3
+   skips a level). The section is self-evident visually, so it is sr-only. #}
+<h2 class="sr-only">All guides</h2>
 <div class="guide-grid">
   {% for guide in guides %}
   <a class="guide-card" href="{{ url_for('guide_detail', guide_slug=guide.slug) }}">

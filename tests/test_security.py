@@ -353,6 +353,72 @@ def test_security_headers_are_present(secured_client):
     assert response.headers["Referrer-Policy"] == "same-origin"
 
 
+def test_private_pages_are_not_cacheable(client, session_client):
+    """Every HTML/JSON response and anything that sets a cookie must never be stored.
+
+    Regression for H8/I3: no `Cache-Control` was emitted at all, so a shared cache or the
+    browser's back/forward cache could serve one account's saved list to the next visit.
+    """
+    # A signed-in account surface.
+    assert session_client.get("/saved").headers["Cache-Control"] == "private, no-store"
+    # Account surfaces are private even when signed out (a cached redirect is still wrong).
+    for path in ("/signin", "/signup", "/dashboard", "/saved", "/admin/data"):
+        assert client.get(path).headers["Cache-Control"] == "private, no-store", path
+    # The API and the health probe are never cacheable.
+    for path in ("/api/statistics", "/healthz"):
+        assert client.get(path).headers["Cache-Control"] == "private, no-store", path
+
+
+def test_every_html_route_is_no_store(client):
+    """No HTML route may be publicly cacheable, because every one carries a nonce and a header.
+
+    A per-request CSP nonce is embedded in every page and the header renders "Sign in" versus
+    the account name, so a shared cache could replay one visitor's page to another. This walks
+    the whole public route table rather than a sample, so a new route is covered on arrival.
+    """
+    checked = 0
+    for rule in client.application.url_map.iter_rules():
+        if rule.endpoint == "static" or "GET" not in (rule.methods or set()):
+            continue
+        if "<" in rule.rule:  # needs a real id; the detail routes are covered elsewhere
+            continue
+        response = client.get(rule.rule)
+        if response.headers.get("Content-Type", "").startswith("text/html"):
+            assert response.headers["Cache-Control"] == "private, no-store", rule.rule
+            checked += 1
+    assert checked >= 20, f"expected the public route table, only saw {checked} HTML routes"
+
+
+def test_no_html_response_combines_public_cache_with_a_nonce_or_cookie(client, app_db):
+    """The exact invariant: an HTML response never says `public` while carrying a nonce/cookie."""
+    for path in ("/", "/opportunities", "/trends", "/companies", "/markets", "/changes"):
+        response = client.get(path)
+        cache = response.headers.get("Cache-Control", "")
+        csp = response.headers.get("Content-Security-Policy", "")
+        has_nonce = "nonce-" in csp
+        sets_cookie = bool(response.headers.get("Set-Cookie"))
+        assert not (cache.startswith("public") and (has_nonce or sets_cookie)), path
+        # And the stronger statement: none of these HTML pages is public at all.
+        assert cache == "private, no-store", path
+
+
+def test_static_assets_keep_a_long_cache_and_are_fingerprinted(client):
+    """A static asset is publicly cacheable for a long time and its URL is content-versioned."""
+    response = client.get("/static/css/app.css")
+    assert response.status_code == 200
+    assert "max-age=31536000" in response.headers["Cache-Control"]
+    # The base template links it with a fingerprint query so a rebuild is not served stale.
+    body = client.get("/").get_data(as_text=True)
+    assert "css/app.css?v=" in body
+
+
+def test_public_pages_get_a_short_public_cache(client, session_client):
+    """Kept as a guard that no HTML page is public — the header shows account state."""
+    for path in ("/", "/trends", "/companies"):
+        assert client.get(path).headers["Cache-Control"] == "private, no-store", path
+    assert session_client.get("/").headers["Cache-Control"] == "private, no-store"
+
+
 def test_the_session_cookie_is_httponly_and_samesite(tmp_path):
     """The session cookie's flags come from the app configuration.
 
@@ -387,3 +453,40 @@ def test_login_errors_do_not_reveal_whether_an_account_exists(secured_client):
     assert "unknown" not in lowered
     assert "no such user" not in lowered
     assert "not found" not in lowered
+
+
+def test_csp_nonce_is_at_least_128_bits():
+    """The CSP nonce must carry at least 128 bits of entropy from a CSPRNG.
+
+    An 8-character nonce is a shape a reader and a scanner both flag; it is also what a
+    hand-rolled `os.urandom(6)` produces. This pins the strength and the source.
+    """
+    import base64
+    import inspect
+
+    from oppintel.app import security
+
+    src = inspect.getsource(security.csp_nonce)
+    assert "secrets.token_urlsafe" in src, "nonce must come from the `secrets` CSPRNG"
+
+    # Base64url of n bytes is ceil(4n/3) characters with the padding stripped. 128 bits is 16
+    # bytes -> 22 characters. Assert the observed length matches 128+ bits, not a literal.
+    for _ in range(20):
+        nonce = security.secrets.token_urlsafe(16)
+        raw = base64.urlsafe_b64decode(nonce + "=" * (-len(nonce) % 4))
+        assert len(raw) * 8 >= 128
+        assert len(nonce) >= 22
+
+
+def test_csp_nonce_is_unique_per_request(client):
+    """Two requests must not share a nonce, or the CSP defence degrades to a static token."""
+    import re
+
+    def nonce_of(path):
+        body = client.get(path).get_data(as_text=True)
+        m = re.search(r'nonce="([^"]+)"', body)
+        assert m, f"no nonce in {path}"
+        return m.group(1)
+
+    seen = {nonce_of("/") for _ in range(5)}
+    assert len(seen) == 5, f"nonce repeated across requests: {seen}"

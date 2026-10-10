@@ -3,10 +3,11 @@
 #
 # Two modes, chosen automatically:
 #
-#   * Render / any container host (foreground). Detected by `$RENDER`, or by an explicit
-#     `FOREGROUND=1`. The platform requires the process to stay in the foreground and to bind
-#     the port it assigns, so this runs the supervisor directly. `$PORT` comes from the platform;
-#     `$OPPINTEL_DATA_DIR` points at the mounted disk so the database survives a redeploy.
+#   * Supervised / container host (foreground). Detected by an explicit `FOREGROUND=1` (which a
+#     hosting platform can set in its start command). The platform requires the process to stay in
+#     the foreground and to bind the port it assigns, so this runs the supervisor directly.
+#     `$PORT` comes from the platform; `$OPPINTEL_DATA_DIR` may point at persistent storage so the
+#     database survives a redeploy.
 #
 #   * Local / any shell without a process manager (background). Runs the supervisor in the
 #     background and records its PID so stop.sh can find it. Safe to re-run: an already-running
@@ -22,6 +23,7 @@ export HOST="${HOST:-0.0.0.0}"
 
 # Read the caller's intent before overwriting it: assigning first made `FOREGROUND=1` a no-op,
 # so the documented way to force foreground mode silently ran the local branch instead.
+# `FOREGROUND=1` is the host-neutral switch; the platform's own marker is accepted too.
 if [ "${FOREGROUND:-0}" = "1" ] || [ -n "${RENDER:-}" ]; then
     FOREGROUND=1
 else
@@ -36,14 +38,13 @@ else
 fi
 
 # Default to the checkout's own data directory, which always exists and is writable. A host with
-# a mounted disk sets OPPINTEL_DATA_DIR to the mount path to keep state across a redeploy.
+# persistent storage sets OPPINTEL_DATA_DIR to that path to keep state across a redeploy/restart.
 export OPPINTEL_DATA_DIR="${OPPINTEL_DATA_DIR:-$REPO_ROOT/data}"
 
 if ! mkdir -p "$OPPINTEL_DATA_DIR" 2>/dev/null || [ ! -w "$OPPINTEL_DATA_DIR" ]; then
     echo "error: cannot write to OPPINTEL_DATA_DIR=$OPPINTEL_DATA_DIR" >&2
-    echo "  On Render this means the disk is not attached at that path. Free instances have no" >&2
-    echo "  disk, so the mount path is never created. Unset OPPINTEL_DATA_DIR to use the" >&2
-    echo "  checkout, or attach a disk and point this at its mount path." >&2
+    echo "  The configured data directory is not writable. Point OPPINTEL_DATA_DIR at storage" >&2
+    echo "  that persists across restarts, or unset it to use the checkout's own data/ directory." >&2
     exit 1
 fi
 

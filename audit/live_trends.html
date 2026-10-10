@@ -1,0 +1,481 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trend Radar</title>
+<meta name="description" content="Observed changes in commercial construction records across configured markets, with each metric defined and source-coverage limits stated.">
+<link rel="canonical" href="https://buildscope-xppz.onrender.com/">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#060b17">
+
+
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Trend Radar">
+<meta property="og:description" content="Observed changes in commercial construction records across configured markets, with each metric defined and source-coverage limits stated.">
+<meta property="og:url" content="https://buildscope-xppz.onrender.com/">
+<meta property="og:site_name" content="BuildScope — Construction Opportunity Intelligence">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Trend Radar">
+<meta name="twitter:description" content="Observed changes in commercial construction records across configured markets, with each metric defined and source-coverage limits stated.">
+
+
+<link rel="stylesheet" href="/static/css/app.css">
+
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    
+    <a class="brand" href="/" aria-label="BuildScope Home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg class="brand-logo-svg" viewBox="0 0 24 24">
+          <path d="M12 2L2 7l10 5 10-5-10-5z" />
+          <path d="M2 17l10 5 10-5" />
+          <path d="M2 12l10 5 10-5" />
+          <circle cx="12" cy="12" r="3" class="brand-logo-accent" />
+        </svg>
+      </span>
+      <span class="brand-text">
+        <strong>BUILD SCOPE<span class="brand-dot">.</span></strong>
+        <small>Construction Opportunity Intelligence</small>
+      </span>
+    </a>
+
+    
+    <nav class="site-nav" aria-label="Main navigation">
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/opportunities">Opportunities</a></li>
+        <li><a href="/markets">Markets</a></li>
+        <li><a href="/companies">Companies</a></li>
+        <li><a href="/changes">Changes</a></li>
+        <li><a href="/trends">Trends</a></li>
+        <li><a href="/analytics">Analytics</a></li>
+        <li><a href="/reports">Reports</a></li>
+        <li><a href="/how-it-works">How It Works</a></li>
+      </ul>
+
+      <div class="nav-account">
+        <a class="nav-search-trigger" href="/opportunities" aria-label="Search opportunities">
+          <svg class="nav-search-icon" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <span>Search projects...</span>
+        </a>
+
+        
+          <a class="btn btn-small btn-ghost" href="/signin">Sign In</a>
+          <a class="btn btn-small btn-primary" href="/signup">Get Access</a>
+        
+      </div>
+    </nav>
+
+    
+    <button type="button" class="mobile-menu-btn" id="mobile-menu-open-btn" aria-label="Open Navigation Menu" aria-expanded="false" aria-controls="mobile-nav-drawer">
+      <div class="mobile-menu-icon" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </button>
+  </div>
+</header>
+
+
+<div class="mobile-drawer-backdrop" id="mobile-drawer-backdrop" aria-hidden="true"></div>
+<aside class="mobile-drawer" id="mobile-nav-drawer" role="dialog" aria-modal="true" aria-label="Mobile Navigation" tabindex="-1">
+  <div class="drawer-header">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg class="brand-logo-svg" viewBox="0 0 24 24">
+          <path d="M12 2L2 7l10 5 10-5-10-5z" />
+          <path d="M2 17l10 5 10-5" />
+          <path d="M2 12l10 5 10-5" />
+          <circle cx="12" cy="12" r="3" class="brand-logo-accent" />
+        </svg>
+      </span>
+      <span class="brand-text">
+        <strong>BUILD SCOPE<span class="brand-dot">.</span></strong>
+        <small>Construction Opportunity Intelligence</small>
+      </span>
+    </div>
+    <button type="button" class="drawer-close-btn" id="mobile-menu-close-btn" aria-label="Close Navigation Menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+  </div>
+
+  <nav class="drawer-nav" aria-label="Mobile main navigation">
+    <a href="/">Home</a>
+    <a href="/opportunities">Opportunities</a>
+    <a href="/markets">Markets</a>
+    <a href="/companies">Companies</a>
+    <a href="/changes">Changes</a>
+    <a href="/trends">Trends</a>
+    <a href="/analytics">Analytics</a>
+    <a href="/reports">Reports</a>
+    <a href="/how-it-works">How It Works</a>
+  </nav>
+
+  <div class="drawer-divider"></div>
+
+  <div class="drawer-account">
+    
+      <a class="btn btn-outline" href="/signin">Sign In</a>
+      <a class="btn btn-primary" href="/signup">Get Access</a>
+    
+  </div>
+
+  <div class="drawer-footer-status">
+    <div><strong>Active Market:</strong> Dallas–Fort Worth</div>
+    <div class="muted">Data freshness: October 2026</div>
+  </div>
+</aside>
+
+
+<section class="hero hero-compact">
+  <div class="wrap">
+    <p class="crumb"><a href="/">Home</a> · Trend Radar</p>
+    <div class="hero-tagline-kicker">Observed Activity, Defined</div>
+    <h1>Trend Radar</h1>
+    <p class="lede">
+      What changed in the commercial construction records BuildScope actually holds, over the
+      period shown. Every figure is a count of stored rows. Each is defined below and kept
+      separate, because a project is not a permit, a permit is not verified trade scope, and a
+      detected change is not new construction.
+    </p>
+  </div>
+</section>
+
+
+<main id="main">
+  
+    
+  
+  
+<div class="wrap" style="padding-top:24px; padding-bottom:56px">
+  
+  <div class="results-header-bar" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:12px">
+    <div>
+      <h2>Observation window: 2026-09-10 to 2026-10-09</h2>
+      <p class="results-count-sub">
+        Previous period for comparison: 2026-08-11 to 2026-09-09
+        
+          (not available — see note)
+        
+      </p>
+    </div>
+    <div style="display:flex; gap:8px">
+      
+        <a class="btn btn-small btn-outline"
+           href="/trends?window=7d">Last 7d</a>
+      
+        <a class="btn btn-small btn-primary"
+           href="/trends?window=30d">Last 30d</a>
+      
+        <a class="btn btn-small btn-outline"
+           href="/trends?window=90d">Last 90d</a>
+      
+    </div>
+  </div>
+
+  
+
+  
+  <div class="notice" style="margin-top:20px">
+    <strong>No previous period to compare against.</strong>
+    BuildScope first observed this trade on
+    2026-10-09,
+    so no records predate the previous period. A "0" comparison would read as a decline and
+    would be false, so no comparison is shown.
+  </div>
+  
+
+  
+  <div class="stat-strip" style="margin-top:24px; flex-wrap:wrap; gap:16px">
+    
+    <div class="stat" style="flex:1 1 260px; min-width:240px">
+      <span class="stat-value">197</span>
+      <span class="stat-label">New commercial projects</span>
+      <p class="small muted" style="margin-top:8px; line-height:1.45">Distinct assembled projects whose permit date falls inside the period. One project is counted once however many permits it carries.</p>
+      
+        <p class="small muted" style="margin-top:6px">No comparison available.</p>
+      
+      
+        <p class="small muted" style="margin-top:4px">
+          2 record(s) excluded: dated after today.
+        </p>
+      
+    </div>
+    
+    <div class="stat" style="flex:1 1 260px; min-width:240px">
+      <span class="stat-value">245</span>
+      <span class="stat-label">Permit records</span>
+      <p class="small muted" style="margin-top:8px; line-height:1.45">Permit rows with a permit date inside the period, linked to a project of this trade. Several permit rows can belong to one project, so this is not a project count.</p>
+      
+        <p class="small muted" style="margin-top:6px">No comparison available.</p>
+      
+      
+    </div>
+    
+    <div class="stat" style="flex:1 1 260px; min-width:240px">
+      <span class="stat-value">143</span>
+      <span class="stat-label">Projects with classified trade scope</span>
+      <p class="small muted" style="margin-top:8px; line-height:1.45">Distinct projects carrying at least one classified trade relationship, dated in the period. A permit mentioning a trade is not counted here unless the classified relationship was written.</p>
+      
+        <p class="small muted" style="margin-top:6px">No comparison available.</p>
+      
+      
+    </div>
+    
+    <div class="stat" style="flex:1 1 260px; min-width:240px">
+      <span class="stat-value">0</span>
+      <span class="stat-label">Projects with a detected change</span>
+      <p class="small muted" style="margin-top:8px; line-height:1.45">Distinct previously-observed projects whose stored value changed during the period. A project&#39;s first appearance is not a change and is excluded; it is reported separately as newly observed.</p>
+      
+        <p class="small muted" style="margin-top:6px">No comparison available.</p>
+      
+      
+    </div>
+    
+    <div class="stat" style="flex:1 1 260px; min-width:240px">
+      <span class="stat-value">1,791</span>
+      <span class="stat-label">Projects first observed</span>
+      <p class="small muted" style="margin-top:8px; line-height:1.45">Distinct projects BuildScope first ingested during the period. This measures when the record entered this database, not when a city published it — the two differ and are reported separately.</p>
+      
+        <p class="small muted" style="margin-top:6px">No comparison available.</p>
+      
+      
+    </div>
+    
+    <div class="stat" style="flex:1 1 260px; min-width:240px">
+      <span class="stat-value">13</span>
+      <span class="stat-label">Projects with strong mechanical evidence</span>
+      <p class="small muted" style="margin-top:8px; line-height:1.45">Distinct projects whose mechanical evidence tier is 1 or 2, dated in the period. Strong evidence of scope is not evidence that a bid is open.</p>
+      
+        <p class="small muted" style="margin-top:6px">No comparison available.</p>
+      
+      
+    </div>
+    
+  </div>
+
+  
+  <div class="detail-panel" style="margin-top:28px; padding:20px 24px">
+    <h3 style="margin-top:0">How to read these figures</h3>
+    <ul style="line-height:1.6">
+      
+        <li class="small">Counts describe the records BuildScope holds and when it observed them, not the full permit volume of any city.</li>
+      
+        <li class="small">A project count, a permit count, a trade-evidence count and a change count are different measurements of the same records and are never added together.</li>
+      
+        <li class="small">No record in this database predates the previous period, so no comparison is shown. A zero here would read as a decline and would be false.</li>
+      
+      
+        <li class="small">No record carries a malformed permit date in this trade.</li>
+      
+    </ul>
+    <p class="small muted">
+      "New commercial projects" counts permits dated inside the window; it does not mean a bid
+      is open, and it is not the city's total permit volume. Nothing here is projected or
+      seasonally adjusted.
+    </p>
+  </div>
+
+  
+  <div class="detail-panel" style="margin-top:20px; padding:20px 24px">
+    <h3 style="margin-top:0">Source coverage for each market</h3>
+    <p class="small muted">
+      A market listed in configuration is not a market with data. These are the actual coverage
+      states, so two markets with unequal coverage are never compared as if they were equal.
+    </p>
+    <table class="table" style="width:100%; margin-top:10px">
+      <thead>
+        <tr><th>Market</th><th>Coverage state</th><th>Records</th><th>Latest record</th></tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td>Dallas–Fort Worth</td>
+          <td>Verified current coverage</td>
+          <td>6,142</td>
+          <td>2026-10-09</td>
+        </tr>
+        
+        <tr>
+          <td>Austin</td>
+          <td>Configured, no source enabled</td>
+          <td>0</td>
+          <td>—</td>
+        </tr>
+        
+        <tr>
+          <td>Greater Houston</td>
+          <td>Configured, no source enabled</td>
+          <td>0</td>
+          <td>—</td>
+        </tr>
+        
+      </tbody>
+    </table>
+  </div>
+
+  
+  <div class="detail-panel" style="margin-top:20px; padding:20px 24px">
+    <h3 style="margin-top:0">When this database observed its records</h3>
+    <p class="small">
+      First observed: 2026-10-09T15:30:34.136871+00:00<br>
+      Last observed: 2026-10-09T15:32:08.332005+00:00<br>
+      Permit dates held: 2025-08-06
+      to 2026-12-19
+    </p>
+    <p class="small muted">
+      A rise in "new commercial projects" can reflect more permits being filed, or a deeper
+      collection pass reaching older filings. The two are different claims; this window is shown
+      so a reader can weigh them.
+    </p>
+  </div>
+
+  
+  <div style="margin-top:24px; display:flex; gap:12px; flex-wrap:wrap">
+    <a class="btn btn-primary" href="/opportunities">Inspect the projects</a>
+    <a class="btn btn-outline" href="/changes">See detected changes</a>
+    <a class="btn btn-outline" href="/analytics">Market analytics</a>
+  </div>
+</div>
+
+</main>
+
+
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand-title">
+          <span class="bs-motif" aria-hidden="true"><span></span><span></span><span></span></span>
+          BUILD SCOPE
+        </div>
+        <p class="footer-brand-descriptor">
+          <strong>See the work before the work begins.</strong><br>
+          Commercial construction opportunity intelligence built directly from official public records.
+        </p>
+        <p class="small muted" style="margin-top:12px">
+          Live Market: Dallas–Fort Worth (DFW)<br>
+          Continuous Ingestion: October 2026
+        </p>
+      </div>
+
+      <div>
+        <h4>Product</h4>
+        <ul>
+          <li><a href="/opportunities">Opportunities</a></li>
+          <li><a href="/markets">Markets</a></li>
+          <li><a href="/companies">Companies</a></li>
+          <li><a href="/changes">Changes</a></li>
+          <li><a href="/trends">Trends</a></li>
+          <li><a href="/analytics">Analytics</a></li>
+          <li><a href="/reports">Reports</a></li>
+          <li><a href="/commercial-construction-leads">Commercial Construction Leads</a></li>
+          <li><a href="/guides">Guides</a></li>
+          <li><a href="/how-it-works">How It Works</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4>Coverage</h4>
+        <ul>
+          
+          <li>
+            <a href="/markets/dfw">
+              Dallas–Fort Worth
+            </a>
+          </li>
+          
+          <li>
+            <a href="/markets/austin">
+              Austin (Planned)
+            </a>
+          </li>
+          
+          <li>
+            <a href="/markets/houston">
+              Greater Houston (Planned)
+            </a>
+          </li>
+          
+          
+          <li>
+            <a href="/trades/commercial-hvac">
+              Commercial HVAC / Mechanical
+            </a>
+          </li>
+          
+        </ul>
+      </div>
+
+      <div>
+        <h4>Workspace</h4>
+        <ul>
+          
+            <li><a href="/signin">Sign In</a></li>
+            <li><a href="/signup">Get Access</a></li>
+          
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-legal">
+      <p>
+        <strong>Evidence &amp; Reliability Notice:</strong> BuildScope indexes and clusters public commercial construction records, municipal permit filings, and trade scope data.
+        Permit filings represent public documentary records and do not imply active subcontract bidding or owner solicitation unless verified in official procurement documents.
+        Confirm all valuations, specifications, and project statuses with issuing municipal jurisdictions and project authorities.
+      </p>
+      <p class="muted">&copy; 2026 BuildScope. All rights reserved. Commercial Opportunity Intelligence.</p>
+    </div>
+  </div>
+</footer>
+
+
+<script>
+(function() {
+  var openBtn = document.getElementById('mobile-menu-open-btn');
+  var closeBtn = document.getElementById('mobile-menu-close-btn');
+  var backdrop = document.getElementById('mobile-drawer-backdrop');
+  var drawer = document.getElementById('mobile-nav-drawer');
+
+  function openDrawer() {
+    document.body.classList.add('drawer-open');
+    if (openBtn) openBtn.setAttribute('aria-expanded', 'true');
+    if (drawer) drawer.focus();
+  }
+
+  function closeDrawer() {
+    document.body.classList.remove('drawer-open');
+    if (openBtn) openBtn.setAttribute('aria-expanded', 'false');
+  }
+
+  if (openBtn) openBtn.addEventListener('click', openDrawer);
+  if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+  if (backdrop) backdrop.addEventListener('click', closeDrawer);
+
+  window.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && document.body.classList.contains('drawer-open')) {
+      closeDrawer();
+      if (openBtn) openBtn.focus();
+    }
+  });
+})();
+</script>
+</body>
+</html>

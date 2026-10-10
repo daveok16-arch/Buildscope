@@ -33,8 +33,8 @@
     <span class="stat-label">Mechanical permit on file</span>
   </div>
   <div class="stat">
-    <span class="stat-value">{{ "{:,}".format(stats.cities) }}</span>
-    <span class="stat-label">Cities covered</span>
+    <span class="stat-value">{{ "{:,}".format(stats.active_jurisdictions) }}</span>
+    <span class="stat-label">Cities with at least one public project</span>
   </div>
 </div>
 
@@ -64,7 +64,7 @@
 
   <h2 style="margin-top:24px">Monitoring, Alerts and Pursuit Pipeline</h2>
   <p>
-    Watching an opportunity commands BuildScope to monitor the parcel across every subsequent collection cycle and trigger an alert when a material record change occurs — a new trade permit filing, an issued status, or plan revision. Teams can bookmark opportunities, maintain private estimator notes, and manage internal pursuit stages.
+    Watching an opportunity records your interest in it and raises an in-app alert when a later collection run detects a difference in the stored record. The record is re-read on each collection cycle, so a new trade permit filing, an issued status, or a plan revision is picked up when the issuing city republishes it. Accounts can bookmark opportunities, keep private estimator notes, and track internal pursuit stages.
   </p>
 </section>
 
@@ -86,7 +86,7 @@
 
 <section class="section">
   <div class="notice notice-plain">
-    <h4>What this platform does not claim</h4>
+    <p class="panel-eyebrow">What this platform does not claim</p>
     <p>
       A project appearing here is <strong>relevant</strong> to {{ trade.short_label | lower }} work
       because a public record shows mechanical activity. It is <strong>not a confirmed open bid</strong>.

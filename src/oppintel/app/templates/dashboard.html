@@ -10,7 +10,7 @@
     </div>
     <h1>Commercial Intelligence Workspace</h1>
     <p class="lede">
-      Real-time opportunity tracking, monitored projects, recorded permit changes, and your active pursuit pipeline across {{ market.name }}.
+      Project and permit intelligence, monitored projects, recorded permit changes, and your active pursuit pipeline across {{ market.name }}.
     </p>
   </div>
 </section>
@@ -45,7 +45,7 @@
 {# Preference reminder notice if unconfigured #}
 {% if not prefs.cities and not prefs.project_types and not prefs.min_value and not prefs.max_value %}
 <div class="notice notice-action" style="margin-bottom:28px">
-  <h4 style="margin-top:0">Focus your intelligence feed</h4>
+  <p class="panel-eyebrow" style="margin-top:0">Focus your intelligence feed</p>
   <p>
     You are currently monitoring all market-wide opportunities. Configure target cities and preferred project types to personalize your new opportunity matching.
   </p>
@@ -88,10 +88,11 @@
     {# B. Recently Detected Changes #}
     <section class="section">
       <div class="section-head">
-        <div class="section-kicker">Continuous Audit</div>
-        <h2>Recently Detected Changes</h2>
+        <div class="section-kicker">Record Audit</div>
+        <h2>Recently Recorded Changes</h2>
         <p class="section-sub">
-          Projects where permit status, valuation, or scope changed in the last 30 days during collection passes.
+          Projects where a stored value (permit status, valuation, or scope) differed from the
+          previous collection run in the last 30 days. First observations are labelled separately.
         </p>
       </div>
 
@@ -127,10 +128,10 @@
           <li>
             {% if project.slug %}
               <a href="{{ url_for('opportunity_detail', slug=project.slug) }}" style="font-weight:700; color:var(--navy-950)">
-                {{ (project.project_name or project.address) | truncate(48) }}
+                {{ ((project.project_name | titlecase) or project.address) | truncate(48) }}
               </a>
             {% else %}
-              <strong>{{ (project.project_name or project.address) | truncate(48) }}</strong>
+              <strong>{{ ((project.project_name | titlecase) or project.address) | truncate(48) }}</strong>
             {% endif %}
             <span class="muted small">{{ project.city }} · {{ project.estimated_project_value | money }}</span>
           </li>

@@ -53,6 +53,43 @@ def _fresh_db(tmp_path) -> Database:
     return db
 
 
+# --- a future filing date is labelled, never presented as a filing -------------
+
+def test_filing_date_filter_marks_a_future_value_unverified(app_db):
+    """The 19 Dec 2026 defect: a permit dated after today must not read as a filing date."""
+    from oppintel.service import OpportunityService
+
+    fmt = app_db.jinja_env.filters["filing_date"]
+    assert fmt("2026-06-01") == OpportunityService.format_date("2026-06-01")
+    future = fmt("2226-12-19")
+    assert "date unverified" in future
+    assert "19 Dec 2226" in future
+    assert fmt(None) == "Not verified"
+
+
+def test_decorate_flags_a_future_permit_date(app_db):
+    """`decorate` sets the flag the templates use, without altering the stored value."""
+    from oppintel.config import active_market, active_trade
+    from oppintel.db import Database
+    from oppintel.service import OpportunityService
+
+    db = Database(app_db.config["APP_CONFIG"].database_path)
+    try:
+        svc = OpportunityService(db, active_market(), active_trade())
+        row = db.conn.execute("SELECT * FROM project LIMIT 1").fetchone()
+        project = dict(row)
+        db.conn.execute(
+            "UPDATE project SET permit_date = ? WHERE id = ?", ("2226-12-19", project["id"])
+        )
+        db.conn.commit()
+        project = dict(db.conn.execute("SELECT * FROM project WHERE id = ?", (project["id"],)).fetchone())
+        decorated = svc.decorate(dict(project))
+        assert decorated["permit_date_is_future"] is True
+        assert decorated["permit_date"] == "2226-12-19"  # value preserved exactly
+    finally:
+        db.close()
+
+
 # --- persistence across connections -------------------------------------------
 
 def test_findings_survive_a_fresh_connection(tmp_path):

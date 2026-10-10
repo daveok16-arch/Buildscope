@@ -3,12 +3,13 @@
 {% block hero %}
 <section class="hero hero-compact">
   <div class="wrap">
-    <p class="crumb"><a href="{{ url_for('home') }}">Home</a> · Continuous Monitoring</p>
-    <div class="hero-tagline-kicker">Continuous Audit Log</div>
+    <p class="crumb"><a href="{{ url_for('home') }}">Home</a> · Change Feed</p>
+    <div class="hero-tagline-kicker">Change Audit Log</div>
     <h1>Detected Project Changes</h1>
     <p class="lede">
-      Real differences detected between consecutive collection passes across {{ market.name }}.
-      Every entry represents a verified change in permit status, mechanical evidence, declared valuation, or project scope.
+      Records entering the system and real differences detected between consecutive collection
+      passes across {{ market.name }}. A first observation is labelled as such; only a difference
+      between two passes is a detected change.
     </p>
   </div>
 </section>
@@ -20,7 +21,7 @@
   {# Filter Sidebar #}
   <aside class="filter-sidebar">
     <div class="filter-sidebar-head">
-      <h3>Audit Scope</h3>
+      <h2 class="filter-panel-title">Audit Scope</h2>
     </div>
     <div class="filter-stack">
       <div class="field">
@@ -33,22 +34,80 @@
         </div>
       </div>
       <div class="notice" style="margin-top:16px; font-size:0.85rem">
-        <strong>Zero-False-Positive Guarantee:</strong>
-        A pipeline re-run with unchanged data produces zero events. The timeline fills only when the municipal record itself moves.
+        <strong>No fabricated events:</strong>
+        A pipeline re-run over unchanged data produces no events. A change appears only when the
+        municipal record itself differs from the value we last stored.
       </div>
     </div>
   </aside>
 
   {# Main Results #}
   <div class="feed-results-area">
+    {% if freshness and freshness.real_diff_count == 0 %}
+    <div class="notice" style="margin-bottom:16px">
+      <strong>Collection began {{ freshness.first_observed_display }}.</strong>
+      Every entry below is a first observation — a record entering the system. Differences
+      between collection passes appear after later runs; none have been recorded yet.
+    </div>
+    {% endif %}
+    <div class="notice" style="margin-bottom:16px">
+      <strong>What we record.</strong>
+      We record every permit we observe and flag differences between collection runs. Each entry
+      is either a first observation (the record entering our system) or a real difference between
+      two passes. The table below shows, for each entry, the value we stored before and the value
+      the record shows now.
+    </div>
     <div class="results-header-bar">
       <div>
-        <h2>{{ changes | length }} Differences Detected in Last {{ days }} Days</h2>
-        <p class="results-count-sub">Continuous change detection tracking status transitions, scope additions, and valuation updates.</p>
+        {% set n_first = breakdown.get('new_project', 0) %}
+        {% set n_diff = total - n_first %}
+        <h2>{{ "{:,}".format(total) }} Change-feed Entries in Last {{ days }} Days</h2>
+        <p class="results-count-sub">
+          {{ "{:,}".format(n_first) }} are first observations (a record entering the system, not a
+          change) and {{ "{:,}".format(n_diff) }} are detected differences between passes.
+          Showing {{ changes | length }} of {{ "{:,}".format(total) }}
+          (page {{ page }} of {{ total_pages }}).
+        </p>
       </div>
     </div>
 
     {% if changes %}
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Detected changes">
+        <table class="data-table change-table">
+          <caption class="sr-only">Detected changes with before and after values</caption>
+          <thead>
+            <tr>
+              <th scope="col">Detected</th>
+              <th scope="col">Project</th>
+              <th scope="col">Kind</th>
+              <th scope="col">Field</th>
+              <th scope="col">Before</th>
+              <th scope="col">After</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in changes %}
+            <tr>
+              <td class="nowrap">{{ c.detected_at[:10] if c.detected_at else 'Recent' }}</td>
+              <td>
+                {% if c.slug %}
+                  <a href="{{ url_for('opportunity_detail', slug=c.slug) }}">{{ (c.project_name | titlecase) or c.address or 'Commercial Project' }}</a>
+                {% else %}
+                  {{ (c.project_name | titlecase) or c.address or 'Commercial Project' }}
+                {% endif %}
+                {% if c.city %}<div class="small muted">{{ c.city }}</div>{% endif %}
+              </td>
+              <td><span class="badge badge-plain" style="font-size:0.75rem; text-transform:uppercase">{{ c.change_kind | replace('_', ' ') }}</span></td>
+              <td>{{ c.field_name or c.summary or '—' }}</td>
+              <td>{% if c.previous_value %}<del>{{ c.previous_value }}</del>{% else %}<span class="muted">Not previously recorded</span>{% endif %}</td>
+              <td>{% if c.current_value %}<span style="color:var(--signal-high-text); font-weight:600">{{ c.current_value }}</span>{% else %}<span class="muted">—</span>{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="margin-top:28px">Entries as a timeline</h3>
       <div class="detail-panel" style="padding:20px 24px">
         <ol class="timeline" style="margin:0">
           {% for c in changes %}
@@ -68,9 +127,9 @@
             <div class="timeline-body" style="font-size:0.95rem; line-height:1.5">
               <strong>
                 {% if c.slug %}
-                  <a href="{{ url_for('opportunity_detail', slug=c.slug) }}">{{ c.project_name or c.address or 'Commercial Project' }}</a>
+                  <a href="{{ url_for('opportunity_detail', slug=c.slug) }}">{{ (c.project_name | titlecase) or c.address or 'Commercial Project' }}</a>
                 {% else %}
-                  {{ c.project_name or c.address or 'Commercial Project' }}
+                  {{ (c.project_name | titlecase) or c.address or 'Commercial Project' }}
                 {% endif %}
               </strong>:
               {{ c.summary }}
@@ -96,6 +155,20 @@
           {% endfor %}
         </ol>
       </div>
+      {% if total_pages > 1 %}
+      <nav class="pagination" style="margin-top:20px; display:flex; gap:8px; align-items:center; flex-wrap:wrap"
+           aria-label="Change feed pages">
+        {% if page > 1 %}
+          <a class="btn btn-small btn-outline"
+             href="{{ url_for('changes_feed', days=days, page=page-1) }}">&larr; Newer</a>
+        {% endif %}
+        <span class="small muted">Page {{ page }} of {{ total_pages }}</span>
+        {% if page < total_pages %}
+          <a class="btn btn-small btn-outline"
+             href="{{ url_for('changes_feed', days=days, page=page+1) }}">Older &rarr;</a>
+        {% endif %}
+      </nav>
+      {% endif %}
     {% else %}
       {% with heading = "No changes detected in this window",
               message = "No qualifying changes were recorded in the selected timeframe.",

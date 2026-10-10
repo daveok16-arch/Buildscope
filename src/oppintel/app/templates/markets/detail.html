@@ -28,7 +28,7 @@
   <div class="stat"><span class="stat-value">{{ "{:,}".format(stats.projects_public) }}</span><span class="stat-label">Commercial projects</span></div>
   <div class="stat"><span class="stat-value">{{ "{:,}".format(stats.with_mechanical) }}</span><span class="stat-label">With mechanical evidence</span></div>
   <div class="stat"><span class="stat-value">{{ "{:,}".format(stats.tier1) }}</span><span class="stat-label">Mechanical permit on file</span></div>
-  <div class="stat"><span class="stat-value">{{ "{:,}".format(stats.cities) }}</span><span class="stat-label">Cities covered</span></div>
+  <div class="stat"><span class="stat-value">{{ "{:,}".format(stats.active_jurisdictions) }}</span><span class="stat-label">Cities with at least one public project</span></div>
 </div>
 
 {% if opportunities %}
@@ -86,7 +86,7 @@
 
 <section class="section">
   <div class="notice notice-plain">
-    <h4>Coverage note</h4>
+    <p class="panel-eyebrow">Coverage note</p>
     <p>
       This market covers {{ mkt.cities | length }} configured cities. Coverage is not complete
       for every jurisdiction, and some source record types are capped by a pagination safety

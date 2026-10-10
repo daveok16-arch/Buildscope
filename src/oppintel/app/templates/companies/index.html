@@ -16,12 +16,31 @@
 
 {% block content %}
 <div class="wrap" style="padding-top:24px; padding-bottom:56px">
+  <div class="mobile-filter-bar">
+    <button type="button" class="btn btn-outline filter-toggle" id="mobile-filter-btn"
+            aria-expanded="false" aria-controls="company-filter-panel">
+      <span class="filter-toggle-label">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px">
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+        </svg>
+        Filters{% if active_filter_count %} ({{ active_filter_count }}){% endif %}
+      </span>
+      <span class="small muted">Adjust criteria &darr;</span>
+    </button>
+  </div>
+
+  <div class="filter-sheet-backdrop" id="filter-sheet-backdrop" hidden></div>
+
 <div class="feed-workspace-layout">
-  {# Filter Sidebar #}
-  <aside class="filter-sidebar">
+  {# Filter Sidebar (a bottom sheet on mobile) #}
+  <aside class="filter-sidebar" id="company-filter-panel" aria-label="Filter stakeholders">
+    <div class="filter-sheet-handle" aria-hidden="true"></div>
+    <button type="button" class="btn btn-small btn-outline filter-sheet-close" id="filter-sheet-close">
+      Close filters
+    </button>
     <form method="get" action="{{ url_for('companies_index') }}">
       <div class="filter-sidebar-head">
-        <h3>Filter Stakeholders</h3>
+        <h2 class="filter-panel-title">Filter Stakeholders</h2>
         <a class="btn btn-small btn-ghost" href="{{ url_for('companies_index') }}">Reset</a>
       </div>
 
@@ -66,9 +85,9 @@
     </div>
 
     {% if companies %}
-      <div class="card-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
+      <div class="card-grid">
         {% for c in companies %}
-        <article class="card opportunity-card" style="display:flex; flex-direction:column; justify-content:space-between">
+        <article class="card opportunity-card company-card">
           <div>
             <div class="card-badges">
               <span class="badge badge-plain">{{ c.primary_role }}</span>
@@ -76,37 +95,37 @@
                 <span class="badge badge-evidence">{{ c.mechanical_project_count }} with Mechanical</span>
               {% endif %}
             </div>
-            <h3 class="card-title" style="margin-top:8px">
+            <h3 class="card-title">
               <a href="{{ url_for('company_detail', slug=c.slug) }}">{{ c.name }}</a>
             </h3>
             
-            <div class="card-meta" style="margin:12px 0">
+            <dl class="company-facts">
               <div class="meta-item">
-                <span class="meta-label">Associated Projects:</span>
-                <span class="meta-val font-semibold">{{ c.project_count }}</span>
+                <dt class="meta-label">Associated Projects</dt>
+                <dd class="meta-val">{{ c.project_count }}</dd>
               </div>
               {% if c.total_declared_value %}
               <div class="meta-item">
-                <span class="meta-label">Declared Valuation:</span>
-                <span class="meta-val font-semibold">${{ "{:,.0f}".format(c.total_declared_value) }}</span>
+                <dt class="meta-label">Declared Valuation</dt>
+                <dd class="meta-val">${{ "{:,.0f}".format(c.total_declared_value) }}</dd>
               </div>
               {% endif %}
               {% if c.cities %}
               <div class="meta-item">
-                <span class="meta-label">Active Footprint:</span>
-                <span class="meta-val">{{ c.cities | join(', ') }}</span>
+                <dt class="meta-label">Active Footprint</dt>
+                <dd class="meta-val">{{ c.cities | join(', ') }}</dd>
               </div>
               {% endif %}
               {% if c.project_types %}
               <div class="meta-item">
-                <span class="meta-label">Specializations:</span>
-                <span class="meta-val">{{ c.project_types | join(', ') }}</span>
+                <dt class="meta-label">Specializations</dt>
+                <dd class="meta-val">{{ c.project_types | join(', ') }}</dd>
               </div>
               {% endif %}
-            </div>
+            </dl>
           </div>
 
-          <div class="card-footer" style="margin-top:16px; border-top:1px solid var(--slate-200); padding-top:12px; display:flex; justify-content:space-between; align-items:center">
+          <div class="card-footer company-card-footer">
             <span class="small muted">Public Records Verified</span>
             <a class="btn btn-small btn-outline" href="{{ url_for('company_detail', slug=c.slug) }}">View Profile &rarr;</a>
           </div>
@@ -125,4 +144,20 @@
   </div>
 </div>
 </div>
+
+<script nonce="{{ csp_nonce() }}">
+(function() {
+  var btn = document.getElementById('mobile-filter-btn');
+  var sidebar = document.getElementById('company-filter-panel');
+  var backdrop = document.getElementById('filter-sheet-backdrop');
+  var closeBtn = document.getElementById('filter-sheet-close');
+  if (!btn || !sidebar || !window.BSDialog) return;
+
+  window.BSDialog.register(btn, sidebar, backdrop, {
+    bodyClass: 'filter-sheet-open',
+    closeEls: [closeBtn],
+    dialogRole: true
+  });
+})();
+</script>
 {% endblock %}

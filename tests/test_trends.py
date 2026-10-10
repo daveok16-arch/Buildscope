@@ -216,8 +216,34 @@ def test_malformed_date_is_excluded_and_counted(tmp_path):
 
 
 def test_window_days_are_the_documented_ones():
-    assert WINDOW_DAYS == {"7d": 7, "30d": 30, "90d": 90}
+    # `all` maps to 0: it is the whole dataset, not a trailing period. It was added so the
+    # page can show the dataset's own totals under an explicit "cumulative" label.
+    assert WINDOW_DAYS == {"7d": 7, "30d": 30, "90d": 90, "all": 0}
     assert MIN_OBSERVATIONS_FOR_TREND >= 1
+
+
+def test_all_time_window_covers_the_whole_dataset():
+    period = resolve_window("all", today=date(2026, 10, 7))
+    assert period.is_all_time is True
+    assert period.contains(date(2026, 10, 7))
+    assert period.contains(date(2019, 1, 1))
+    # No previous period exists for an all-time window.
+    assert period.previous().is_all_time is True
+    assert period.previous().days == 0
+
+
+def test_occurrence_metrics_are_cumulative_only_in_the_all_time_window(tmp_path):
+    db = _db(tmp_path, [_permit("A", date(2026, 10, 1))])
+    all_time = build_trend_report(db, window="all", today=date(2026, 10, 7))
+    assert all_time.metric_index["projects_observed"].cumulative is True
+    # Occurrence metrics declare they are only meaningful for a trailing period, so the page
+    # can hide them under "all" rather than show a period figure with no period.
+    assert "all" not in all_time.metric_index["projects_changed"].windows
+    # A stock metric (evidence held) is meaningful for every window including "all".
+    assert "all" in all_time.metric_index["projects_with_strong_evidence"].windows
+    ranged = build_trend_report(db, window="30d", today=date(2026, 10, 7))
+    assert ranged.metric_index["projects_observed"].cumulative is False
+    db.close()
 
 
 # --- HTTP ---------------------------------------------------------------------
@@ -247,3 +273,83 @@ def test_trends_api_returns_definitions_with_values(client):
     for m in payload["metrics"]:
         assert m["definition"]
         assert "value" in m
+
+
+def test_ingestion_window_newest_permit_excludes_future_dates(tmp_path):
+    """The "records span" end date must not be a future-dated permit.
+
+    A permit dated after today is a quality defect, and reporting it as the newest record held
+    would state a filing date that cannot exist. The window reports the newest *usable* permit
+    date instead.
+    """
+    db = _db(tmp_path, [
+        _permit("PAST", date(2026, 10, 5)),
+        _permit("FUTURE", date(2026, 12, 19)),
+    ])
+    report = build_trend_report(db, window="30d", today=date(2026, 10, 7))
+    assert report.ingestion_window["newest_permit_date"] == "2026-10-05"
+    db.close()
+
+
+def test_every_metric_carries_a_basis_line(tmp_path):
+    """Each card must name the population and period it counts, so two cards cannot be read
+    as comparable when they are not (the source of the 'new projects vs public projects'
+    confusion)."""
+    db = _db(tmp_path, [])
+    report = build_trend_report(db, window="30d", today=date(2026, 10, 7))
+    for m in report.metrics:
+        assert m.basis, f"{m.key} has no basis line"
+        assert "period" in m.basis or "time" in m.basis
+    db.close()
+
+
+def test_new_projects_basis_says_it_ignores_classification(tmp_path):
+    """'New commercial projects' is a window count over permit dates, not the home 'public
+    projects' figure. The basis line must say so explicitly."""
+    db = _db(tmp_path, [])
+    report = build_trend_report(db, window="30d", today=date(2026, 10, 7))
+    basis = report.metric_index["projects_observed"].basis
+    assert "regardless of classification" in basis
+    db.close()
+
+
+def test_new_projects_card_reports_the_public_subset(tmp_path):
+    """D5: the 'new projects' card carries a second line naming the discoverable subset, so the
+    all-observed headline is not read as the public count."""
+    public = _permit("M1", date(2026, 9, 15), description="Mechanical remodel of spec suite")
+    non_public = Permit(
+        source_id="fort_worth_permits",
+        permit_number="N1",
+        natural_key="N1",
+        permit_type="Commercial Building Permit",
+        permit_subtype="commercial_building",
+        permit_date=date(2026, 9, 16),
+        status="Issued",
+        address="20 OTHER ST",
+        city="Fort Worth",
+        state="TX",
+        work_description="Tenant improvement with no mechanical work",
+        land_use="OFFICE BUILDING",
+        is_commercial=True,
+        job_value=500_000.0,
+        source_url="https://example.gov/N1",
+        source_date=date(2026, 9, 16),
+    )
+    db = _db(tmp_path, [public, non_public])
+    # The classifier is deliberately generous on a synthetic record, so force one project to a
+    # non-discoverable classification to guarantee a strict subset deterministically.
+    db.conn.execute(
+        "UPDATE project SET classification = 'NEEDS_VERIFICATION' "
+        "WHERE project_name = 'Tenant improvement with no mechanical work'"
+    )
+    db.conn.commit()
+
+    report = build_trend_report(db, window="30d", today=date(2026, 10, 7))
+    metric = report.metric_index["projects_observed"]
+    assert metric.value == 2
+    assert metric.secondary is not None
+    label, value = metric.secondary
+    assert label == "of which public"
+    assert value == 1  # only the mechanical project is discoverable
+    assert 0 < value < metric.value  # a strict subset, not the whole headline
+    db.close()

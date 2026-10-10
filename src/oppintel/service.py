@@ -33,6 +33,7 @@ from .config import (
     load_sources,
     type_slug,
 )
+from .dates import occurrence_is_future
 from .db import Database
 from .eligibility import evaluate
 from .grouping import building_key, group_projects, sibling_info_for
@@ -53,10 +54,44 @@ DISCOVERABLE_PROCUREMENT = (CONFIRMED_OPEN, EVIDENCE_FOUND, NOT_VERIFIED)
 
 #: Sort options exposed to the public. Deliberately factual orderings only: there is no
 #: "best opportunity" sort, because that would be an invented judgement.
+#
+#: "Most recent permit" orders by the most recent *usable* permit date: a permit dated after
+#: today is a defect (see `dates.usable_occurrence_sql`) and must not sort to the top as if it
+#: were the newest filing. `date('now')` is SQLite's UTC day, matching the observation day the
+#: rest of the pipeline uses, and keeps the order expression free of bound parameters so the
+#: sort stays a static, testable string.
+_SORT_DATE = "CASE WHEN p.permit_date <= date('now') THEN p.permit_date END"
+
+
+def _recent_order(alias: str = "p") -> str:
+    """An ORDER BY that ranks projects by their most recent *usable* permit date.
+
+    A permit dated after today is a defect and must not rank as the newest filing, so it is
+    excluded from the ordering expression (it sorts last, after real dates). The id breaks ties
+    deterministically.
+    """
+    date_expr = (
+        f"CASE WHEN {alias}.permit_date <= date('now') THEN {alias}.permit_date END"
+    )
+    return f"{date_expr} DESC NULLS LAST, {alias}.id"
+
+
 SORT_OPTIONS = {
-    "recent": ("Most recent permit", "p.permit_date DESC NULLS LAST, p.id"),
+    "recent": ("Most recent permit", _recent_order("p")),
     "updated": ("Recently updated", "p.updated_at DESC, p.id"),
-    "status": ("Project status", "p.project_status ASC, p.permit_date DESC NULLS LAST, p.id"),
+    "status": (
+        "Project status",
+        f"p.project_status ASC, {_recent_order('p')}",
+    ),
+    # "Best evidence" is a factual ordering, not a judgement: it ranks by the stored evidence
+    # tier (Tier 1 official permit, then Tier 2 documented scope, then none) and breaks ties by
+    # the most recent usable permit date. It is order by what the data records, never by an
+    # opinion of value.
+    "evidence": (
+        "Best evidence",
+        "CASE p.mechanical_evidence_tier WHEN 1 THEN 0 WHEN 2 THEN 1 ELSE 2 END ASC, "
+        + _recent_order("p"),
+    ),
 }
 
 DEFAULT_SORT = "recent"
@@ -89,6 +124,10 @@ class OpportunityFilters:
     max_value: float | None = None
     #: Structural filters. Each maps to a stored column, never to a derived judgement.
     mechanical_only: bool = False
+    #: The complement of `mechanical_only`: exclude records the trade has evidence for, so a
+    #: view of "fresh filings, trade not yet verified" is filtered in SQL rather than by
+    #: dropping rows after the page is built (which would misreport the total and page count).
+    without_mechanical: bool = False
     #: Only records whose stored `updated_at` is within this many days.
     freshness_days: int | None = None
     #: Restrict to an explicit id set. Used by the account views (saved, watching, pipeline),
@@ -145,6 +184,7 @@ class OpportunityFilters:
             min_value=band(self.min_value),
             max_value=band(self.max_value),
             mechanical_only=bool(self.mechanical_only),
+            without_mechanical=bool(self.without_mechanical),
             freshness_days=days,
             project_ids=ids,
             sort=self.sort if self.sort in SORT_OPTIONS else DEFAULT_SORT,
@@ -174,6 +214,8 @@ class OpportunityFilters:
             params["include_unverified"] = "1"
         if self.mechanical_only:
             params["mechanical_only"] = "1"
+        if self.without_mechanical:
+            params["without_mechanical"] = "1"
         if self.freshness_days:
             params["freshness_days"] = self.freshness_days
         params.update(overrides)
@@ -309,7 +351,8 @@ class OpportunityService:
         whole point: the directory may widen, but it may not claim a trade the record does not
         support.
         """
-        if filters.include_unverified or filters.procurement_status or filters.mechanical_only:
+        if (filters.include_unverified or filters.procurement_status or filters.mechanical_only
+                or filters.without_mechanical):
             return None, []
         if (self.trade.discovery or {}).get("discover_commercial_base"):
             return None, []
@@ -376,6 +419,11 @@ class OpportunityService:
             field = (self.trade.discovery or {}).get("evidence_field")
             if field and re.fullmatch(r"[a-z_]+", str(field)):
                 clauses.append(f"p.{field} IS NOT NULL")
+        if filters.without_mechanical:
+            # "Trade not yet verified" is expressed by the stored tier, the same value the card
+            # reads, so the page count and the cards agree.
+            clauses.append("(p.mechanical_evidence_tier IS NULL "
+                           "OR p.mechanical_evidence_tier NOT IN (1, 2))")
         if filters.freshness_days:
             clauses.append("p.updated_at >= ?")
             params.append(
@@ -499,6 +547,10 @@ class OpportunityService:
         project["has_mechanical_evidence"] = project.get("mechanical_evidence_tier") in (1, 2)
         project["last_verified_display"] = self.format_month(project.get("last_verified"))
         project["permit_date_display"] = self.format_date(project.get("permit_date"))
+        # A permit dated after today cannot describe a filing that has already happened. The
+        # value is preserved exactly (the source states it), but it is flagged so a template
+        # labels it "Unverified date" instead of presenting a future date as a filing date.
+        project["permit_date_is_future"] = occurrence_is_future(project.get("permit_date"))
         project["is_closed"] = project.get("procurement_status") == CLOSED
         project["building_key"] = building_key(project.get("address"), project.get("city"))
 
@@ -621,6 +673,24 @@ class OpportunityService:
         return parsed.strftime("%B %Y")
 
     @staticmethod
+    def format_date_time(value: Any) -> str:
+        """A date and its time, for the collection timestamp.
+
+        The collection boundary is a moment, not a month: "October 2026" cannot distinguish a
+        run that finished this morning from one three weeks ago. A source that stores only a
+        date (no time) still renders as a date rather than a fabricated midnight.
+        """
+        if not value:
+            return "Not verified"
+        try:
+            parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        except ValueError:
+            return str(value)
+        if parsed.hour or parsed.minute or parsed.second:
+            return parsed.strftime("%d %b %Y, %H:%M UTC")
+        return parsed.strftime("%d %b %Y")
+
+    @staticmethod
     def format_date(value: Any) -> str:
         if not value:
             return "Not verified"
@@ -673,9 +743,9 @@ class OpportunityService:
                AND p.id <> ?
                AND p.classification IN (?, ?)
                AND p.procurement_status IN (?, ?, ?)
-             ORDER BY p.permit_date DESC NULLS LAST, p.id
+             ORDER BY {order}
              LIMIT ?
-            """,
+            """.format(order=_recent_order("p")),
             (project.get("city"), project["id"])
             + PUBLIC_CLASSIFICATIONS + DISCOVERABLE_PROCUREMENT + (limit,),
         ).fetchall()
@@ -790,11 +860,20 @@ class OpportunityService:
     # --- statistics -----------------------------------------------------------
 
     def market_statistics(self) -> dict[str, Any]:
-        """Real counts from the database, for the homepage and landing pages.
+        """Real counts for the homepage and landing pages, read from the stats snapshot.
 
-        Every figure is a count of stored rows. Nothing here is estimated, projected or
-        rounded up, because a public statistic the database cannot support is a fabricated one.
+        The figures come from `app/stat_snapshot.py`, which computes them once per refresh and
+        stores them, so a page cannot disagree with the API about the same word and a visitor
+        cannot see two different totals seconds apart. The keys and semantics are unchanged for
+        callers; only the computation moved to one place.
         """
+        from .app.stat_snapshot import read_snapshot
+
+        metrics = read_snapshot(self.db, self.market, self.trade)
+        if metrics:
+            return metrics
+        # No snapshot and the table is absent (a database that predates it): fall back to the
+        # equivalent computation so a read still works during an upgrade window.
         return self.statistics_for(where="1=1", params=[])
 
     def _evidence_predicate(self, alias: str = "p") -> str:
@@ -982,9 +1061,20 @@ class OpportunityService:
             "SELECT MAX(retrieval_date) AS latest, MAX(updated_at) AS updated FROM source_coverage"
         ).fetchone()
         latest = row["latest"] if row else None
+        first_observed = self.db.conn.execute(
+            "SELECT MIN(created_at) FROM project"
+        ).fetchone()[0]
+        # A real difference is a change between collection runs, not a record's first
+        # appearance. The /changes page states this count so an empty feed is explained.
+        diff_row = self.db.conn.execute(
+            "SELECT COUNT(*) FROM project_change WHERE change_kind <> 'new_project'"
+        ).fetchone()
         return {
             "retrieval_date": latest,
             "display": self.format_month(latest),
+            "first_observed": first_observed,
+            "first_observed_display": self.format_month(first_observed[:10] if first_observed else None),
+            "real_diff_count": int(diff_row[0] or 0),
             "sources": self.db.conn.execute(
                 """
                 SELECT s.name, c.earliest_date, c.latest_date, c.retrieval_date,
@@ -1305,7 +1395,7 @@ class OpportunityService:
               FROM project p
               LEFT JOIN project_slug s ON s.project_id = p.id
              WHERE {where}
-             ORDER BY p.permit_date DESC NULLS LAST, p.id
+             ORDER BY {_recent_order("p")}
              LIMIT ?
             """,
             tuple(params) + (limit,),
@@ -1321,11 +1411,14 @@ class OpportunityService:
         """
         return self.db.changes_for_project(project_id, limit=limit)
 
-    def recent_changes(self, *, limit: int = 20, days: int = 30) -> list[dict[str, Any]]:
-        """Changes across all public projects in the recent window.
+    def recent_changes(
+        self, *, limit: int = 20, days: int = 30, offset: int = 0
+    ) -> list[dict[str, Any]]:
+        """Changes across all public projects in the recent window, newest first.
 
         Restricted to projects that are publicly discoverable, so the "recently updated"
-        section cannot surface a project the directory itself withholds.
+        section cannot surface a project the directory itself withholds. ``offset`` supports a
+        paged feed; the matching total is `recent_changes_count`.
         """
         cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
         rows = self.db.conn.execute(
@@ -1339,11 +1432,54 @@ class OpportunityService:
                AND p.classification IN (?, ?)
                AND p.procurement_status IN (?, ?, ?)
              ORDER BY c.id DESC
-             LIMIT ?
+             LIMIT ? OFFSET ?
             """,
-            (cutoff,) + PUBLIC_CLASSIFICATIONS + DISCOVERABLE_PROCUREMENT + (limit,),
+            (cutoff,) + PUBLIC_CLASSIFICATIONS + DISCOVERABLE_PROCUREMENT + (limit, offset),
         ).fetchall()
         return [dict(r) for r in rows]
+
+    def recent_changes_count(self, *, days: int = 30) -> int:
+        """How many changes match the public recent-changes filter.
+
+        The count applies the same public predicate as `recent_changes`, so a page's headline
+        ("N detected changes") is the size of the result set and not the size of one page. This
+        is what fixes the count that stopped at the page limit.
+        """
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+        row = self.db.conn.execute(
+            """
+            SELECT COUNT(*) AS n
+              FROM project_change c
+              JOIN project p ON p.id = c.project_id
+             WHERE c.detected_at >= ?
+               AND p.classification IN (?, ?)
+               AND p.procurement_status IN (?, ?, ?)
+            """,
+            (cutoff,) + PUBLIC_CLASSIFICATIONS + DISCOVERABLE_PROCUREMENT,
+        ).fetchone()
+        return int(row["n"] or 0)
+
+    def recent_changes_breakdown(self, *, days: int = 30) -> dict[str, int]:
+        """Counts by `change_kind` over the same public filter as `recent_changes_count`.
+
+        The feed must not describe a first observation as a detected difference: `new_project`
+        is the moment a record entered the system, not a difference between two passes. The
+        breakdown lets the page say so honestly instead of summing both into "changes".
+        """
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+        rows = self.db.conn.execute(
+            """
+            SELECT c.change_kind AS kind, COUNT(*) AS n
+              FROM project_change c
+              JOIN project p ON p.id = c.project_id
+             WHERE c.detected_at >= ?
+               AND p.classification IN (?, ?)
+               AND p.procurement_status IN (?, ?, ?)
+             GROUP BY c.change_kind
+            """,
+            (cutoff,) + PUBLIC_CLASSIFICATIONS + DISCOVERABLE_PROCUREMENT,
+        ).fetchall()
+        return {r["kind"]: int(r["n"]) for r in rows}
 
     def changed_project_ids(self, *, limit: int = 20, days: int = 30) -> list[int]:
         """Distinct project ids with a recent change, most recently changed first."""
@@ -1373,11 +1509,11 @@ class OpportunityService:
         filter, so a project cannot slip through by being listed here.
         """
         rows = self.db.conn.execute(
-            """
+            f"""
             SELECT id FROM project p
              WHERE classification IN (?, ?)
                AND procurement_status IN (?, ?, ?)
-             ORDER BY permit_date DESC NULLS LAST, id DESC
+             ORDER BY {_recent_order("p")}
              LIMIT ?
             """,
             PUBLIC_CLASSIFICATIONS + DISCOVERABLE_PROCUREMENT + (limit,),

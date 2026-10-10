@@ -1,20 +1,30 @@
 {# Reusable opportunity card. Used by the directory, homepage, dashboard and landing pages. #}
 <article class="card">
-  {# 1. Zero-Pill Scannable Signal & Scope Metadata Line #}
+  {# 1. Evidence-led signal line. The proof state leads, as one badge: the trade-signal label the
+     service already derives from the stored evidence tier (strong official permit -> documented
+     scope -> "Trade not verified"). Classification is a confidence word after the evidence, not a
+     competing coloured badge, and procurement status is stated once, factually. Nothing here is
+     invented: every clause is a stored field or a service helper. #}
+  {% set evidence_tier = project.mechanical_evidence_tier %}
   <div class="card-meta-line">
-    <span class="signal-indicator signal-{{ project.classification | lower | replace('_','-') }}">
-      {{ project.classification | replace('_',' ') }}
+    <span class="evidence-badge evidence-tier-{{ evidence_tier or 'none' }}">
+      <span class="evidence-dot" aria-hidden="true"></span>{{ project.trade_signal or project.evidence_label }}
     </span>
-    <span class="meta-dot">·</span>
-    <span class="trade-signal-text">{{ project.trade_signal or project.evidence_label }}</span>
-    {% if project.procurement_status == 'Closed' %}
+    {% if project.classification == 'HIGH' %}
+      <span class="meta-dot">·</span>
+      <span class="confidence">High confidence</span>
+    {% elif project.classification == 'MEDIUM' %}
+      <span class="meta-dot">·</span>
+      <span class="confidence">Medium confidence</span>
+    {% endif %}
+    {% if project.is_closed %}
       <span class="meta-dot">·</span>
       <span class="muted">Closed</span>
-    {% elif project.procurement_status %}
+    {% elif project.procurement_status and project.procurement_status != 'Not verified' %}
       <span class="meta-dot">·</span>
-      <span>{{ project.procurement_status }}</span>
+      <span class="procurement-note">{{ project.procurement_status }}</span>
     {% endif %}
-    {% if not project.is_report_eligible and project.procurement_status != 'Closed' %}
+    {% if not project.is_report_eligible and not project.is_closed %}
       <span class="meta-dot">·</span>
       <span class="muted">Lead only</span>
     {% endif %}
@@ -28,15 +38,18 @@
     {% endif %}
   </div>
 
-  {# 2. Project Title & Location #}
+  {# 2. Project Title & Location. The title is title-cased (source names arrive shouted); the
+     address is left exactly as the source published it, because an address is an identifier, not
+     prose, and the directory/search tests match it verbatim. #}
+  {% set display_name = (project.project_name or project.address or 'Commercial construction project') | titlecase | truncate(88) %}
   <div class="card-header-block">
     <h3>
       {% if project.slug %}
         <a href="{{ url_for('opportunity_detail', slug=project.slug) }}">
-          {{ (project.project_name or project.address or 'Commercial construction project') | truncate(88) }}
+          {{ display_name }}
         </a>
       {% else %}
-        {{ (project.project_name or project.address or 'Commercial construction project') | truncate(88) }}
+        {{ display_name }}
       {% endif %}
     </h3>
 
@@ -48,25 +61,29 @@
     </p>
   </div>
 
-  {# 3. Verified Project Facts #}
+  {# 3. Verified Project Facts. Only verified values occupy a slot; the missing ones are named
+     once below, so a card never repeats "Not verified" down every row. #}
+  {% set facts_present, facts_missing = split_facts([
+       ('Declared value', project.estimated_project_value, project.estimated_project_value | money),
+       ('Project type', project.project_type, project.project_type | or_na),
+       ('Building scale', project.square_footage, project.square_footage | sqft),
+       ('Permit date', project.permit_date, project.permit_date | filing_date),
+  ]) %}
+  {% if facts_present %}
   <dl class="facts">
+    {% for label, raw, rendered in facts_present %}
     <div>
-      <dt>Declared Value</dt>
-      <dd>{{ project.estimated_project_value | money }}</dd>
+      <dt>{{ label }}</dt>
+      <dd>{{ rendered }}</dd>
     </div>
-    <div>
-      <dt>Project Type</dt>
-      <dd>{{ project.project_type | or_na }}</dd>
-    </div>
-    <div>
-      <dt>Building Scale</dt>
-      <dd>{{ project.square_footage | sqft if project.square_footage else 'Not verified' }}</dd>
-    </div>
-    <div>
-      <dt>Permit Date</dt>
-      <dd>{{ project.permit_date | nice_date }}</dd>
-    </div>
+    {% endfor %}
   </dl>
+  {% endif %}
+  {% if facts_missing %}
+  <p class="facts-missing small muted">
+    Not published by the source: {{ facts_missing | join_missing }}.
+  </p>
+  {% endif %}
 
   {# 4. Intelligence & Evidence Highlight #}
   {% if project.match_reasons %}

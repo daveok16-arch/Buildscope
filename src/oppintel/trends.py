@@ -31,24 +31,40 @@ from datetime import date, datetime, timedelta, timezone
 
 from .db import Database
 
+#: The label whose window is the whole dataset rather than a trailing period. An occurrence
+#: metric over "all" is a cumulative total ("records held"), not a trend, and is labelled so.
+ALL_TIME = "all"
+
 #: Named comparison windows, in days. Kept small and fixed so a metric means the same thing
-#: wherever it appears.
+#: wherever it appears. `all` has no day count: it means the entire stored dataset.
 WINDOWS: tuple[tuple[str, int], ...] = (
     ("7d", 7),
     ("30d", 30),
     ("90d", 90),
+    (ALL_TIME, 0),
 )
 
-#: Picking a window is a UI concern; this maps a label back to its day count.
+#: Picking a window is a UI concern; this maps a label back to its day count. `all` maps to 0.
 WINDOW_DAYS: dict[str, int] = {label: days for label, days in WINDOWS}
 
 DEFAULT_WINDOW = "30d"
+
+#: An early date that predates any permit a city could publish, used as the lower bound of the
+#: "all time" window. It is a sentinel, not a presented value.
+_EPOCH = date(1900, 1, 1)
 
 #: A window with fewer observations than this is reported as insufficient for a trend
 #: statement. Chosen low deliberately: it screens out "one record appeared" dressed as a trend
 #: without suppressing genuine early signal. It is a floor on *confidence of the wording*, not
 #: a hidden filter — the count itself is always shown.
 MIN_OBSERVATIONS_FOR_TREND = 5
+
+#: Occurrence metrics (a change, a first observation, a permit issued) are only meaningful
+#: inside a period, so they are absent from the "all time" view. Stock metrics (projects held,
+#: evidence held) are meaningful for every window including "all".
+_PERIOD_WINDOWS: tuple[str, ...] = tuple(label for label, days in WINDOWS if days > 0)
+_ALL_WINDOWS: tuple[str, ...] = tuple(label for label, _days in WINDOWS)
+_OCCURRENCE_WINDOWS = _PERIOD_WINDOWS
 
 #: SQL fragment: a well-formed `YYYY-MM-DD` date. Anything else is treated as missing rather
 #: than compared as text, so a malformed value cannot land inside a period by accident.
@@ -61,6 +77,9 @@ class Period:
 
     start: date
     end: date
+    #: True when the period covers the whole dataset rather than a trailing window. Set by
+    #: `resolve_window`; an occurrence metric over an all-time period is a cumulative total.
+    is_all_time: bool = False
 
     @property
     def days(self) -> int:
@@ -70,6 +89,11 @@ class Period:
         return self.start <= value < self.end
 
     def previous(self) -> Period:
+        # An all-time period has no previous period to compare against; returning an empty
+        # interval keeps the previous-period queries from scanning the whole table for a
+        # comparison that cannot exist.
+        if self.is_all_time:
+            return Period(_EPOCH, _EPOCH, is_all_time=True)
         span = timedelta(days=self.days)
         return Period(self.start - span, self.start)
 
@@ -79,13 +103,19 @@ def resolve_window(window: str | int, *, today: date | None = None) -> Period:
 
     The window is inclusive of today, so ``[today - (days-1), today + 1)`` holds exactly
     ``days`` calendar days. This keeps "last 7 days" from silently meaning 8.
+
+    ``all`` (or any non-positive day count) is the whole dataset: it starts at an epoch
+    sentinel so the same bounded SQL shape still applies, and its ``is_all_time`` is True so the
+    page can label the occurrence figures as cumulative totals rather than a trailing trend.
     """
     if isinstance(window, int):
-        days = window
+        days = int(window)
     else:
         days = WINDOW_DAYS.get(str(window), WINDOW_DAYS[DEFAULT_WINDOW])
-    days = max(1, int(days))
     end_day = today or datetime.now(timezone.utc).date()
+    if days <= 0:
+        return Period(_EPOCH, end_day + timedelta(days=1), is_all_time=True)
+    days = max(1, days)
     start = end_day - timedelta(days=days - 1)
     return Period(start, end_day + timedelta(days=1))
 
@@ -102,6 +132,20 @@ class Metric:
     comparison_available: bool = False
     comparison_note: str | None = None
     excluded_future: int = 0
+    #: True when the value is a cumulative total over the whole dataset (the "all time"
+    #: window), not an occurrence inside a trailing period. A cumulative total is not a trend,
+    #: so the page labels it accordingly rather than showing it as a period figure.
+    cumulative: bool = False
+    #: The window options this metric is meaningful for. Occurrence metrics (a change, a first
+    #: observation) are only meaningful inside a period and are absent from "all".
+    windows: tuple[str, ...] = ()
+    #: One short line naming what population and period the value counts, shown next to the
+    #: figure so no two cards can be read as comparable when they are not.
+    basis: str = ""
+    #: An optional second figure shown under the value, as ``(label, value)``. Used where a
+    #: headline population contains a stricter sub-population a reader would otherwise assume
+    #: the headline already restricts to (e.g. observed projects vs the discoverable subset).
+    secondary: tuple[str, int] | None = None
 
     @property
     def delta(self) -> int | None:
@@ -143,6 +187,9 @@ class TrendReport:
     malformed_dates: int = 0
     generated_at: str = ""
     ingestion_window: dict = field(default_factory=dict)
+    #: Trailing monthly counts of usable permits, for the page's activity chart. Derived from
+    #: the same rows and the same exclusions as every other metric here.
+    activity_series: list[dict] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
 
     @property
@@ -224,7 +271,7 @@ def _coverage_notes(db: Database) -> list[dict]:
         return []
 
 
-def _ingestion_window(db: Database, *, trade: str) -> dict:
+def _ingestion_window(db: Database, *, trade: str, today: date) -> dict:
     """When the database actually collected this trade's records, and from what span of dates.
 
     Reported alongside the metrics so a reader can tell a change in observed records from a
@@ -232,17 +279,31 @@ def _ingestion_window(db: Database, *, trade: str) -> dict:
     """
     row = db.conn.execute(
         "SELECT MIN(p.created_at) AS first_seen, MAX(p.updated_at) AS last_seen, "
-        "MIN(p.permit_date) AS oldest_permit, MAX(p.permit_date) AS newest_permit "
+        "MIN(p.permit_date) AS oldest_permit, "
+        f"MAX(CASE WHEN {_VALID_DATE} AND p.permit_date <= ? THEN p.permit_date END) "
+        "AS newest_permit "
         "FROM project p WHERE p.trade = ?",
-        (trade,),
+        (today.isoformat(), trade),
     ).fetchone()
     if row is None:
         return {}
+    # How long BuildScope has actually been collecting. A window longer than this span is
+    # reminding the reader that the database is younger than the period, so the figure is a
+    # total held, not a complete period.
+    span_days = None
+    if row["first_seen"] and row["last_seen"]:
+        try:
+            first = datetime.fromisoformat(str(row["first_seen"]).replace("Z", "+00:00"))
+            last = datetime.fromisoformat(str(row["last_seen"]).replace("Z", "+00:00"))
+            span_days = max((last.date() - first.date()).days, 0)
+        except ValueError:
+            span_days = None
     return {
         "first_observed": row["first_seen"],
         "last_observed": row["last_seen"],
         "oldest_permit_date": row["oldest_permit"],
         "newest_permit_date": row["newest_permit"],
+        "observation_span_days": span_days,
     }
 
 
@@ -258,6 +319,16 @@ def build_trend_report(
     previous = period.previous()
     reference_day = (today or datetime.now(timezone.utc).date())
 
+    # One short line per card names the population and the period, so two cards that are not
+    # comparable cannot be read as if they were (e.g. "new projects" is a window over permit
+    # dates; "public projects" on the home page is an all-time count of a different population).
+    if period.is_all_time:
+        period_text = "all time"
+    else:
+        period_text = (
+            f"{period.start.isoformat()} to {(period.end - timedelta(days=1)).isoformat()}"
+        )
+
     # --- comparability -------------------------------------------------------
     first_seen_row = db.conn.execute(
         "SELECT MIN(p.created_at) AS first_seen FROM project p WHERE p.trade = ?", (trade,)
@@ -270,13 +341,20 @@ def build_trend_report(
             ).date()
         except ValueError:
             first_seen = None
-    comparison_available = first_seen is not None and first_seen <= previous.start
-    comparison_note = None
-    if not comparison_available:
+    if period.is_all_time:
+        comparison_available = False
         comparison_note = (
-            "No record in this database predates the previous period, so no comparison is "
-            "shown. A zero here would read as a decline and would be false."
+            "This window is the whole stored dataset, so there is no previous period to "
+            "compare against. Occurrence figures here are cumulative totals, not a trend."
         )
+    else:
+        comparison_available = first_seen is not None and first_seen <= previous.start
+        comparison_note = None
+        if not comparison_available:
+            comparison_note = (
+                "No record in this database predates the previous period, so no comparison is "
+                "shown. A zero here would read as a decline and would be false."
+            )
 
     # --- the metrics ---------------------------------------------------------
     # 1. Projects whose permit date falls in the window: distinct project count.
@@ -289,18 +367,43 @@ def build_trend_report(
     projects_now = _count(db, cur_sql, cur_params)
     projects_prev = _count(db, prev_sql, prev_params) if comparison_available else None
 
+    # The discoverable subset of the same window: the home page's "Public projects" population
+    # (classified HIGH/MEDIUM and not closed), dated in this period. Reported under the headline
+    # so a reader does not assume "all observed projects" already means "public".
+    public_here_sql, public_here_params = _project_metric_sql(
+        "COUNT(DISTINCT p.id)", period=period, trade=trade, today=reference_day
+    )
+    public_here = _count(
+        db,
+        public_here_sql.replace(
+            "WHERE p.trade = ? ",
+            "WHERE p.trade = ? AND p.classification IN ('HIGH','MEDIUM') "
+            "AND p.procurement_status <> 'Closed' ",
+        ),
+        public_here_params,
+    )
+
     projects_observed = Metric(
         key="projects_observed",
         label="New commercial projects",
         definition=(
             "Distinct assembled projects whose permit date falls inside the period. One project "
-            "is counted once however many permits it carries."
+            "is counted once however many permits it carries. This is every observed project, "
+            "whatever its classification or procurement status; the discoverable subset is "
+            "shown separately below."
         ),
         value=projects_now,
         previous=projects_prev,
         comparison_available=comparison_available,
         comparison_note=comparison_note,
         excluded_future=_future_excluded(db, trade=trade, today=reference_day),
+        cumulative=period.is_all_time,
+        windows=_OCCURRENCE_WINDOWS,
+        basis=(
+            "All observed projects with a permit dated in this period, regardless of "
+            f"classification or procurement status ({period_text})."
+        ),
+        secondary=("of which public", public_here),
     )
 
     # 2. Permits with a permit date in the window. A project count and a permit count are not
@@ -338,6 +441,12 @@ def build_trend_report(
         previous=permits_prev,
         comparison_available=comparison_available,
         comparison_note=comparison_note,
+        cumulative=period.is_all_time,
+        windows=_OCCURRENCE_WINDOWS,
+        basis=(
+            "Permit rows linked to a project of this trade, dated in this period "
+            f"({period_text})."
+        ),
     )
 
     # 3. Projects carrying a classified trade relationship, dated in the window. This is
@@ -376,6 +485,12 @@ def build_trend_report(
         previous=trade_prev,
         comparison_available=comparison_available,
         comparison_note=comparison_note,
+        cumulative=period.is_all_time,
+        windows=_OCCURRENCE_WINDOWS,
+        basis=(
+            "Distinct projects with a classified trade relationship, dated in this period "
+            f"({period_text})."
+        ),
     )
 
     # 4. Projects changed *after* first being observed, in the window. `new_project` is the
@@ -413,6 +528,12 @@ def build_trend_report(
         previous=changed_prev,
         comparison_available=comparison_available,
         comparison_note=comparison_note,
+        cumulative=period.is_all_time,
+        windows=_OCCURRENCE_WINDOWS,
+        basis=(
+            "Distinct previously-known projects whose stored value changed in this period "
+            f"({period_text}); first appearances are excluded."
+        ),
     )
 
     # 5. Projects first observed (ingested) in the window. This measures BuildScope's data
@@ -445,6 +566,12 @@ def build_trend_report(
         previous=observed_prev,
         comparison_available=comparison_available,
         comparison_note=comparison_note,
+        cumulative=period.is_all_time,
+        windows=_OCCURRENCE_WINDOWS,
+        basis=(
+            "Distinct projects first ingested by BuildScope in this period "
+            f"({period_text})."
+        ),
     )
 
     # 6. Projects with strong (tier 1 or 2) mechanical evidence, dated in the window.
@@ -479,6 +606,12 @@ def build_trend_report(
         previous=strong_prev,
         comparison_available=comparison_available,
         comparison_note=comparison_note,
+        cumulative=period.is_all_time,
+        windows=_ALL_WINDOWS,
+        basis=(
+            "Distinct projects with a tier 1 or 2 mechanical evidence record, dated in this "
+            f"period ({period_text})."
+        ),
     )
 
     malformed = _malformed_date_count(db, trade)
@@ -488,6 +621,10 @@ def build_trend_report(
         "permit volume of any city.",
         "A project count, a permit count, a trade-evidence count and a change count are "
         "different measurements of the same records and are never added together.",
+        "\"New commercial projects\" here counts every stored project with a permit dated in "
+        "the window, whatever its classification. The home page's \"Public projects\" figure is "
+        "an all-time count of classified, discoverable projects — a different population over a "
+        "different period, so the two are not expected to be equal.",
     ]
     if malformed:
         notes.append(
@@ -512,7 +649,8 @@ def build_trend_report(
         coverage=_coverage_notes(db),
         malformed_dates=malformed,
         generated_at=datetime.now(timezone.utc).isoformat(),
-        ingestion_window=_ingestion_window(db, trade=trade),
+        ingestion_window=_ingestion_window(db, trade=trade, today=reference_day),
+        activity_series=monthly_project_series(db, trade=trade, today=reference_day),
         notes=[n for n in notes if n],
     )
 
@@ -521,3 +659,54 @@ def format_period(period: Period) -> str:
     """A human label for a period, used in the page and in tests."""
     last_day = period.end - timedelta(days=1)
     return f"{period.start.isoformat()} to {last_day.isoformat()}"
+
+
+#: Number of trailing months shown in the activity chart. A fixed span keeps the chart honest:
+#: it is a recent view of the same stored rows, not a rescaled window.
+CHART_MONTHS = 12
+
+
+def monthly_project_series(
+    db: Database, *, trade: str, today: date | None = None, months: int = CHART_MONTHS
+) -> list[dict[str, Any]]:
+    """Counts of usable permits per calendar month, for the trailing ``months`` months.
+
+    A chart is a metric, so it obeys the same rules as the rest of the report: a future-dated
+    permit is excluded (it cannot evidence work already filed) and a malformed date is excluded.
+    Each row is ``{"month": "YYYY-MM", "label": "Oct 2026", "count": N}``. The series is derived
+    purely from stored ``permit_date`` values — nothing is projected.
+    """
+    reference = today or datetime.now(timezone.utc).date()
+    first_of_month = reference.replace(day=1)
+    # Walk back months by hand so the series has a stable length even across a year boundary.
+    start_year, start_month = first_of_month.year, first_of_month.month
+    total = start_year * 12 + (start_month - 1) - (months - 1)
+    start_year, start_month = divmod(total, 12)
+    start_month += 1
+    start = date(start_year, start_month, 1)
+    rows = db.conn.execute(
+        "SELECT substr(p.permit_date, 1, 7) AS ym, COUNT(DISTINCT p.id) AS n "
+        "FROM project p "
+        "WHERE p.trade = ? "
+        f"AND {_VALID_DATE} "
+        "AND p.permit_date >= ? AND p.permit_date <= ? "
+        "GROUP BY ym",
+        (trade, start.isoformat(), reference.isoformat()),
+    ).fetchall()
+    counts = {str(r["ym"]): int(r["n"]) for r in rows}
+    series: list[dict[str, Any]] = []
+    y, m = start_year, start_month
+    for _ in range(months):
+        key = f"{y:04d}-{m:02d}"
+        series.append(
+            {
+                "month": key,
+                "label": date(y, m, 1).strftime("%b %Y"),
+                "count": counts.get(key, 0),
+            }
+        )
+        m += 1
+        if m > 12:
+            m = 1
+            y += 1
+    return series

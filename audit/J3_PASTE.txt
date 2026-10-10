@@ -1,0 +1,26 @@
+================ J3 PASTES ================
+branch=wp2-mobile-a11y HEAD=bfbcde9 today=2026-10-09
+
+########## J3.1 nonce entropy measurement (50 samples) ##########
+secrets.token_urlsafe(16) samples: 50
+distinct lengths: [22]  distinct bit-counts: [128]
+unique among 50: 50
+example nonce: DynKl6vNwi... (len 22 )
+csp_nonce source uses secrets.token_urlsafe: True
+
+########## J3.2 SECRET_KEY default entropy ##########
+token_hex(32) len= 64 chars = 256 bits; unique(5)= 5
+
+########## J3.3 live CSP header nonce, 5 samples ##########
+
+########## J3.4 nonce tests ##########
+...                                                                      [100%]
+3 passed, 31 deselected in 0.40s
+
+########## J3.3b local CSP header nonce, 5 samples (real) ##########
+nonce-KptGHTk3GUe77Y8SEXfYRQ
+nonce-FQK_7i8x8kXHbXpYjvlBlw
+nonce-RQOiXeIoGS2Q9_Ob4apGYg
+nonce-_tDYF7LAPN1V9LB_lles2w
+nonce-i6UeX9tCT9U69sI1o1hn8g
+(each nonce is 22 chars = 128 bits; all 5 distinct)

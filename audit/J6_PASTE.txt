@@ -1,0 +1,31 @@
+================ J6 PASTES ================
+branch=wp2-mobile-a11y HEAD=bfbcde9 today=2026-10-09
+Interpretation: J6 = idempotency + crash queue-safety (the J6 content evidenced in
+audit/WP2_J_GATE_CLOSEOUT.md '## J6'). If the Director's J6 names a different sentence,
+flag it and stop on J6 only.
+
+########## J6.1 idempotency (audit/scripts/j6_idempotency.py) ##########
+scratch clone : /tmp/j6_8bzc3wwk/oppintel.db
+
+(a) assemble idempotency
+    before any pass      : {'permit': 4190, 'raw_record': 4239, 'project': 1261, 'project_change': 1261, 'project_state_snapshot': 1261}
+    after pass 1          : {'permit': 4190, 'raw_record': 4239, 'project': 1261, 'project_change': 1262, 'project_state_snapshot': 1261}
+    after pass 2          : {'permit': 4190, 'raw_record': 4239, 'project': 1261, 'project_change': 1262, 'project_state_snapshot': 1261}
+    after pass 3          : {'permit': 4190, 'raw_record': 4239, 'project': 1261, 'project_change': 1262, 'project_state_snapshot': 1261}
+
+(b) ingest idempotency (replay the same source twice)
+    replaying fort_worth_permits_20261010T172220.jsonl (last 400 of 200000 records)
+    before replay        : {'permit': 4190, 'raw_record': 4239, 'project': 1261, 'project_change': 1262, 'project_state_snapshot': 1261}
+    after replay 1       : {'permit': 4584, 'raw_record': 4637, 'project': 1275, 'project_change': 1276, 'project_state_snapshot': 1275} (status=ok)
+    after replay 2       : {'permit': 4584, 'raw_record': 4637, 'project': 1275, 'project_change': 1276, 'project_state_snapshot': 1275} (status=ok)
+
+(a) assemble: project_change 1261 -> 1262 over 3 passes (expect no growth after pass 1)
+temp dir (safe to delete): /tmp/j6_8bzc3wwk
+
+########## J6.2 crash queue-safety tests ##########
+..                                                                       [100%]
+2 passed, 6 deselected in 0.48s
+
+########## J6.3 the two crash tests (source) ##########
+318:def test_a_killed_ingest_leaves_a_recoverable_run_and_no_stale_lock(tmp_path):
+353:def test_an_orphaned_run_does_not_block_the_next_ingest(tmp_path):

@@ -71,6 +71,51 @@ def _changes(db) -> list[dict]:
     ).fetchall()]
 
 
+# --- the public feed headline is the result-set size, not one page -------------
+
+def test_changes_feed_headline_is_the_total_not_the_page_size(client):
+    """The count stopped at the page limit (a page of 60 read '60 differences'); fix: a real
+    COUNT over the same public filter, with the list paged under it. The label names what it
+    measures: a first observation is not a detected difference."""
+    body = client.get("/changes?days=90").get_data(as_text=True)
+    assert "Change-feed Entries in Last 90 Days" in body
+    assert "are first observations" in body
+
+
+def test_changes_feed_separates_first_observations_from_differences(app_db):
+    """A `new_project` row is an entry, not a diff, and the page must say so.
+    On a first pass every row is `new_project`, so the difference count is zero."""
+    from oppintel.app.main import _service
+    from oppintel.config import active_market, active_trade
+    from oppintel.db import Database
+
+    db = Database(app_db.config["APP_CONFIG"].database_path)
+    try:
+        svc = _service(db, active_market(), active_trade(), None)
+        total = svc.recent_changes_count(days=3650)
+        breakdown = svc.recent_changes_breakdown(days=3650)
+        assert breakdown.get("new_project", 0) == total
+        assert total - breakdown.get("new_project", 0) == 0
+    finally:
+        db.close()
+
+
+def test_recent_changes_count_matches_the_filtered_rows(app_db):
+    """`recent_changes_count` and `recent_changes` must agree on the same filter."""
+    from oppintel.app.main import _service
+    from oppintel.config import active_market, active_trade
+    from oppintel.db import Database
+
+    db = Database(app_db.config["APP_CONFIG"].database_path)
+    try:
+        svc = _service(db, active_market(), active_trade(), None)
+        total = svc.recent_changes_count(days=3650)
+        rows = svc.recent_changes(limit=100000, days=3650)
+        assert total == len(rows)
+    finally:
+        db.close()
+
+
 # --- the first pass records entry, not a fabricated history --------------------
 
 def test_first_pass_records_a_new_project_event(monitored_db):

@@ -185,3 +185,51 @@ def is_usable_occurrence(value: date | None, *, observed: date) -> bool:
     because a future date cannot describe a filing.
     """
     return value is not None and value <= observed
+
+
+def parse_iso_date(value: object) -> date | None:
+    """Parse a stored ISO date (``YYYY-MM-DD`` prefix) to a ``date``, or None.
+
+    Stored dates are ISO strings; only the date part is meaningful here. A value that is not a
+    well-formed calendar date returns None rather than raising, so a caller judging a stored
+    field never has to guess whether a malformed value is "old" or "future".
+    """
+    if value is None:
+        return None
+    text = str(value).strip()
+    if len(text) < 10:
+        return None
+    try:
+        return date.fromisoformat(text[:10])
+    except ValueError:
+        return None
+
+
+def usable_occurrence_sql(alias: str = "", *, placeholder: str = "?") -> str:
+    """A SQL predicate that keeps only a *usable* occurrence date: missing, or not in the future.
+
+    A permit dated after the observation day cannot describe a filing that has already happened,
+    so it must not be allowed to set a "newest permit" boundary, sort to the top of a
+    most-recent list, or fill a freshness banner. Every such query needs the same guard, so it
+    is written once here rather than re-derived per query and drifting.
+
+    The observation day is bound as a parameter (``placeholder``) by the caller, so the caller
+    controls "today" and a test can pin it. A NULL date passes the guard: an absent date is an
+    honest gap, and SQL ``MAX``/``ORDER BY`` already ignore it.
+    """
+    column = f"{alias}.permit_date" if alias else "permit_date"
+    return f"({column} IS NULL OR {column} <= {placeholder})"
+
+
+def occurrence_is_future(value: object, *, observed: date | None = None) -> bool:
+    """True when a stored occurrence date (a permit/filing date) is after the observation day.
+
+    A permit cannot be filed after the record describing it was observed, so a future value is
+    unverifiable as a filing rather than simply "new". A missing or malformed value is not
+    future (it is an honest gap or a separate defect), so the caller must test for absence
+    itself.
+    """
+    parsed = parse_iso_date(value)
+    if parsed is None:
+        return False
+    return parsed > (observed or date.today())

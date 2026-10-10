@@ -45,8 +45,12 @@ def test_health_discloses_no_project_content(client):
     body = client.get("/healthz").get_data(as_text=True)
     payload = json.loads(body)
     # The payload is a closed set: a new key must be added here deliberately, so an accidental
-    # field that carries content cannot slip into the probe unnoticed.
-    assert set(payload) == {"status", "database", "projects", "permits", "coverage"}
+    # field that carries content cannot slip into the probe unnoticed. `cities_with_public_projects`
+    # is a jurisdiction count (the same figure the home page publishes), not project content.
+    assert set(payload) == {
+        "status", "database", "projects", "permits", "coverage",
+        "cities_with_public_projects",
+    }
     # Coverage reports counts and state only, never a record.
     coverage = payload["coverage"]
     assert {"markets_configured", "markets_serving", "markets"} <= set(coverage)
@@ -188,16 +192,16 @@ def _run_start(tmp_path, env_overrides, monkeypatch):
 
 
 def test_start_script_does_not_assume_a_mounted_disk(tmp_path, monkeypatch):
-    """A host with no disk must still start: `/var/data` does not exist on a Free instance.
+    """A host with no persistent storage must still start.
 
-    This is the failure that took a deploy down — the script defaulted the data directory to the
+    This is the failure that took a deploy down — the script defaulted the data directory to a
     mount path, so the first `mkdir` hit a read-only filesystem and the process exited.
     """
-    result = _run_start(tmp_path, {"RENDER": "true", "PORT": "10000"}, monkeypatch)
+    result = _run_start(tmp_path, {"FOREGROUND": "1", "PORT": "10000"}, monkeypatch)
 
     assert result.returncode == 0, result.stderr
     assert "DATA_DIR=" in result.stdout
-    # It falls back to the checkout's own data/ rather than the mount path.
+    # It falls back to the checkout's own data/ rather than any mount path.
     assert "/var/data" not in result.stdout
 
 
@@ -205,22 +209,22 @@ def test_start_script_fails_loudly_when_the_data_directory_is_unwritable(tmp_pat
     """An explicitly configured, unwritable path is a configuration error, not a traceback."""
     result = _run_start(
         tmp_path,
-        {"RENDER": "true", "PORT": "10000", "OPPINTEL_DATA_DIR": "/proc/definitely-not-writable"},
+        {"FOREGROUND": "1", "PORT": "10000", "OPPINTEL_DATA_DIR": "/proc/definitely-not-writable"},
         monkeypatch,
     )
 
     assert result.returncode == 1
     assert "cannot write to OPPINTEL_DATA_DIR" in result.stderr
     # The message names the cause, so the operator is not left reading a sqlite traceback.
-    assert "disk is not attached" in result.stderr
+    assert "not writable" in result.stderr
 
 
 def test_start_script_honours_a_writable_data_directory(tmp_path, monkeypatch):
-    """The paid path: a mounted disk is used as given, and the database goes inside it."""
+    """A configured persistent directory is used as given, and the database goes inside it."""
     disk = tmp_path / "mnt"
     result = _run_start(
         tmp_path,
-        {"RENDER": "true", "PORT": "10000", "OPPINTEL_DATA_DIR": str(disk)},
+        {"FOREGROUND": "1", "PORT": "10000", "OPPINTEL_DATA_DIR": str(disk)},
         monkeypatch,
     )
 
@@ -234,13 +238,13 @@ def test_start_script_honours_a_writable_data_directory(tmp_path, monkeypatch):
 def test_start_script_prefers_the_platform_url_over_loopback(tmp_path, monkeypatch):
     """A deployed host must not advertise http://127.0.0.1:<port> as its canonical origin.
 
-    Render injects RENDER_EXTERNAL_URL. Ignoring it put a loopback address in every canonical tag
-    and all 88 sitemap entries on a live service.
+    A platform injects its own external URL. Ignoring it put a loopback address in every canonical
+    tag and all 88 sitemap entries on a live service.
     """
     result = _run_start(
         tmp_path,
         {
-            "RENDER": "true",
+            "FOREGROUND": "1",
             "PORT": "10000",
             "RENDER_EXTERNAL_URL": "https://buildscope-intelligence.onrender.com",
         },
@@ -257,7 +261,7 @@ def test_start_script_explicit_base_url_wins(tmp_path, monkeypatch):
     result = _run_start(
         tmp_path,
         {
-            "RENDER": "true",
+            "FOREGROUND": "1",
             "PORT": "10000",
             "BASE_URL": "https://hvac.example.com",
             "RENDER_EXTERNAL_URL": "https://buildscope-intelligence.onrender.com",

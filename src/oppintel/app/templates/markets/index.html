@@ -26,6 +26,7 @@
         Each market represents a geographic cluster of municipal and county permit sources. Coverage is strictly driven by verifiable data ingestion.
         {{ coverage_summary.markets_serving }} of {{ coverage_summary.markets_configured }} configured markets currently serve data.
       </p>
+      {% include "partials/collection_window.html" %}
     </div>
 
     <div class="card-grid">
@@ -40,7 +41,11 @@
             <span class="muted">Planned Market</span>
           {% endif %}
           <span class="meta-dot">·</span>
-          <span>{{ card.market.cities | length }} jurisdictions</span>
+          {% if card.stats %}
+            <span>{{ card.stats.active_jurisdictions }} cities with at least one public project</span>
+          {% else %}
+            <span>{{ card.market.cities | length }} configured cities</span>
+          {% endif %}
         </div>
         <h3 style="margin-top:8px">
           {% if card.market.active %}

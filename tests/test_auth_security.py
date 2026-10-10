@@ -471,15 +471,25 @@ def test_unknown_mail_backend_is_refused():
 
 
 def test_forgot_password_does_not_reveal_whether_an_account_exists(app_db):
-    """L. The response is identical for a registered and an unregistered address."""
+    """L. The response is identical for a registered and an unregistered address.
+
+    The per-request CSP nonce (``nonce="..."``) differs between the two responses by design,
+    so it is normalised before the comparison. Everything else — the message, the fields, any
+    hint of delivery — must match byte for byte.
+    """
+    import re
+
     _create_victim(app_db)
     client = app_db.test_client()
 
     known = client.post("/forgot-password", data={"email": VICTIM_EMAIL})
     unknown = client.post("/forgot-password", data={"email": "nobody@example.com"})
 
+    def normalise(body: str) -> str:
+        return re.sub(r'nonce="[^"]*"', 'nonce="X"', body)
+
     assert known.status_code == unknown.status_code == 200
-    assert known.get_data(as_text=True) == unknown.get_data(as_text=True)
+    assert normalise(known.get_data(as_text=True)) == normalise(unknown.get_data(as_text=True))
 
 
 def test_forgot_password_delivers_through_the_mailer_for_a_real_account(app_db, monkeypatch):

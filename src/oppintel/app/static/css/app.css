@@ -66,6 +66,18 @@
   --ink-quiet:    #94a3b8;
   --muted:        #64748b;
 
+  /* Evidence badge (card signal). AA-safe text on tinted fills: tier-1 green >=7:1,
+     tier-2 amber >=4.6:1, none slate >=8:1. */
+  --evidence-strong-bg:     #ecfdf5;
+  --evidence-strong-border: #a7f3d0;
+  --evidence-strong-text:   #065f46;
+  --evidence-mid-bg:        #fffbeb;
+  --evidence-mid-border:    #fde68a;
+  --evidence-mid-text:      #92400e;
+  --evidence-none-bg:       #f1f5f9;
+  --evidence-none-border:   #cbd5e1;
+  --evidence-none-text:     #334155;
+
   --bg:           #ffffff;
   --bg-soft:      #f8fafc;
   --bg-tint:      #f1f5f9;
@@ -105,7 +117,6 @@ html {
   -webkit-text-size-adjust: 100%;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   scroll-behavior: smooth;
-  overflow-x: hidden;
 }
 
 body {
@@ -119,7 +130,6 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
   width: 100%;
 }
 
@@ -209,6 +219,63 @@ a:hover {
   padding-left: clamp(16px, 3.5vw, 28px);
   padding-right: clamp(16px, 3.5vw, 28px);
 }
+
+/* Visible to screen readers only. Used for headings that exist to keep the
+   document outline valid when the visible heading is hidden at a breakpoint. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+
+/* Data tables (change feed, ingest funnel). There was no table styling at all, so an
+   unstyled <table> inherited the browser default. */
+.table-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-md, 8px);
+  background: #ffffff;
+}
+.table-scroll:focus-visible {
+  outline: 2px solid var(--navy-700, #1e3a5f);
+  outline-offset: 2px;
+}
+.data-table,
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+.data-table th,
+.data-table td,
+.table th,
+.table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--slate-150);
+  vertical-align: top;
+}
+.data-table thead th,
+.table thead th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--slate-600);
+  background: var(--slate-50);
+  border-bottom: 1px solid var(--slate-200);
+}
+.data-table tbody tr:last-child td,
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.nowrap { white-space: nowrap; }
 
 .skip-link {
   position: absolute;
@@ -305,6 +372,18 @@ p:last-child {
    GLOBAL HEADER & SINGLE PROFESSIONAL BAR
    ========================================================================== */
 
+/* Preview-build banner (PREVIEW_MODE). Sits above the header, states the data caveat. */
+.preview-banner {
+  background: var(--gold-500);
+  color: var(--navy-950);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 7px 0;
+  text-align: center;
+}
+.preview-banner strong { font-weight: 800; }
+
 .site-header {
   background: var(--navy-950);
   border-bottom: 1px solid var(--line-dark);
@@ -329,7 +408,8 @@ p:last-child {
   gap: 10px;
   color: #ffffff;
   text-decoration: none;
-  flex-shrink: 0;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .brand-mark {
@@ -471,6 +551,8 @@ p:last-child {
   justify-content: center;
   width: 44px;
   height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: var(--radius-sm);
@@ -512,6 +594,11 @@ p:last-child {
   transition: opacity 0.25s ease, visibility 0.25s ease;
 }
 
+/* aria-modal dialog. role="dialog" is not permitted on <aside> (axe
+   aria-allowed-role); a <div> is. Hidden entirely on desktop (no hamburger
+   there) so it cannot contribute to horizontal scroll; it becomes a flex
+   column only inside the mobile breakpoint, and visibility:hidden while
+   closed keeps its links out of the tab order. */
 .mobile-drawer {
   position: fixed;
   top: 0;
@@ -522,8 +609,12 @@ p:last-child {
   border-left: 1px solid var(--line-dark);
   z-index: 1100;
   transform: translateX(100%);
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  display: flex;
+  visibility: hidden;
+  /* visibility flips only after the slide-out finishes (so the close animation
+     is seen); on open it flips at once. Transitioning visibility by duration
+     would keep it hidden for the whole open animation and make focus() a no-op. */
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 0.25s;
+  display: none;
   flex-direction: column;
   box-shadow: -8px 0 32px rgba(0, 0, 0, 0.5);
   overflow-y: auto;
@@ -535,8 +626,16 @@ body.drawer-open .mobile-drawer-backdrop {
   visibility: visible;
 }
 
+/* Lock the page behind the drawer while it is open, so a scroll gesture does not move the
+   content under the modal. */
+body.drawer-open {
+  overflow: hidden;
+}
+
 body.drawer-open .mobile-drawer {
   transform: translateX(0);
+  visibility: visible;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 0s;
 }
 
 .drawer-header {
@@ -615,7 +714,11 @@ body.drawer-open .mobile-drawer {
   background: rgba(0, 0, 0, 0.25);
   border-top: 1px solid var(--line-dark);
   font-size: 0.76rem;
-  color: var(--slate-400);
+  color: var(--slate-300);
+}
+/* .muted is slate-500 (4.2:1 on this near-black panel); slate-300 is 13:1. */
+.drawer-footer-status .muted {
+  color: var(--slate-300);
 }
 
 /* ==========================================================================
@@ -640,15 +743,24 @@ body.drawer-open .mobile-drawer {
 }
 
 .btn-primary {
+  /* gold-500 (#d97706) with dark navy-950 text (#060b17): 6.17:1, WCAG AA for small text.
+     White on gold-500 was 3.19:1 (fail), and white on the old gold-600 override was 5.02:1 —
+     the dark-text-on-original-gold treatment is both the brand gold and AA. */
   background: var(--gold-500);
-  color: #ffffff !important;
-  border-color: var(--gold-600);
+  color: var(--navy-950) !important;
+  border-color: var(--gold-500);
   box-shadow: 0 1px 2px rgba(180, 83, 9, 0.2);
 }
 .btn-primary:hover {
-  background: var(--gold-600);
-  border-color: var(--gold-600);
-  color: #ffffff !important;
+  /* gold-400: navy-950 on #f59e0b is 9.16:1, so the hover is a lighter gold, not burnt orange. */
+  background: var(--gold-400);
+  border-color: var(--gold-400);
+  color: var(--navy-950) !important;
+}
+.btn-primary:focus-visible {
+  /* The global gold ring is invisible on a gold button; a navy ring is 6.17:1 against gold. */
+  outline: 2px solid var(--navy-950);
+  outline-offset: 2px;
 }
 
 .btn-outline {
@@ -664,11 +776,27 @@ body.drawer-open .mobile-drawer {
 
 .btn-ghost {
   background: transparent;
-  color: var(--slate-300) !important;
+  color: var(--slate-600);
 }
 .btn-ghost:hover {
+  background: var(--slate-100);
+  color: var(--slate-900);
+}
+
+/* Ghost buttons on the dark chrome (sticky header, hero, mobile drawer) need the
+   light treatment; on a white surface the base style above applies. Previously the
+   light colour was hardcoded on .btn-ghost with !important, which made every ghost
+   button on white unreadable (1.48:1) and defeated inline overrides. */
+.site-header .btn-ghost,
+.hero .btn-ghost,
+.mobile-drawer .btn-ghost {
+  color: var(--slate-300);
+}
+.site-header .btn-ghost:hover,
+.hero .btn-ghost:hover,
+.mobile-drawer .btn-ghost:hover {
   background: rgba(255, 255, 255, 0.08);
-  color: #ffffff !important;
+  color: #ffffff;
 }
 
 .btn-dark {
@@ -700,6 +828,52 @@ body.drawer-open .mobile-drawer {
   padding: 13px 26px;
   min-height: 46px;
   border-radius: var(--radius-md);
+}
+
+/* WCAG 2.5.5 target size (44px) applies to touch input, so it is scoped to
+   coarse pointers and narrow viewports rather than shrinking desktop density. */
+@media (max-width: 640px), (hover: none) and (pointer: coarse) {
+  .btn,
+  .btn-small,
+  .drawer-close-btn,
+  .feed-sort-select,
+  .mobile-menu-btn,
+  .form-input,
+  .btn-google-auth {
+    min-height: 44px;
+  }
+  .hero-search-box button {
+    min-height: 44px;
+  }
+  .drawer-close-btn {
+    width: 44px;
+    height: 44px;
+  }
+  .btn-small {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  .drawer-nav a {
+    min-height: 44px;
+  }
+  .feed-sort-select {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  /* The filter sheet's own controls are reachable by touch too, so they meet the
+     same 44px target rather than only the ones outside the collapsed panel. */
+  .filter-sidebar .field input,
+  .filter-sidebar .field select,
+  .filter-sidebar .date-input input {
+    min-height: 44px;
+  }
+  .filter-sidebar .checkline {
+    min-height: 44px;
+    align-items: center;
+  }
+  .filter-sidebar .checkline input {
+    margin-top: 0;
+  }
 }
 
 /* ==========================================================================
@@ -782,8 +956,10 @@ body.drawer-open .mobile-drawer {
 }
 
 .hero-search-box button {
+  /* Button option B: brand gold-500 with navy-950 text (6.17:1, WCAG AA small text),
+     matching .btn-primary so the hero search action and the CTA are the same treatment. */
   background: var(--gold-500);
-  color: #ffffff;
+  color: var(--navy-950);
   font-weight: 700;
   font-size: 0.90rem;
   padding: 0 22px;
@@ -796,7 +972,13 @@ body.drawer-open .mobile-drawer {
 }
 
 .hero-search-box button:hover {
-  background: var(--gold-600);
+  /* gold-400: navy-950 on #f59e0b is 9.16:1. */
+  background: var(--gold-400);
+}
+
+.hero-search-box button:focus-visible {
+  outline: 2px solid var(--navy-950);
+  outline-offset: 2px;
 }
 
 .hero-cta {
@@ -882,7 +1064,7 @@ body.drawer-open .mobile-drawer {
 /* Operational KPI Strip inside Dashboard & Analytics */
 .stat-strip {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
   gap: 12px;
   margin: 0 0 28px;
 }
@@ -1029,6 +1211,101 @@ body.drawer-open .mobile-drawer {
   margin-top: 24px;
 }
 
+/* --- Company directory card -------------------------------------------------
+   The company card previously reused `.card-meta` (a single-line flex row) to
+   hold a label/value list, so every value past the first was squeezed and the
+   text was clipped. A definition list keeps each field on its own row. */
+.company-card {
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.company-facts {
+  margin: 12px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.company-facts .meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.company-facts .meta-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--slate-500);
+}
+
+.company-facts .meta-val {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--navy-950);
+  overflow-wrap: anywhere;
+}
+
+.company-card-footer {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--slate-200);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Guide index cards (`.guide-grid` / `.guide-card` had no rules, so the list
+   rendered as unstyled full-width links). */
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: clamp(14px, 2vw, 20px);
+  margin-top: 8px;
+}
+
+.guide-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  text-decoration: none;
+  color: var(--ink);
+  transition: all 0.15s ease;
+}
+
+.guide-card:hover {
+  border-color: var(--slate-300);
+  box-shadow: var(--shadow-md);
+}
+
+.guide-card h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--navy-950);
+}
+
+.guide-card p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--slate-600);
+}
+
+/* Touch/narrow: company cards become single-column so a 320px grid track can
+   never overflow a 390px viewport. */
+@media (max-width: 640px) {
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .card {
   background: #ffffff;
   border: 1px solid var(--line);
@@ -1066,19 +1343,104 @@ body.drawer-open .mobile-drawer {
 .signal-indicator {
   font-weight: 800;
 }
-.signal-indicator.signal-high { color: var(--signal-high); }
-.signal-indicator.signal-medium { color: var(--signal-med); }
-.signal-indicator.signal-low { color: var(--signal-low); }
+/* The -text variants are the AA-safe pairings for white backgrounds (>=7:1);
+   the raw signal-* hues are 3.2-3.8:1 and fail WCAG AA as small body text. */
+.signal-indicator.signal-high { color: var(--signal-high-text); }
+.signal-indicator.signal-medium { color: var(--signal-med-text); }
+.signal-indicator.signal-low { color: var(--signal-low-text); }
+.signal-indicator.signal-closed { color: var(--signal-closed-text); }
+
+/* Evidence badge: the one proof-state badge on a card. It leads, so it is a pill with a
+   status dot rather than a bare coloured word. */
+.evidence-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 9px 2px 7px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+}
+.evidence-badge .evidence-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+.evidence-badge.evidence-tier-1 {
+  background: var(--evidence-strong-bg);
+  border-color: var(--evidence-strong-border);
+  color: var(--evidence-strong-text);
+}
+.evidence-badge.evidence-tier-2 {
+  background: var(--evidence-mid-bg);
+  border-color: var(--evidence-mid-border);
+  color: var(--evidence-mid-text);
+}
+.evidence-badge.evidence-tier-none {
+  background: var(--evidence-none-bg);
+  border-color: var(--evidence-none-border);
+  color: var(--evidence-none-text);
+}
+/* Confidence is a quiet word after the evidence, not a second coloured badge. */
+.confidence {
+  color: var(--slate-600);
+  font-weight: 650;
+}
 
 /* Card Title & Address */
 .card-header-block {
   margin-bottom: 14px;
 }
 
+/* Inline SVG activity chart: no charting library. Bars scale to the figure, the table is the
+   accessible alternative, and nothing is drawn that the metrics do not already count. */
+.chart-figure {
+  margin: 0;
+  background: #ffffff;
+  border: 1px solid var(--slate-150);
+  border-radius: var(--radius-sm);
+  padding: 18px 20px 10px;
+}
+.chart-figure figcaption {
+  margin-bottom: 10px;
+}
+.bar-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.chart-data {
+  margin-top: 8px;
+}
+.chart-data summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--slate-600);
+  padding: 6px 0;
+}
+
+
 .card-header-block h3 {
   font-size: 1.15rem;
   margin-bottom: 6px;
   line-height: 1.3;
+}
+
+/* A small uppercase label above a panel/step title. It is deliberately not a
+   heading element: the visual eyebrow sits under an existing h2/h3 and a real
+   <h4> would skip a level in the document outline (WCAG 1.3.1 / axe
+   heading-order). */
+.panel-eyebrow {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--slate-600);
+  margin: 0 0 4px;
 }
 
 .card-header-block h3 a {
@@ -1134,6 +1496,13 @@ body.drawer-open .mobile-drawer {
   font-size: 0.90rem;
   font-weight: 650;
   color: var(--navy-950);
+}
+
+/* Missing-fields line: names what the source did not publish, once, instead of repeating a
+   placeholder down every fact row. */
+.facts-missing {
+  margin: -4px 0 12px;
+  color: var(--slate-500);
 }
 
 /* Intelligence Scope / Excerpt Box */
@@ -1283,6 +1652,16 @@ body.drawer-open .mobile-drawer {
   margin: 28px 0 48px;
 }
 
+/* A grid/flex child defaults to min-width:auto, so a wide table inside it stretches the
+   track and the whole page scrolls horizontally on a phone. Allow the results column to
+   shrink below its content; the table's own .table-scroll wrapper then scrolls instead. */
+.feed-workspace-layout > * {
+  min-width: 0;
+}
+.feed-results-area {
+  min-width: 0;
+}
+
 .filter-sidebar {
   background: #ffffff;
   border: 1px solid var(--line);
@@ -1301,7 +1680,8 @@ body.drawer-open .mobile-drawer {
   border-bottom: 1px solid var(--line);
 }
 
-.filter-sidebar-head h3 {
+.filter-sidebar-head h3,
+.filter-sidebar-head h2.filter-panel-title {
   font-size: 0.96rem;
   margin: 0;
   text-transform: uppercase;
@@ -1314,6 +1694,77 @@ body.drawer-open .mobile-drawer {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+/* Mobile-only affordances. Hidden on desktop; the 860px query reveals them. */
+.mobile-filter-bar {
+  display: none;
+  margin: 16px 0 8px;
+}
+.filter-toggle {
+  width: 100%;
+  justify-content: space-between;
+}
+.filter-toggle-label {
+  display: inline-flex;
+  align-items: center;
+}
+.filter-sheet-handle {
+  display: none;
+  width: 40px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--slate-300);
+  margin: 0 auto 12px;
+}
+.filter-sheet-close {
+  display: none;
+  width: 100%;
+  margin-bottom: 12px;
+}
+.filter-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1190;
+  background: rgba(15, 23, 42, 0.5);
+}
+.filter-sheet-backdrop[hidden] {
+  display: none;
+}
+
+.date-range-field {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.date-range-field legend {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--slate-700);
+  letter-spacing: 0.02em;
+  padding: 0;
+  margin-bottom: 6px;
+}
+.date-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.date-inputs {
+  display: flex;
+  gap: 8px;
+}
+.date-input {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.date-input label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--slate-600);
 }
 
 .field {
@@ -1402,7 +1853,7 @@ body.drawer-open .mobile-drawer {
 
 .auth-grid {
   display: grid;
-  grid-template-columns: 1.15fr 0.95fr;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.95fr);
   gap: 56px;
   align-items: start;
 }
@@ -1602,6 +2053,11 @@ body.drawer-open .mobile-drawer {
   margin-bottom: 2px;
 }
 
+/* .muted is slate-500 (3.75:1 on the #0f172a auth panel); slate-400 is 7.6:1. */
+.auth-intelligence-panel .muted {
+  color: var(--slate-400);
+}
+
 .auth-guarantee-note {
   display: flex;
   align-items: center;
@@ -1781,6 +2237,7 @@ body.drawer-open .mobile-drawer {
 .auth-footer-links {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 20px;
 }
 
@@ -1796,7 +2253,7 @@ body.drawer-open .mobile-drawer {
 
 @media (max-width: 860px) {
   .auth-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 36px;
   }
   .auth-brand-col {
@@ -2098,6 +2555,11 @@ body.drawer-open .mobile-drawer {
   margin-top: 64px;
 }
 
+/* .muted resolves to slate-500 (4.13:1 on navy-950); slate-400 is 7.67:1. */
+.site-footer .muted {
+  color: var(--slate-400);
+}
+
 .footer-grid {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr;
@@ -2121,9 +2583,12 @@ body.drawer-open .mobile-drawer {
   margin-bottom: 12px;
 }
 
-.site-footer h4 {
+/* Footer column labels are not document headings; using <p> keeps the
+   heading outline h1 -> h2 without a skipped h3. */
+.footer-heading {
   color: #ffffff;
   font-size: 0.78rem;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-bottom: 16px;
@@ -2172,6 +2637,9 @@ body.drawer-open .mobile-drawer {
   .mobile-menu-btn {
     display: inline-flex;
   }
+  .mobile-drawer {
+    display: flex;
+  }
   .evidence-chain-grid {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -2192,6 +2660,27 @@ body.drawer-open .mobile-drawer {
     display: none;
     position: static;
   }
+  /* The filter panel is a bottom sheet on mobile: hidden until the "Filters"
+     button opens it, then pinned to the viewport so results are never pushed
+     below a long form. */
+  body.filter-sheet-open .filter-sidebar {
+    display: block;
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 1200;
+    max-height: 85vh;
+    overflow-y: auto;
+    border-radius: 16px 16px 0 0;
+    padding: 8px 20px 24px;
+    box-shadow: var(--shadow-lg);
+  }
+  body.filter-sheet-open {
+    overflow: hidden;
+  }
+  .filter-sheet-handle,
+  .filter-sheet-close {
+    display: block;
+  }
   .evidence-strip {
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
@@ -2209,6 +2698,9 @@ body.drawer-open .mobile-drawer {
   .split-3 {
     grid-template-columns: 1fr;
   }
+  .split-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 640px) {
@@ -2216,8 +2708,26 @@ body.drawer-open .mobile-drawer {
     flex-direction: column;
     padding: 8px;
   }
+  .split-4 {
+    grid-template-columns: 1fr;
+  }
+  /* A nowrap button with a long label ("Commercial HVAC opportunities") is
+     wider than a 390px viewport once padding is included; let it wrap and fill
+     the row instead of forcing horizontal scroll. */
+  .btn {
+    white-space: normal;
+    max-width: 100%;
+  }
+  .hero-cta {
+    width: 100%;
+  }
+  .hero-cta .btn {
+    width: 100%;
+    justify-content: center;
+  }
   .hero-search-box button {
     width: 100%;
+    min-height: 44px;
   }
   .evidence-strip {
     grid-template-columns: 1fr;
@@ -2263,5 +2773,13 @@ body.drawer-open .mobile-drawer {
   }
   .card {
     padding: 16px 14px;
+  }
+  /* Long product wordmark overflows a 320-360px header; the mark alone is
+     enough to identify the site at that width. */
+  .brand-text small {
+    display: none;
+  }
+  .brand-text strong {
+    font-size: 1rem;
   }
 }

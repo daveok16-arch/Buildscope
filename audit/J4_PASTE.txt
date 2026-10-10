@@ -1,0 +1,45 @@
+================ J4 PASTES ================
+branch=wp2-mobile-a11y HEAD=bfbcde9 origin/main=e01eadd today=2026-10-09
+
+########## J4.1 change-tracking proof (audit/scripts/j4_change_tracking.py) ##########
+scratch clone : /tmp/j4_fhriito0/oppintel.db
+target project #64 'interior finish out for chiropractic off' (109 CARROLL ST) tier before = 2
+  permit PB26-13684::Commercial Building Permit desc: 'interior finish out for chiropractic office.  Including part'
+pass1 change kinds: {'evidence_updated': 1, 'new_project': 1261}
+pass2 change kinds: {'classification_changed': 1, 'evidence_updated': 5, 'new_project': 1261}
+
+project #64 tier after = None
+project_change rows with change_kind <> 'new_project' = 6
+
+  #1262 project 460 | evidence_updated/classification_score : '31' -> '21'
+      Classification score changed. Previous: 31. Current: 21.
+  #1263 project 64 | classification_changed/classification : 'MEDIUM' -> 'NEEDS_VERIFICATION'
+      Classification changed. Previous: MEDIUM. Current: NEEDS_VERIFICATION.
+  #1264 project 64 | evidence_updated/classification_score : '55' -> '25'
+      Classification score changed. Previous: 55. Current: 25.
+  #1265 project 64 | evidence_updated/mechanical_evidence_tier : '2' -> None
+      Mechanical evidence changed. Previous: 2. Current: Not verified.
+  #1266 project 64 | evidence_updated/project_name : 'interior finish out for chiropractic office.  Including partition walls, doors, ceiling, flooring, finishes, treatment rooms, waiting and kids area, office, and bathroom with the electrical , plumbing, and mechanical in plans.' -> 'interior finish out; scope text amended'
+      Project name changed. Previous: interior finish out for chiropractic office.  Including partition walls, doors, ceiling, flooring, finishes, treatment rooms, waiting and kids area, office, and bathroom with the electrical , plumbing, and mechanical in plans.. Current: interior finish out; scope text amended.
+  #1267 project 64 | evidence_updated/mechanical_hvac_evidence : 'Tier 2: work description: "interior finish out for chiropractic office.  Including partition walls, doors, ceiling, flooring, finishes, treatment rooms, waiting and kids area, office, and bathroom with the electrical , plumbing, and mechanical in plans." | Keywords: mechanical | Field: work_description' -> None
+      Mechanical scope changed. Previous: Tier 2: work description: "interior finish out for chiropractic office.  Including partition walls, doors, ceiling, flooring, finishes, treatment rooms, waiting and kids area, office, and bathroom with the electrical , plumbing, and mechanical in plans." | Keywords: mechanical | Field: work_description. Current: Not verified.
+
+temp dir (safe to delete): /tmp/j4_fhriito0
+
+########## J4.2 idempotency (audit/scripts/j6_idempotency.py) ##########
+scratch clone : /tmp/j6_goca6xdp/oppintel.db
+
+(a) assemble idempotency
+    before any pass      : {'permit': 4190, 'raw_record': 4239, 'project': 1261, 'project_change': 1261, 'project_state_snapshot': 1261}
+    after pass 1          : {'permit': 4190, 'raw_record': 4239, 'project': 1261, 'project_change': 1262, 'project_state_snapshot': 1261}
+    after pass 2          : {'permit': 4190, 'raw_record': 4239, 'project': 1261, 'project_change': 1262, 'project_state_snapshot': 1261}
+    after pass 3          : {'permit': 4190, 'raw_record': 4239, 'project': 1261, 'project_change': 1262, 'project_state_snapshot': 1261}
+
+(b) ingest idempotency (replay the same source twice)
+    replaying fort_worth_permits_20261010T172220.jsonl (last 400 of 200000 records)
+    before replay        : {'permit': 4190, 'raw_record': 4239, 'project': 1261, 'project_change': 1262, 'project_state_snapshot': 1261}
+    after replay 1       : {'permit': 4584, 'raw_record': 4637, 'project': 1275, 'project_change': 1276, 'project_state_snapshot': 1275} (status=ok)
+    after replay 2       : {'permit': 4584, 'raw_record': 4637, 'project': 1275, 'project_change': 1276, 'project_state_snapshot': 1275} (status=ok)
+
+(a) assemble: project_change 1261 -> 1262 over 3 passes (expect no growth after pass 1)
+temp dir (safe to delete): /tmp/j6_goca6xdp

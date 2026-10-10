@@ -1,0 +1,68 @@
+# Render blueprint — PRODUCTION example (paid instance + persistent disk).
+#
+# This file is an EXAMPLE, not the active blueprint. Render reads `render.yaml`; to go to a real
+# persistent deployment, copy this file over it (or paste its service block into render.yaml) and
+# commit. It is kept separate so the shipped preview blueprint always applies on a Free instance:
+# a Blueprint that declares a `disk:` block on a Free plan does not apply at all, so a disk can
+# never live in the active preview file.
+#
+# Why these differ from the preview:
+#   * `plan: starter` (or higher) — a disk requires a paid instance type.
+#   * `disk:` mounts 1 GB at /var/data and the OPPINTEL_* variables point the database and the
+#     raw archive there, so a deploy replaces the code, not the data. Sized from the J2
+#     measurement: the 24-month default footprint is ~220 MB, so 1 GB has room for the database,
+#     the raw archive and a few backups.
+#   * PREVIEW_MODE is absent, so no "data may reset" banner is shown.
+#   * A location for a real deploy must satisfy: one instance only (SQLite is a single writer),
+#     >= 2 GB RAM (the D6/J2.1 peak measurement), and the disk above.
+#
+# See docs/deployment.md ("Moving to persistent hosting") and audit/RELEASE_NOTES_PORTABLE.md.
+
+services:
+  - type: web
+    name: buildscope
+    runtime: python
+    plan: starter
+    region: oregon
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: bash ops/start.sh
+    healthCheckPath: /healthz
+    # One instance: a Render disk attaches to a single instance, and two refresh loops must not
+    # race against the same database file.
+    numInstances: 1
+    autoDeploy: true
+    envVars:
+      - key: PYTHONPATH
+        value: src
+      - key: SECRET_KEY
+        generateValue: true
+      # Set for a custom domain; otherwise the app uses RENDER_EXTERNAL_URL.
+      - key: BASE_URL
+        sync: false
+      - key: SESSION_COOKIE_SECURE
+        value: "true"
+      - key: CSRF_ENABLED
+        value: "true"
+      - key: GZIP_ENABLED
+        value: "1"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: REFRESH_SECONDS
+        value: "21600"
+      # The 24-month window is applied at the source (config/sources.yaml), so a bounded page
+      # count stays inside it. The progressive backfill may be enabled here if a deeper backfill
+      # is wanted and the instance has the RAM.
+      - key: MAX_PAGES
+        value: "3"
+      - key: GROW_BACKFILL
+        value: "0"
+      # Point the app and the CLI at the mounted disk so the dataset outlives a deploy.
+      - key: OPPINTEL_DATA_DIR
+        value: /var/data
+      - key: OPPINTEL_DB
+        value: /var/data/oppintel.db
+    disk:
+      name: oppintel-data
+      mountPath: /var/data
+      sizeGB: 1

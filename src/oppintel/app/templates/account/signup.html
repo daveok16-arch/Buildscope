@@ -12,7 +12,7 @@
         </div>
         <h1 class="auth-brand-title">See the work before the work begins.</h1>
         <p class="auth-brand-subtitle">
-          Monitor construction opportunities, saved searches, watched projects, and recorded project changes across Dallas&ndash;Fort Worth.
+          Monitor construction opportunities, watched projects, and recorded project changes across Dallas&ndash;Fort Worth.
         </p>
 
         <div class="auth-intelligence-panel">
@@ -40,8 +40,8 @@
             <div class="auth-feature-item">
               <span class="feature-bullet">&check;</span>
               <div>
-                <strong>Continuous Change Detection</strong>
-                <p class="small muted">Get notified when permit scope, valuation, or contractors change.</p>
+                <strong>Change Tracking</strong>
+                <p class="small muted">Get an in-app alert when a later collection run finds a difference in permit scope, valuation, or contractors.</p>
               </div>
             </div>
             <div class="auth-feature-item">
@@ -55,7 +55,7 @@
               <span class="feature-bullet">&check;</span>
               <div>
                 <strong>Pursuit Pipeline &amp; Watchlist</strong>
-                <p class="small muted">Organize active pursuits with your team before public bids open.</p>
+                <p class="small muted">Track your own pursuit stages and notes on each opportunity.</p>
               </div>
             </div>
           </div>
@@ -142,7 +142,7 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function() {
   var btn = document.getElementById('google-auth-btn');
   var errorEl = document.getElementById('auth-client-error');
