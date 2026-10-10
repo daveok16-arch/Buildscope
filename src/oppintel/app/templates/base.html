@@ -24,6 +24,24 @@
 {% endif %}
 
 <link rel="stylesheet" href="{{ asset_url('css/app.css') }}">
+{# No-JS fallback: on mobile the filter sidebar is an off-canvas bottom sheet opened by JS.
+   Without JS that would make filters unreachable, so reveal the panel inline and hide the
+   (inoperable) toggle. The native <select> controls remain fully usable. #}
+<noscript><style>
+  @media (max-width: 860px) {
+    .mobile-filter-bar { display: none !important; }
+    .filter-sidebar { display: block !important; position: static !important;
+      max-height: none !important; overflow: visible !important;
+      border-radius: 0 !important; box-shadow: none !important; }
+    .filter-sheet-handle, .filter-sheet-close, .filter-sheet-backdrop { display: none !important; }
+  }
+</style></noscript>
+{# Progressive-enhancement islands. Vendored locally (no CDN) so the CSP stays strict.
+   Deferred, nonced, and each one is optional: the pages submit and render with JS off.
+   Motion One (vanilla) provides the animation primitives; motion.js wires named behaviours. #}
+<script nonce="{{ csp_nonce() }}" defer src="{{ asset_url('vendor/motion/motion.min.js') }}"></script>
+<script nonce="{{ csp_nonce() }}" defer src="{{ asset_url('js/motion.js') }}"></script>
+<script nonce="{{ csp_nonce() }}" defer src="{{ asset_url('js/controls.js') }}"></script>
 {% if seo %}{% for block in seo.json_ld %}
 <script type="application/ld+json">{{ block | tojson }}</script>
 {% endfor %}{% endif %}

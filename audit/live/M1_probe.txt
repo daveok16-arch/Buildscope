@@ -1,0 +1,6 @@
+comboboxes built=5  native selects hidden=5
+city popup open=1  options=17  searchable=1
+keyboard type 'plan' -> options=1  native select value='Plano'
+mobile sheet geometry: {'position': 'fixed', 'bottom': -0.0, 'topRadius': '20px', 'width': 390}
+console errors desktop: none
+console errors mobile: none

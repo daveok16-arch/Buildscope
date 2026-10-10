@@ -404,3 +404,28 @@ running and cannot give a writable persistent directory) is **usually unsuitable
   it from history; rotate it in the Firebase console and, if the history must be scrubbed, filter
   the repository separately.
 
+
+## WP3 display layer + motion system (M1+)
+
+* The site stays **server-rendered Flask + Jinja**. Interactive pieces are small vanilla
+  "islands" under `src/oppintel/app/static/js/`, loaded with a CSP nonce and `defer`:
+  `motion.js` (named animation behaviours) and `controls.js` (custom filter controls).
+* **Motion One** (the vanilla "motion" library) is vendored at
+  `static/vendor/motion/motion.min.js` (pinned 10.18.0, MIT, `VERSION.txt`, `LICENSE`). No CDN.
+  It provides `animate/inView/stagger/spring`; `motion.js` wires the behaviours (scroll reveal,
+  count-up, sticky-header compaction, segmented indicator, disclosure height, View Transitions).
+  JS budget: whole-site <= 35 KB gzip (currently ~15 KB). Motion is progressive enhancement:
+  every animated element works with JS off and respects `prefers-reduced-motion`; only
+  transform/opacity animate, resting states are set in CSS so CLS stays 0.
+* **Custom filter controls** (`controls.js`) replace the native `<select>` popup (which renders
+  as a black Android system sheet) with a branded listbox + combobox. The native `<select>`
+  stays in the DOM inside `.bs-combobox` as the form field of record, so a no-JS submit still
+  filters. The island only upgrades selects inside a `[data-bs-control]` scope (the filter
+  panels on `/opportunities` and `/companies`). On mobile the popup is a bottom sheet via
+  `window.BSDialog`. Do not put a `[data-bs-control]` wrapper on a select whose value triggers
+  JS navigation (the inline sort select in the toolbar) — the island sets the value directly.
+* **No-JS fallback:** the mobile filter sidebar is an off-canvas sheet opened by JS, so a
+  `<noscript>` block in `base.html` reveals it inline and hides the inoperable toggle. Keep it
+  when changing the filter layout.
+* Tests: `tests/test_controls.py` (markup contract), `audit/m1_probe.py` (browser: keyboard,
+  bottom sheet, no console errors), `audit/live/` for release screenshots.

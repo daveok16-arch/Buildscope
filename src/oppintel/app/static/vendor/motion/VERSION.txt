@@ -1,0 +1,4 @@
+motion (Motion One, vanilla) 10.18.0
+Source: https://www.npmjs.com/package/motion
+File: motion.min.js (UMD, global "Motion")
+License: MIT (see LICENSE)
