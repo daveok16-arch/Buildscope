@@ -375,18 +375,6 @@
                    rel="noopener noreferrer nofollow" style="margin-left:6px">source</a>
               {% endif %}
             </span>
-            <div class="timeline-interpretation" style="margin-top:6px; background:var(--slate-100); padding:6px 10px; border-radius:var(--radius-xs); font-size:0.8rem; color:var(--slate-700)">
-              <strong>BuildScope Interpretation:</strong>
-              {% if 'mechanical' in event.summary | lower or 'hvac' in event.summary | lower %}
-                Documentary mechanical scope modification on record, indicating trade package progression.
-              {% elif 'status' in event.summary | lower %}
-                Municipal permit lifecycle status update recorded from local jurisdiction.
-              {% elif 'value' in event.summary | lower %}
-                Declared construction valuation amended on public filing.
-              {% else %}
-                Factual attribute update detected between automated collection cycles.
-              {% endif %}
-            </div>
           </li>
           {% endfor %}
         </ol>

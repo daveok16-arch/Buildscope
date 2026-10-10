@@ -2906,3 +2906,28 @@ body.drawer-open .mobile-drawer {
 @media (prefers-reduced-motion: reduce) {
   .card:hover { transform: none; }
 }
+
+/* ==========================================================================
+   WP3 M4 — Dossier: sticky mobile action bar, tighter timeline
+   ========================================================================== */
+.timeline { list-style: none; margin: 0; padding: 0; }
+.timeline > li { padding: 12px 0; border-bottom: 1px solid var(--slate-150); }
+.timeline > li:last-child { border-bottom: 0; }
+@media (max-width: 720px) {
+  .dossier-head .action-row {
+    position: sticky; top: 0; z-index: 20;
+    background: var(--white); border-bottom: 1px solid var(--line);
+    padding: 10px 0; margin: 0 -16px 4px; padding-left: 16px; padding-right: 16px;
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .dossier-head .action-row .inline-form { margin: 0; }
+}
+
+/* ==========================================================================
+   WP3 M4 — Dossier: stop long unbreakable source URLs from widening the grid.
+   A grid item's default min-width is auto, so a long URL in the sidebar forced
+   the single-column track wider than the viewport (mobile horizontal scroll).
+   ========================================================================== */
+.detail-grid > * { min-width: 0; }
+.src-url { overflow-wrap: anywhere; word-break: break-word; }
+.detail-panel dd, .detail-panel dt { overflow-wrap: anywhere; }
