@@ -114,9 +114,13 @@ class Pipeline:
         if max_pages is not None:
             connector.max_pages = max_pages
 
+        # Precedence: an explicit caller/CLI `since` wins; otherwise the source's configured
+        # window applies. This is what bounds a one-time seed to the last N months.
+        effective_since = since if since is not None else cfg.resolved_since()
+
         try:
             landing = connector.landing_path()
-            raw_stream = connector.fetch_raw(since=since)
+            raw_stream = connector.fetch_raw(since=effective_since)
 
             def counted() -> Iterator[RawPermit]:
                 for raw in raw_stream:

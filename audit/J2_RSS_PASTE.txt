@@ -1,0 +1,7 @@
+scratch db: /tmp/j2rss_g6eum34k/oppintel.db
+ingest: status=ok rows_landed=0 permits=200000 (38.0s)
+assemble: projects_written=5900 (67.6s)
+
+permits=186,774  projects=5,900
+peak RSS = 304,540 KiB = 297.4 MB
+temp dir: /tmp/j2rss_g6eum34k

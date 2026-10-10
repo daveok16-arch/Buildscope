@@ -346,7 +346,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Write a dated SQLite snapshot into <data_dir>/backups (keep the last N)",
     )
     backup.add_argument("--dir", help="Destination directory (default: data/backups)")
-    backup.add_argument("--keep", type=int, default=7, help="How many backups to retain")
+    backup.add_argument("--keep", type=int, default=3, help="How many backups to retain")
     backup.set_defaults(func=cmd_backup)
 
     sub.add_parser("assemble", help="Assemble permits into projects and classify"

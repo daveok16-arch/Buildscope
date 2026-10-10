@@ -1,0 +1,81 @@
+db=/tmp/h1_readonly.db  today=2026-10-09
+
+############ H1a — the four numbers, side by side ############
+
+G1c window (wp1_d5_window.py): permit_date >= 2026-09-09   (open-ended, no future guard)
+Trends window (trends.py 30d): [2026-09-10, 2026-10-10)  permit_date <= 2026-10-09, valid-date guard
+
+[1] G1c total in-window          = 158
+[2] Trends projects_observed     = 134
+[3] G1c 'public (both gates)'    = 22   (window >= 2026-09-09)
+[4] Trends 'of which public'     = 22   (window >= 2026-09-10, not Closed)
+
+-- the two '22's are different sets --
+   [3] public in-window (>= 2026-09-09)            = 22 projects
+       rows dated exactly 2026-09-09 (non-public) = 22 projects
+       intersection                               = 0
+       same set?                                  = False
+       -> the first is a public subset of the window; the second is a boundary row the Trends window excludes.
+
+[?] all public projects (no window) = 133
+    public in last 7 days  (>= 2026-10-03)   = 11
+    public in this month   (>= 2026-10-01)   = 14
+    public in last 14 days (>= 2026-09-26)   = 20
+
+-- row-by-row delta --
+  G1c 158  minus  Trends 134 = 24
+    explained by:
+      * non-commercial_hvac trade rows in G1c window : 0
+      * permit_date > today inside G1c window        : 2
+      * permit_date == 2026-09-09 (G1c includes, Trends does not): 22
+      check 158 - 0 - 2 = 156
+  G1c public 22  vs  Trends public 22 = 0
+
+############ H1b — the min/max line ############
+wp1_d5_window.py prints the FULL project permit_date range, not the window range:
+  full project permit_date range: min=2025-12-04  max=2026-12-19
+  the label 'full permit_date range' is correct; it is not a 30-day window.
+
+############ H1c — full breakdowns ############
+
+-- in-window (>= 2026-09-09) by classification --
+   'NEEDS_VERIFICATION'   136
+   'MEDIUM'               21
+   'HIGH'                 1
+
+-- in-window (>= 2026-09-09) by procurement_status --
+   'Evidence found, status unclear'       101
+   'Not verified'                         52
+   'Closed'                               5
+
+-- exclusion gate for non-public in-window (first gate that fails) --
+   classification (not HIGH/MEDIUM)      : 136
+   procurement status (not discoverable) : 0
+   other / no evidence tier (among public): 0
+   --- non-public in-window total        : 136 (= 136 + 0 + 0)
+
+-- 10 sample non-public in-window rows --
+   THE VILLAGE AT OWNSBY FARMS RETA | Celina      | 2026-12-02 | NEEDS_VERIFICATION | Not verified           | tier=None | classification=NEEDS_VERIFICATION
+   Plumbing remodel for Burnt apart | Dallas      | 2026-10-09 | NEEDS_VERIFICATION | Evidence found, status | tier=None | classification=NEEDS_VERIFICATION
+   Plumbing remodel for burnt units | Dallas      | 2026-10-09 | NEEDS_VERIFICATION | Evidence found, status | tier=None | classification=NEEDS_VERIFICATION
+   New construction of a general me | Dallas      | 2026-10-09 | NEEDS_VERIFICATION | Evidence found, status | tier=None | classification=NEEDS_VERIFICATION
+   Electrical NEW construction      | Dallas      | 2026-10-09 | NEEDS_VERIFICATION | Evidence found, status | tier=None | classification=NEEDS_VERIFICATION
+   A 16' x 16'' LED dance floor wil | Dallas      | 2026-10-09 | NEEDS_VERIFICATION | Not verified           | tier=None | classification=NEEDS_VERIFICATION
+   Relocating notification devices  | Dallas      | 2026-10-09 | NEEDS_VERIFICATION | Not verified           | tier=None | classification=NEEDS_VERIFICATION
+   cafe for employees of Sterling   | Dallas      | 2026-10-09 | NEEDS_VERIFICATION | Evidence found, status | tier=None | classification=NEEDS_VERIFICATION
+   Building 6- Foundation Repair- I | Fort Worth  | 2026-10-08 | NEEDS_VERIFICATION | Evidence found, status | tier=None | classification=NEEDS_VERIFICATION
+   QTEAM INHOUSE - Property Manager | Dallas      | 2026-10-08 | NEEDS_VERIFICATION | Evidence found, status | tier=None | classification=NEEDS_VERIFICATION
+
+-- permit-date distribution by month for ALL public projects (133) --
+   2025-12  1
+   2026-01  3
+   2026-02  4
+   2026-03  9
+   2026-04  8
+   2026-05  26
+   2026-06  16
+   2026-07  20
+   2026-08  21
+   2026-09  11
+   2026-10  13
+   2026-12  1

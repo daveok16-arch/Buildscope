@@ -113,6 +113,13 @@ These are enforced by tests, not by convention. Breaking one fails the suite.
 * Connectors order newest-first and default to 200 pages/source. An unbounded `ingest`
   (Fort Worth ArcGIS alone) is 200k+ records and takes >13 min, so a recurring refresh is
   bounded (`MAX_PAGES`, default 3); use `--full` only for an initial backfill.
+* Every source carries `since_months: 24` in `config/sources.yaml`. `SourceConfig.resolved_since`
+  turns that into a date and `Pipeline.ingest_source` passes it to `fetch_raw`, so the bound
+  reaches the source's own date filter (ArcGIS `where`, Socrata `$where`, Accela search dates) —
+  it cuts the download, not just the stored rows. CLI `--since` overrides it for one run; a 24-month
+  seed is ~21.6k permits and a ~149 MB / 1 GB-disk footprint, versus ~232k permits / ~1.6 GB for all
+  history. Peak RSS for a 200k-row ingest+assemble measured at ~298 MB.
+  Tests: `tests/test_source_window.py`.
 * `ops/start.sh` redirects the daemon's stdout to `data/automation.out`, **not**
   `data/automation.log`: the daemon owns that log file itself and a second writer interleaves
   and truncates lines.

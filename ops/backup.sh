@@ -28,7 +28,7 @@ fi
 export OPPINTEL_DATA_DIR="${OPPINTEL_DATA_DIR:-$REPO_ROOT/data}"
 export OPPINTEL_DB="${OPPINTEL_DB:-$OPPINTEL_DATA_DIR/oppintel.db}"
 
-KEEP="${KEEP:-7}"
+KEEP="${KEEP:-3}"
 BACKUP_DIR="${BACKUP_DIR:-$OPPINTEL_DATA_DIR/backups}"
 
 if [ ! -f "$OPPINTEL_DB" ]; then

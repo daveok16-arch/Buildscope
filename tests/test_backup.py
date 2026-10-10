@@ -66,3 +66,28 @@ def test_prune_never_removes_the_protected_file(tmp_path):
 def test_backup_missing_database_raises(tmp_path):
     with pytest.raises(FileNotFoundError):
         create_backup(tmp_path / "nope.db", tmp_path / "backups")
+
+
+def test_default_keep_is_three(tmp_path, monkeypatch, caplog):
+    """The default retention is small enough for a 1 GB Render disk (keep keeps count * snapshot)."""
+    import inspect
+
+    from oppintel import backup as backup_mod
+
+    sig = inspect.signature(backup_mod.create_backup)
+    assert sig.parameters["keep"].default == 3
+
+
+def test_low_disk_warns_but_still_writes(tmp_path, caplog, monkeypatch):
+    db = tmp_path / "oppintel.db"
+    _make_db(db)
+    # Force the free-space probe to report 1 MB, far below the threshold.
+    monkeypatch.setattr(
+        "oppintel.backup.shutil.disk_usage",
+        lambda _p: type("U", (), {"free": 1_000_000, "total": 1_000_000, "used": 0})(),
+    )
+    with caplog.at_level("WARNING", logger="oppintel.backup"):
+        out = create_backup(db, tmp_path / "backups", min_free_mb=200)
+    assert out.exists(), "a low-disk warning must not abort the backup"
+    assert any("low disk before backup" in r.message for r in caplog.records)
+

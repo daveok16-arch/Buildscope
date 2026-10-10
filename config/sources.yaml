@@ -5,6 +5,11 @@
 #
 # `market_coverage` records what period the source actually covers. The pipeline surfaces
 # this so the dashboard never presents stale data as current.
+#
+# `since_months` (per source) bounds ingestion to a rolling window, default 24 months. It is
+# applied AT THE SOURCE (ArcGIS `where`, Socrata `$where`, Accela search dates), so the bound
+# cuts the download as well as the stored rows. Set `since_months: null`, or omit it, to take
+# all history. A one-time `--since YYYY-MM-DD` on the CLI overrides it for that run.
 
 defaults:
   user_agent: "DFW-OppIntelligence-MVP/0.1 (public-records research)"
@@ -28,6 +33,8 @@ sources:
     jurisdiction_city: "Fort Worth"
     jurisdiction_state: "TX"
     reliability: 0.95
+    # ArcGIS: filter is applied server-side via File_Date (see connectors/fort_worth_permits.py).
+    since_months: 24
     notes: >
       Includes a first-class "Mechanical" permit type and "Commercial Building Permit"
       records with work description, declared job value, and owner. This is the strongest
@@ -46,6 +53,8 @@ sources:
     jurisdiction_city: null
     jurisdiction_state: "TX"
     reliability: 0.9
+    # Socrata: filter is applied server-side via $where on permitissueddate.
+    since_months: 24
     notes: >
       Commercial permits across Collin County jurisdictions (Plano, Frisco, McKinney,
       Celina, Wylie and others). Carries owner name, declared value, and building area.
@@ -67,6 +76,8 @@ sources:
     jurisdiction_city: "Dallas"
     jurisdiction_state: "TX"
     reliability: 0.9
+    # Accela: the portal search takes an explicit start/end date; since is applied upstream.
+    since_months: 24
     coverage_note: >
       Current. Replaces the stale Socrata extract (ends 2019-12-31) and GIS layer (ends
       2023-12-29) for Dallas. Publishes Commercial Mechanical Permit as a first-class

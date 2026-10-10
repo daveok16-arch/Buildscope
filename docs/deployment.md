@@ -45,7 +45,8 @@ Hosting requirements:
 * the ability to run a **long-lived refresh loop** (the app supervises it) or a **scheduled job**
   that runs `ingest → assemble → build-search-index → monitor`;
 * **one instance only** — SQLite is a single writer, so two instances must not share the file;
-* at least **2 GB RAM** and a **recommended 5 GB persistent disk** (see the sizing below).
+* at least **512 MB RAM and a 1 GB persistent disk** for the default 24-month seed, or **2 GB RAM
+  and 5 GB disk** for an all-history backfill (see the sizing below).
 
 Plain shared hosting (PHP-style, a static-file host, or any platform that cannot keep a process
 running and cannot give a writable persistent directory) is **usually unsuitable**.
@@ -68,13 +69,26 @@ only if an explicitly configured path is **not writable**. It never refuses to s
 a host has no disk: with both variables unset it writes to the checkout's own `data/`, which always
 exists.
 
-**Sizing (from `audit/scripts/h2_estimate.py`, the D6 measurements).** The audit database is
-28.9 MB for 1,261 projects / 4,190 permits (≈6.9 KB per permit). The full seed is 227,374 permits,
-so the database ceiling is **≈1.6 GB**; the raw `data/raw/*.jsonl` archive adds up to ~197 MB for a
-full seed and grows ~916 MB/month unmanaged (the retention policy is inert by default — see
-`config/sources.yaml`). **Recommendation: a 5 GB persistent disk and 2 GB RAM.** The disk holds the
-database plus a month of raw archive plus backups with headroom; the RAM covers an unbounded
-`ingest` pass (Fort Worth ArcGIS alone is 200k+ records).
+**Sizing (from `audit/scripts/j2_sizing.py` and `audit/scripts/j2_rss.py`).** Two seed scopes are
+supported. The default seed is bounded to a rolling **24-month** window (`since_months: 24` on
+every source in `config/sources.yaml`, applied at the source's own date filter):
+
+| Scope | Permits | DB | raw `data/raw/*.jsonl` | 3 gz backups | Total | Disk |
+|---|---|---|---|---|---|---|
+| 24-month (default) | ≈21.6k | ≈149 MB | ≈23 MB | ≈43 MB | ≈220 MB | **1 GB** |
+| all history | ≈232k | ≈1.6 GB | ≈197 MB | ≈461 MB | ≈2.3 GB | **5 GB** |
+
+Peak RSS during an ingest+assemble of the largest single source (200k Fort Worth rows) was
+measured at **298 MB** (`j2_rss.py`), so **512 MB RAM** covers the default seed and **2 GB** covers
+an unbounded `--full` backfill. The WAL is bounded near 4 MB by SQLite's autocheckpoint; raw files
+grow ~916 MB/month only if the (inert-by-default) retention policy is left off.
+
+**Backups.** `ops/backup.sh` / `oppintel backup` writes a consistent online snapshot and keeps the
+newest **3** by default. Backups land on the same disk, so they do **not** survive the volume's
+loss — copy them to object storage (Render disk snapshots, or an off-box `rsync`) if the dataset
+must be recoverable. `create_backup` warns when free space is below one snapshot plus 200 MB
+headroom; it warns and proceeds rather than aborting, because a stale backup is usually better
+than none.
 
 ## Deploy
 

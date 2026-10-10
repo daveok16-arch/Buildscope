@@ -1,0 +1,229 @@
+===================================================================
+J2 PASTE — disk / seed scope / backup sizing / peak RSS / backup.sh
+today=2026-10-09 ; DB copy=/tmp/h1_readonly.db (READ-ONLY)
+===================================================================
+
+### J2a — source date-filter inspection (upstream since) ###
+80:        where = "1=1"
+82:            where = f"File_Date >= timestamp '{since} 00:00:00'"
+89:                "orderByFields": "File_Date DESC",
+57:        where = "proprescom = 'Commercial'"
+59:            where += f" AND permitissueddate > '{since}T00:00:00.000'"
+66:                "$where": where,
+315:    DEFAULT_START = "10/09/2015"
+416:        start = since.strftime("%m/%d/%Y") if since else self.DEFAULT_START
+417:        end = (until or date.today()).strftime("%m/%d/%Y")
+
+### J2b — sizing script output ###
+today=2026-10-09  window 24m starts 2024-10  window 12m starts 2025-10
+
+=== 1. permit-date distribution and payload bytes (largest capture per source) ===
+
+fort_worth_permits: 200,000 rows, 162,604,206 B, 813 B/row
+
+collin_cad_permits: 12,250 rows, 13,772,274 B, 1,124 B/row
+  month range: 2023-01 .. 2026-12
+    2023-01  rows=    287  bytes=     321,463
+    2023-02  rows=    219  bytes=     245,720
+    2023-03  rows=    246  bytes=     275,816
+    2023-04  rows=    298  bytes=     338,914
+    2023-05  rows=    332  bytes=     374,021
+    2023-06  rows=    320  bytes=     359,441
+    2023-07  rows=    283  bytes=     316,658
+    2023-08  rows=    374  bytes=     422,871
+    2023-09  rows=    352  bytes=     398,877
+    2023-10  rows=    339  bytes=     382,817
+    2023-11  rows=    303  bytes=     339,564
+    2023-12  rows=    266  bytes=     299,258
+    2024-01  rows=    247  bytes=     278,808
+    2024-02  rows=    242  bytes=     272,488
+    2024-03  rows=    208  bytes=     235,542
+    2024-04  rows=    368  bytes=     408,518
+    2024-05  rows=    318  bytes=     353,971
+    2024-06  rows=    318  bytes=     353,563
+    2024-07  rows=    353  bytes=     396,468
+    2024-08  rows=    264  bytes=     296,941
+    2024-09  rows=    276  bytes=     310,283
+    2024-10  rows=    364  bytes=     409,971
+    2024-11  rows=    248  bytes=     280,280
+    2024-12  rows=    316  bytes=     353,796
+    2025-01  rows=    300  bytes=     332,456
+    2025-02  rows=    261  bytes=     295,734
+    2025-03  rows=    330  bytes=     367,266
+    2025-04  rows=    302  bytes=     342,250
+    2025-05  rows=    297  bytes=     337,795
+    2025-06  rows=    300  bytes=     338,213
+    2025-07  rows=    272  bytes=     306,166
+    2025-08  rows=    274  bytes=     307,882
+    2025-09  rows=    318  bytes=     357,851
+    2025-10  rows=    235  bytes=     267,133
+    2025-11  rows=    181  bytes=     204,110
+    2025-12  rows=    231  bytes=     260,059
+    2026-01  rows=    176  bytes=     197,602
+    2026-02  rows=    173  bytes=     194,378
+    2026-03  rows=    273  bytes=     309,297
+    2026-04  rows=    212  bytes=     236,274
+    2026-05  rows=    211  bytes=     236,346
+    2026-06  rows=    242  bytes=     270,755
+    2026-07  rows=    263  bytes=     296,045
+    2026-08  rows=    194  bytes=     218,892
+    2026-09  rows=     62  bytes=      67,421
+    2026-12  rows=      2  bytes=       2,300
+
+dallas_accela_permits: 19,963 rows, 20,635,148 B, 1,034 B/row
+  month range: 2020-01 .. 2026-10
+    2020-01  rows=     78  bytes=      78,920
+    2020-02  rows=     55  bytes=      54,913
+    2020-03  rows=     57  bytes=      57,826
+    2020-04  rows=     29  bytes=      29,372
+    2020-05  rows=     46  bytes=      47,467
+    2020-06  rows=     47  bytes=      48,500
+    2020-07  rows=     29  bytes=      29,401
+    2020-08  rows=     44  bytes=      45,052
+    2020-09  rows=     38  bytes=      39,177
+    2020-10  rows=     44  bytes=      44,644
+    2020-11  rows=     32  bytes=      32,340
+    2020-12  rows=     50  bytes=      50,984
+    2021-01  rows=     23  bytes=      23,212
+    2021-02  rows=     36  bytes=      36,484
+    2021-03  rows=     36  bytes=      36,847
+    2021-04  rows=     37  bytes=      38,835
+    2021-05  rows=     70  bytes=      68,591
+    2021-06  rows=     71  bytes=      69,665
+    2021-07  rows=     87  bytes=      86,953
+    2021-08  rows=     79  bytes=      76,903
+    2021-09  rows=     84  bytes=      82,743
+    2021-10  rows=     62  bytes=      61,146
+    2021-11  rows=     76  bytes=      76,375
+    2021-12  rows=     61  bytes=      59,757
+    2022-01  rows=     62  bytes=      62,238
+    2022-02  rows=     56  bytes=      54,743
+    2022-03  rows=    121  bytes=     121,570
+    2022-04  rows=     99  bytes=      95,604
+    2022-05  rows=     93  bytes=      92,668
+    2022-06  rows=    130  bytes=     127,087
+    2022-07  rows=     88  bytes=      88,043
+    2022-08  rows=    110  bytes=     108,886
+    2022-09  rows=    128  bytes=     128,632
+    2022-10  rows=     85  bytes=      84,286
+    2022-11  rows=     59  bytes=      57,302
+    2022-12  rows=     75  bytes=      73,510
+    2023-01  rows=     92  bytes=      92,742
+    2023-02  rows=     91  bytes=      88,593
+    2023-03  rows=     84  bytes=      82,525
+    2023-04  rows=     80  bytes=      78,412
+    2023-05  rows=     53  bytes=      51,570
+    2023-06  rows=     95  bytes=      92,606
+    2023-07  rows=     74  bytes=      72,288
+    2023-08  rows=     71  bytes=      69,250
+    2023-09  rows=     65  bytes=      62,436
+    2023-10  rows=     96  bytes=      97,234
+    2023-11  rows=     78  bytes=      76,094
+    2023-12  rows=     66  bytes=      66,305
+    2024-01  rows=     71  bytes=      70,580
+    2024-02  rows=     61  bytes=      61,085
+    2024-03  rows=     90  bytes=      88,972
+    2024-04  rows=     90  bytes=      89,347
+    2024-05  rows=    139  bytes=     138,893
+    2024-06  rows=    113  bytes=     112,850
+    2024-07  rows=    118  bytes=     116,629
+    2024-08  rows=    190  bytes=     182,923
+    2024-09  rows=    171  bytes=     169,948
+    2024-10  rows=    132  bytes=     132,840
+    2024-11  rows=    104  bytes=     106,341
+    2024-12  rows=    110  bytes=     106,863
+    2025-01  rows=    133  bytes=     133,017
+    2025-02  rows=    114  bytes=     114,836
+    2025-03  rows=    113  bytes=     112,097
+    2025-04  rows=    117  bytes=     115,741
+    2025-05  rows=    137  bytes=     142,751
+    2025-06  rows=    151  bytes=     158,072
+    2025-07  rows=    176  bytes=     181,854
+    2025-08  rows=    138  bytes=     144,855
+    2025-09  rows=    127  bytes=     135,552
+    2025-10  rows=    184  bytes=     194,816
+    2025-11  rows=    131  bytes=     135,635
+    2025-12  rows=    168  bytes=     179,800
+    2026-01  rows=    105  bytes=     110,716
+    2026-02  rows=    153  bytes=     158,989
+    2026-03  rows=    611  bytes=     670,466
+    2026-04  rows=    907  bytes=     990,591
+    2026-05  rows=  1,031  bytes=   1,109,498
+    2026-06  rows=  1,509  bytes=   1,630,204
+    2026-07  rows=  2,613  bytes=   2,719,487
+    2026-08  rows=  3,056  bytes=   3,148,908
+    2026-09  rows=  2,721  bytes=   2,860,508
+    2026-10  rows=    857  bytes=     808,753
+
+=== 2. scope sizes: rows and raw JSONL bytes ===
+   all: rows=  232,213  raw JSONL=    197.0 MB
+   24m: rows=   21,635  raw JSONL=     23.1 MB
+   12m: rows=   16,501  raw JSONL=     17.5 MB
+
+=== 3. DB size projection (measured bytes/row on the audit DB) ===
+  live bytes=28,909,568  permits=4,190  projects=1,261
+  bytes/permit=6,899.7   FTS bytes/project=376.8
+  projected DB (pessimistic: all tables scale with permits):
+     all:   232,213 permits x 6,899.7 B =  1,602.2 MB (FTS 26.3 MB over ~69,885 projects)
+     24m:    21,635 permits x 6,899.7 B =    149.3 MB (FTS 2.5 MB over ~6,511 projects)
+     12m:    16,501 permits x 6,899.7 B =    113.9 MB (FTS 1.9 MB over ~4,966 projects)
+
+=== 4. WAL ceiling ===
+  wal_autocheckpoint = 1000 pages x 4096 B = 4.0 MB (SQLite default; db.py leaves it)
+  pipeline commits every 250 permits; the WAL checkpoints at 4 MB, so ceiling ~4 MB.
+
+=== 5. recurring refresh (bounded: MAX_PAGES=3 x page_size 1000) ===
+  3,000 rows/source x 3 = 9,000 rows/refresh
+  x 848 B/row = 7.6 MB raw/refresh (every 6h)
+  raw per day = 30.5 MB ; per week = 213.8 MB ; per month = 916.3 MB
+  measured gzip ratio on a capture: 0.096
+  retention keep_last=8/source -> 24 files; gzipped after 2 days:
+    steady raw archive ~= 183.3 MB uncompressed, ~17.6 MB gzipped
+  with retention ON, 1 week of growth adds ~213.8 MB, then is pruned to the keep_last window (bounded).
+  with retention OFF, 1 month adds ~916.3 MB to the archive.
+
+=== 6. backup sizing ===
+   all: one uncompressed DB backup ~= 1,602.2 MB; 3 kept ~= 4,806.6 MB; gzipped(x0.10) 3 kept ~= 460.6 MB
+   24m: one uncompressed DB backup ~= 149.3 MB; 3 kept ~= 447.8 MB; gzipped(x0.10) 3 kept ~= 42.9 MB
+   12m: one uncompressed DB backup ~= 113.9 MB; 3 kept ~= 341.6 MB; gzipped(x0.10) 3 kept ~= 32.7 MB
+
+=== 7. recommended disk (all-history seed, retention on) ===
+  DB 1,602.2 + raw 197.0 + WAL 4.0 + archive 17.6 + 3 gz backups 460.6 = 2,281.3 MB
+  round up with 2x headroom -> recommend 5120 MB disk
+
+### J2c — raw_record provenance (document.raw_record_id) ###
+documents: 1901
+documents with raw_record_id: 1901
+orphan raw_record_id: 0
+raw_record rows: 4239
+retention.py only unlinks JSONL files (no raw_record delete):
+135:        path.unlink()
+138:        path.unlink()
+
+### J2d — peak RSS (ingest+assemble of 200k Fort Worth rows) ###
+(see audit/J2_RSS_PASTE.txt)
+
+### J2e — backup.sh / backup.py (keep=3, low-disk warn) ###
+ops/backup.sh:31:KEEP="${KEEP:-3}"
+src/oppintel/backup.py:45:def _warn_if_low_disk(backup_dir: Path, snapshot_bytes: int, min_free_mb: int) -> None:
+src/oppintel/backup.py:51:    needed = snapshot_bytes + min_free_mb * 1024 * 1024
+src/oppintel/backup.py:57:            free / 1e6, needed / 1e6, snapshot_bytes / 1e6, min_free_mb,
+src/oppintel/backup.py:61:def create_backup(
+src/oppintel/backup.py:67:    min_free_mb: int = DEFAULT_MIN_FREE_MB,
+src/oppintel/backup.py:75:    is below ``min_free_mb`` plus the size of the snapshot being written. The write still
+src/oppintel/backup.py:87:    _warn_if_low_disk(backup_dir, db_path.stat().st_size, min_free_mb)
+
+### J2g — warm response times (gunicorn, 2 workers, real DB) ###
+warm TTFB seconds (3 samples each):
+/ 0.051463 0.044355 0.007521
+/opportunities 0.033646 0.012307 0.031738
+/trends 0.099592 0.012155 0.013280
+/companies 0.014375 0.015671 0.006901
+/changes 0.022004 0.007082 0.006963
+HTML transfer bytes (no gzip): / =33159  /opportunities=62727  /trends=24774  /companies=108012
+security header present: Cache-Control: private, no-store (no ETag -> no conditional cache)
+health /healthz -> 200
+
+### tests ###
+pytest tests/test_source_window.py tests/test_backup.py -> 13 passed
+full suite -> 1167 passed (was 1158)

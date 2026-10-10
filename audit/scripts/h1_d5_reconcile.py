@@ -74,6 +74,21 @@ def main() -> int:
     )
     print(f"[4] Trends 'of which public'     = {pub_trends}   (window >= {winB_start}, not Closed)")
 
+    # --- the two different "22"s -------------------------------------------
+    # [3] counts PUBLIC projects (classification + procurement gates) with a permit in the
+    #     window. The other "22" (see the delta below) is the count of ALL rows dated exactly
+    #     2026-09-09, which are non-public. They must not be read as the same figure.
+    ids_sept09 = {r[0] for r in rows("SELECT id FROM project WHERE permit_date = '2026-09-09'")}
+    ids_pubwin = {r[0] for r in rows(
+        f"SELECT id FROM project WHERE permit_date >= ? AND {PUBLIC}", (winA,))}
+    print(f"\n-- the two '22's are different sets --")
+    print(f"   [3] public in-window (>= {winA})            = {len(ids_pubwin)} projects")
+    print(f"       rows dated exactly 2026-09-09 (non-public) = {len(ids_sept09)} projects")
+    print(f"       intersection                               = {len(ids_sept09 & ids_pubwin)}")
+    print(f"       same set?                                  = {ids_sept09 == ids_pubwin}")
+    print(f"       -> the first is a public subset of the window; the second is a boundary row "
+          f"the Trends window excludes.")
+
     # The Director's earlier C2 claim: "only 1 of 133 public projects has an in-window permit".
     pub_all = n(f"SELECT COUNT(*) FROM project WHERE {PUBLIC}")
     print(f"\n[?] all public projects (no window) = {pub_all}")
@@ -143,9 +158,13 @@ def main() -> int:
         f"AND {PUBLIC_PROC} AND (mechanical_evidence_tier IS NULL)",
         (winA,),
     )
+    non_public_total = n(f"SELECT COUNT(*) FROM project WHERE permit_date >= ? AND NOT ({PUBLIC})", (winA,))
+    gate_other = non_public_total - gate_class - gate_proc
     print(f"   classification (not HIGH/MEDIUM)      : {gate_class}")
     print(f"   procurement status (not discoverable) : {gate_proc}")
-    print(f"   missing evidence tier (among public)  : {gate_evidence}")
+    print(f"   other / no evidence tier (among public): {gate_other}")
+    print(f"   --- non-public in-window total        : {non_public_total} "
+          f"(= {gate_class} + {gate_proc} + {gate_other})")
 
     print("\n-- 10 sample non-public in-window rows --")
     for x in rows(

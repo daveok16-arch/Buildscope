@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from datetime import date, timedelta
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -38,6 +39,12 @@ class SourceConfig:
     jurisdiction_state: str = "TX"
     reliability: float = 0.8
     notes: str = ""
+    #: Lower bound for ingestion. `since` is an explicit ISO date; `since_months` is a rolling
+    #: window measured back from today. Precedence: CLI `--since` > `since` > `since_months` >
+    #: None (all history). All three current sources filter by date at the source, so the bound
+    #: cuts the download as well as the stored rows.
+    since: str | None = None
+    since_months: int | None = None
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> SourceConfig:
@@ -47,6 +54,29 @@ class SourceConfig:
     @property
     def is_current(self) -> bool:
         return self.market_coverage == "current"
+
+    def resolved_since(self, today: date | None = None) -> date | None:
+        """The configured lower bound as a date, or None for all history.
+
+        Precedence: an explicit `since` wins; otherwise `since_months` is measured back from
+        `today`. Sub-day units are not supported, so 1 month means "same day, previous month".
+        """
+        if self.since:
+            return date.fromisoformat(self.since)
+        if self.since_months:
+            today = today or date.today()
+            month_index = today.month - 1 - int(self.since_months)
+            year = today.year + month_index // 12
+            month = month_index % 12 + 1
+            day = min(today.day, _days_in_month(year, month))
+            return date(year, month, day)
+        return None
+
+
+def _days_in_month(year: int, month: int) -> int:
+    if month == 12:
+        return 31
+    return (date(year + month // 12, month % 12 + 1, 1) - timedelta(days=1)).day
 
 
 @dataclass
