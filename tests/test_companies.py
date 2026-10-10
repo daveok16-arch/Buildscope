@@ -162,3 +162,11 @@ def test_companies_route_shows_the_filtered_company(stakeholder_client):
     body = stakeholder_client.get("/companies?q=acme").get_data(as_text=True)
     assert "ACME HEALTH LLC" in body
     assert "TARRANT COUNTY" not in body
+
+
+# --- WP3 M5: the companies page states what the data holds -------------------------
+
+def test_companies_page_does_not_claim_unpublished_stakeholder_roles(stakeholder_client):
+    """The directory never found GCs/architects for live data; the copy must not promise them."""
+    body = stakeholder_client.get("/companies").get_data(as_text=True)
+    assert "project owners today" in body
