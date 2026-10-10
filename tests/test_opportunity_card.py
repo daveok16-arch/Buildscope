@@ -70,3 +70,20 @@ def test_evidence_sort_ranks_proven_records_first(client):
             seen_none = True
         else:
             assert not seen_none, f"a proven record ({tier}) sorted after an unproven one"
+
+
+# --- WP3 M3: source provenance on the card --------------------------------------
+
+def test_card_names_its_source_record(client):
+    """A card links back to the municipal record it was assembled from."""
+    payload = _json(client, "/api/opportunities?page_size=50")
+    row = payload["results"][0]
+    body = client.get("/opportunities?page_size=50").get_data(as_text=True)
+    assert "card-source" in body
+    assert row["source_name"] in body
+
+
+def test_toolbar_tier_breakdown_is_labelled_as_page_scoped(client):
+    """The tier breakdown describes the current page, and says so."""
+    body = client.get("/opportunities").get_data(as_text=True)
+    assert "On this page:" in body

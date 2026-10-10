@@ -2887,3 +2887,22 @@ body.drawer-open .mobile-drawer {
 }
 
 .evidence-strip-asof a { text-decoration: underline; text-underline-offset: 2px; }
+
+/* ==========================================================================
+   WP3 M3 — Opportunity card: source provenance line + foot wrapping
+   ========================================================================== */
+.card-foot { flex-wrap: wrap; row-gap: 8px; }
+.card-foot > div:first-child { min-width: 0; }
+.card-foot .card-source {
+  display: block; margin-top: 2px; overflow-wrap: anywhere; color: var(--slate-500);
+}
+.card-foot .card-source a {
+  color: inherit; text-decoration: underline; text-underline-offset: 2px;
+}
+.card:hover {
+  transform: translateY(-2px);
+  transition: transform .13s ease, box-shadow .13s ease, border-color .13s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .card:hover { transform: none; }
+}
