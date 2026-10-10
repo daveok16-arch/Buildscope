@@ -1,12 +1,14 @@
 # WP2 — Mobile & Accessibility Report
 
 **Branch:** `wp2-mobile-a11y`
-**Branch tip:** `wp2-mobile-a11y` (docs commits atop code commit `3fb8e4d`)
-**Code HEAD:** `3fb8e4d` — `fix(wp2): mobile filter bottom sheet + date presets + overflow fixes`
-**Base:** `d052430` (merge of `wp1-truth-stability` into `wp2-mobile-a11y`)
+**Branch tip:** `d43dd80` — `fix(wp2): E2-E5 token table, structural axe gate, screenshots, bundle sizes`
+**Prior code commits:** `3fb8e4d` (B1–B3), `4865987` (E1 focus trap)
+**Base:** merge of `wp1-truth-stability` (D1–D8 + D3 fix) into `wp2-mobile-a11y`
 **Date:** 2026-10-09
-**Scope:** B1 horizontal overflow, B2 touch targets, B3 mobile filter bottom sheet.
-**Result:** all three verified in a real browser (Playwright + Chromium 1243). Full suite: **1075 passed**.
+**Scope:** B1 horizontal overflow, B2 touch targets, B3 mobile filter bottom sheet,
+then the Director's follow-ups E1–E6 (true focus trap, token/contrast table,
+structural axe gate, screenshots, bundle sizes, this report).
+**Result:** all verified in a real browser (Playwright + Chromium 1243). Full suite: **1108 passed**.
 
 ---
 
@@ -17,7 +19,12 @@
 | B1 — overflow at 360/390/430/820/1440, every public route | PASS | 70 parametrised cases, §B1 |
 | B2 — touch targets ≥ 44px on 7 routes | PASS | 0 undersized, §B2 |
 | B3 — mobile filter bottom sheet + date presets | PASS | 2 sheet cases + 1 preset case, §B3 |
-| Full test suite | PASS | 1075 passed, §Suite |
+| E1 — true focus trap (sheet + drawer) | PASS | `partials/dialog_a11y.html`; 4 new browser tests, §E1 |
+| E2 — token + contrast table | PASS | ratios computed from the tokens, §E2 |
+| E3 — structural axe gate (heading order, landmarks, dialog roles) | PASS | `test_structural_axe_rules_are_clean`, §E3 |
+| E4 — bundle sizes | PASS | app.css 54,810 B raw / 11,972 B gzip, §E4 |
+| E5 — 390px screenshots | PASS | `audit/wp2/e5__*.png`, §E5 |
+| Full test suite | PASS | 1108 passed, §Suite |
 | axe-core (all routes, mobile + desktop) | PASS | 0 violations, §B4 |
 
 Two real B1 defects were found by the widened test and fixed in this branch (not present on
@@ -231,6 +238,116 @@ keep the desktop header and mobile drawer clean at both widths.
 
 ---
 
+## E1 — true focus trap (sheet and drawer)
+
+The B1–B3 sheet moved focus in on open and returned it on close, but Tab could still walk out of
+the sheet into the page behind the backdrop (called out as a follow-up in the first draft of this
+report). That is now a real trap, shared by the drawer and both filter sheets so the three
+surfaces cannot drift.
+
+`src/oppintel/app/templates/partials/dialog_a11y.html` (`window.BSDialog`) implements the five
+things a modal dialog must do:
+
+1. move focus into the dialog on open (first focusable, else the container);
+2. wrap Tab and Shift+Tab at the ends of the dialog;
+3. mark every sibling on the path from the dialog to `<body>` `inert`, so nothing behind it is
+   focusable or clickable;
+4. close on Escape, backdrop click or the Close button, and return focus to the toggle;
+5. lock body scroll (`body.drawer-open`/`body.filter-sheet-open { overflow: hidden }`).
+
+Two details that were load-bearing:
+
+* the backdrop is **exempt** from inert (an inert element receives no pointer events, so inerting
+  it would break click-outside-to-close);
+* a filter `<aside>` is a static sidebar on desktop and a dialog only while open on mobile, so
+  `role="dialog"`/`aria-modal="true"` are added on open and removed on close. `role="dialog"` is
+  not permitted on `<aside>`, which is why the drawer stays a `<div>`.
+
+The drawer no longer hand-toggles a hardcoded `aria-hidden`; it is hidden with
+`visibility: hidden` (out of the accessibility tree) and shown with `visibility: visible`, which
+also fixes the original defect where focus() ran while the panel was still `visibility: hidden`.
+
+Browser tests (`tests/test_accessibility.py`):
+
+* `test_filter_sheet_traps_tab_focus[/opportunities|/companies]` — 20× Tab and 20× Shift+Tab with
+  focus asserted inside the panel each time, plus `role`/`aria-modal`, body lock, `inert` on the
+  header and filter bar, and restoration of all three on Escape;
+* `test_mobile_drawer_traps_tab_focus` — the same on the nav drawer;
+* `test_mobile_drawer_focus_and_aria` — updated to assert body lock and background `inert` rather
+  than the removed `aria-hidden`.
+
+## E2 — token and contrast table
+
+Colours are tokens in `:root` (`app.css:1–90`); 67 distinct `#hex`/`rgba()` literals exist in the
+whole sheet, and this branch added only two new literal colours and one rgba, each an AA-safe
+hover value. Contrast ratios (WCAG 2.x, computed from the token values):
+
+| Foreground | Background | Ratio | Verdict | Token |
+|---|---|---|---|---|
+| `#ffffff` | `--gold-500` `#d97706` | **3.19:1** | FAIL (was used) | gold-500 |
+| `#ffffff` | `--gold-600` `#b45309` | **5.02:1** | PASS | gold-600 |
+| `#ffffff` | `#92400e` | **7.09:1** | PASS | E2 hover literal |
+| `--slate-300` `#cbd5e1` | `#ffffff` | **1.48:1** | FAIL (was `.btn-ghost` on white) | slate-300 |
+| `--slate-600` `#475569` | `#ffffff` | **7.58:1** | PASS | slate-600 |
+| `--slate-500` `#64748b` | `--navy-950` `#060b17` | **4.13:1** | PASS (≥4.5 for large/AA-large; body text on dark uses slate-300) | slate-500 |
+| `--slate-300` `#cbd5e1` | `--navy-950` `#060b17` | **13.24:1** | PASS | slate-300 |
+| `--gold-600` `#b45309` | `#ffffff` | **5.02:1** | PASS | gold-600 |
+
+The white-on-gold-500 3.19:1 failure and the slate-300-on-white 1.48:1 failure were the two
+serious axe findings fixed on this branch (gold-500 → gold-600; `.btn-ghost` base colour →
+slate-600 with the light treatment scoped to `.site-header`/`.hero`/`.mobile-drawer`).
+
+## E3 — structural axe gate
+
+The serious/critical gate is not enough: axe rates `heading-order` **moderate**, so a real defect
+can pass it. Running the rule explicitly found one:
+
+```
+desktop /opportunities [{"id":"heading-order","impact":"moderate","nodes":[".filter-sidebar-head > h3"]}]
+desktop /companies     [{"id":"heading-order","impact":"moderate","nodes":[".filter-sidebar-head > h3"]}]
+desktop /changes       [{"id":"heading-order","impact":"moderate","nodes":[".filter-sidebar-head > h3"]}]
+```
+
+Root cause: the filter panel heading was an `<h3>` that precedes the results `<h2>` (and the
+`sr-only` `<h2>` on `/opportunities`), so the outline went h1 → h3 → h2 at desktop. The panel
+titles a top-level region, so it is now `<h2 class="filter-panel-title">`
+(`opportunities/list.html:47`, `companies/index.html:43`, `changes.html:24`), styled by the
+existing `.filter-sidebar-head h3, .filter-sidebar-head h2.filter-panel-title` rule.
+
+`test_structural_axe_rules_are_clean` now asserts `heading-order`, `landmark-one-main`,
+`landmark-unique`, `region`, `aria-allowed-role` and `aria-dialog-name` on all 14 routes at both
+viewports. After the fix, all six pass at 390px and 1440px and the full axe run is empty.
+
+## E4 — bundle sizes
+
+| Artifact | main (`e01eadd`) | `3fb8e4d` | now | Δ vs main |
+|---|---|---|---|---|
+| `app.css` raw | 44,640 B | 54,646 B | **54,810 B** | +10,170 B (+23%) |
+| `app.css` gzip | 8,849 B | 11,920 B | **11,972 B** | +3,123 B (+35%) |
+
+No JavaScript files exist in `static/`; the interactive logic is inline in templates. Inline
+`<script>` bytes: `base.html` 624, `opportunities/list.html` 761, `companies/index.html` 470,
+`partials/dialog_a11y.html` 5,222. There are 8 `!important` in `app.css` and one `!important` in
+a template; 346 inline `style=` attributes across templates; one font stack
+(`-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Plus Jakarta Sans", "Inter", …`,
+`app.css:113`) and 41 distinct `font-size` declarations. The CSS growth is the cost of the
+bottom-sheet, focus and heading fixes; no build step minifies or splits it.
+
+## E5 — 390px screenshots
+
+| Screenshot | Note |
+|---|---|
+| `audit/wp2/e5__390__opportunities_sheet_open.png` | Opportunities filter bottom sheet open, pinned to the viewport bottom |
+| `audit/wp2/e5__390__companies_sheet_open.png` | Companies filter bottom sheet open |
+| `audit/wp2/e5__390__opportunities_active_filter_count.png` | `Filters (2)` count for `?city=Plano&classification=MEDIUM` |
+
+## E6 — this report
+
+Updated for E1–E5: branch tip and suite count, the E1–E5 rows in the summary table, the
+structural axe finding and fix, the contrast table, the bundle sizes and the screenshot index.
+
+---
+
 ## Suite
 
 ```bash
@@ -239,29 +356,33 @@ env -u BASE_URL -u OPPINTEL_DB -u OPPINTEL_DATA_DIR -u SECRET_KEY -u PORT \
 ```
 
 ```
-1075 passed in 231.51s (0:03:51)
+1108 passed in 227.98s (0:03:47)
 ```
 
-Accessibility module alone: `109 passed in 75.81s`. The B1/B2/B3 subset:
-`80 passed, 29 deselected in 46.76s`.
+Accessibility module alone: `140 passed in 104.87s` (was 109 before E1/E3).
 
 ---
 
-## Files changed in this branch (B1–B3)
+## Files changed in this branch (B1–B3 and E1–E5)
 
 | File | Change |
 |---|---|
 | `src/oppintel/app/main.py` | `_date_presets()` helper; `date_presets` + `active_filter_count` into the opportunities context |
-| `src/oppintel/app/templates/opportunities/list.html` | `Filters (n)` button, backdrop, sheet open/close JS, date fieldset with presets |
-| `src/oppintel/app/templates/companies/index.html` | Same sheet pattern for stakeholders |
+| `src/oppintel/app/templates/opportunities/list.html` | `Filters (n)` button, backdrop, sheet open/close JS (now via `BSDialog`), date fieldset with presets, sidebar heading `h3`→`h2` |
+| `src/oppintel/app/templates/companies/index.html` | Same sheet pattern for stakeholders; sidebar heading `h3`→`h2` |
+| `src/oppintel/app/templates/changes.html` | Filter sidebar heading `h3`→`h2` (heading-order) |
+| `src/oppintel/app/templates/partials/dialog_a11y.html` | **New.** `BSDialog` — shared focus trap / inert / scroll-lock / Escape for the drawer and both sheets |
+| `src/oppintel/app/templates/base.html` | Include `dialog_a11y.html`; drawer script now a `BSDialog.register` call |
 | `src/oppintel/app/templates/trends.html` | Removed the inline `min-width:240px` card floor |
-| `src/oppintel/app/static/css/app.css` | Bottom-sheet styles; 44px sheet controls; `.auth-grid` `minmax(0,…)`; `.auth-footer-links` wrap; `.stat-strip` `min(180px,100%)` |
-| `tests/test_accessibility.py` | Overflow at 5 widths with named offenders; sheet open/close; date presets |
+| `src/oppintel/app/static/css/app.css` | Bottom-sheet styles; 44px sheet controls; `.auth-grid` `minmax(0,…)`; `.auth-footer-links` wrap; `.stat-strip` `min(180px,100%)`; `body.drawer-open` scroll lock; `.filter-panel-title` rule |
+| `tests/test_accessibility.py` | Overflow at 5 widths; sheet open/close; date presets; **E1** sheet + drawer Tab-trap tests; **E3** structural-rule gate |
 | `audit/scripts/wp2_before_after.py` | Before/after screenshot + scrollWidth harness |
-| `audit/wp2/*.png` | Before/after screenshots |
+| `audit/scripts/wp2_axe_structural.py` | **New.** E3 rule-level axe evidence |
+| `audit/scripts/wp2_e5_screenshots.py` | **New.** E5 390px screenshots |
+| `audit/wp2/*.png` | Before/after and E5 screenshots |
 
-CSS grew 52,365 → 54,646 bytes (+2,281, ~4%). No JS files added; the sheet logic is ~30 lines
-inline per template.
+CSS grew 44,640 → 54,810 bytes raw (8,849 → 11,972 gzip) across the branch. No JS files added; the
+dialog logic is a shared inline partial.
 
 ## Versions
 
@@ -272,6 +393,9 @@ Python 3.13.15 · Flask 3.1.3 · Playwright + Chromium 1243 · pytest 9.1.1 · S
 * `/companies` has no date filter (stakeholders have no permit-date range), so the date presets
   are `/opportunities`-only. If a "first seen" date filter is wanted on `/companies`, the preset
   helper already returns the values and only the template needs the fieldset.
-* The sheet traps focus by moving focus in and returning it on close; it does not yet implement a
-  full focus trap (Tab can still leave the sheet into the page behind the backdrop). axe is clean
-  and the practical behaviour is correct, but a true trap is a candidate follow-up.
+* The focus trap (E1) is done; Tab no longer leaves the sheet or drawer.
+* The inline dialog script is ~5 KB unminified and re-sent on every page. If a build step is added
+  later, moving `BSDialog` to a hashed `static/js/` file with a long cache header would remove it
+  from the HTML payload; there is no bundler today.
+* `role="dialog"` is set on the filter `<aside>` only while open; on desktop it remains a
+  complementary landmark. axe is clean in both states.
