@@ -1,376 +1,309 @@
-# BuildScope — Principal Engineering & Staff UI Audit (Re-audit)
+# BuildScope — Read-Only Technical Audit (2026-10-09)
 
-**Type:** READ-ONLY audit. No application code, schema, data, or configuration was modified.
-**Audit date:** 2026-10-10 (UTC). **Audited revision:** branch `wp3-visual` @ `1b694f4`
-(working tree). `origin/main` is `e01eadd` and was never touched.
-**Live URL probed:** https://buildscope-xppz.onrender.com
-**Local run:** gunicorn on a **copy** of the DB (`/tmp/audit_copy.db`) — source DB never written.
-**Auditor:** OpenHands agent (AI).
+**Auditor:** OpenHands (Principal SWE / Staff UI Engineer)
+**Commit:** `main` @ `8f2e8ae` (WP3 `wp3-visual` merged this session)
+**Live:** https://buildscope-xppz.onrender.com
+**Rule:** Read-only. All DB reads against `/tmp` copies (`/tmp/demo_buildscope.db`, `/tmp/ro.db`). No schema change, no data deletion.
 
-**Method:** static code review + read-only SQLite `SELECT`s against a copy + live HTTP probes +
-a local run + Playwright screenshots at 3 viewports + axe-core. Every number is copied from a
-command output; the commands are in the Appendix. Anything not verifiable is marked
-**UNVERIFIED** with the reason.
-
-> **Provenance note.** A prior audit exists at `audit/BUILDSCOPE_AUDIT_2026-10-09.md` (dated
-> 2026-10-09). It found 910 tests, 46 routes, and serious contrast/a11y failures plus a
-> `/companies` overflow. Those specific issues have since been fixed by WP1/WP2 (1246 tests now
-> pass; axe is clean; no route overflows). This report is the **current** state; where it
-> contradicts the 2026-10-09 audit, the current measurement wins.
-
-> **Disclosure.** The instructions for this session mixed a read-only audit request with a
-> description of ongoing implementation on branch `wp3-visual`. Before this report, five commits
-> existed on that feature branch (K1–K5); `origin/main` remains untouched at `e01eadd`. This
-> report itself creates only `audit/` artifacts. See Finding C6.
+> Two datasets are referenced:
+> - **LOCAL** = `/tmp/demo_buildscope.db`, byte-copy of the shipped `data/oppintel.db` (28,942,336 bytes): 1,261 projects / 4,190 permits. Reproducible fixture.
+> - **LIVE** = Render instance (`/healthz` → `/opt/render/project/src/data/oppintel.db`): 1,789 projects / 6,195 permits.
+> Founder-quoted numbers ("175/12/6,175", "253/26/11,966") are LIVE-era; LOCAL proves the code paths.
 
 ---
 
 ## 1. Executive summary
 
-BuildScope is a genuine, well-layered B2B intelligence product with a disciplined, evidence-first
-backend and a fast, pure-server-rendered UI. It is **not** mock: 1246 tests pass on a real
-pipeline, every displayed fact traces to a permit row, and the stat layer has a real
-single-source-of-truth. The remaining gaps are **commercial completeness** (no pricing, no export,
-no charts on live), **thin company/GC data**, **SEO canonicals that all point at `/`**, and a
-**hostile free-preview ops posture** (self-seeding ingest→assemble→monitor every boot, 3 pages ×
-4 sources, no disk).
+BuildScope is a well-engineered Flask + SQLite intelligence pipeline with a disciplined "never invent a value" contract, real schema migrations, a tested security layer, and **0 axe-core violations on all 16 public routes**. The core weakness is **truth drift at the presentation boundary**: at least four independent headline-count engines and no enforced reconciliation, so home, `/healthz`, Trends and Analytics print different numbers for the same word. Live home advertises "170 public projects" while live `/healthz` in the same second reports "projects: 1789" — a 10× split a buyer will notice. The catalog is also thin where it sells: **every company is an Owner; GC and Architect are 0 dataset-wide**, and 88.6% of titles are raw source shout-caps cleaned only at render time. The deploy is currently stalled (no release marker ~25 min after push).
 
-Overall health score (1–10):
-
-| Area | Score | One-line rationale |
+| Dimension | /10 | Rationale |
 |---|---|---|
-| Data integrity | **8/10** | Consistent, snapshot-backed counts; 2 future permits; 2,286 dropped permits; 63% null value |
-| UI / design | **7/10** | Real token system; coherent; 349 inline `style=` attrs across 34 templates |
-| Mobile | **7/10** | No overflow anywhere; two 15px footer link tap targets; filter sheet is good |
-| Performance | **9/10** | 0 JS, 1 CSS request (8.7KB gzip), TTFB ~180ms warm; 1.3s cold |
-| Accessibility | **8/10** | axe-clean (WCAG 2.1 AA); 404 has no `<h1>`; axe colour-contrast "incomplete" worth manual check |
-| Security | **8/10** | CSP, CSRF (403), PBKDF2, rate-limit, no tracked secrets; no HSTS header; no email verification |
-| SEO | **6/10** | `/trends`, `/companies`, `/guides`, `/reports`, `/analytics`, `/changes`, `/markets`, `/trades` all canonical → `/` |
-| Product completeness | **6/10** | 46 routes, real workflow; no pricing, no export, no charts on live, GC/architect data absent |
-| Code quality | **8/10** | Layered, documented, heavily tested; ~600-line route module |
-| Ops | **6/10** | Blueprint correct but fragile on Free; no CI, backups, or error monitoring |
-
-**Headline:** the core is real and now measurably healthy; the two things keeping it from
-Dodge/ConstructConnect-class are **no monetization surface** and **a canonical/SEO defect that
-de-indexes every secondary page**.
+| Data integrity | **4** | 4+ disagreeing headline counts; 2 future permits; 2,286 orphan permits (54.6%). |
+| UI / design | **6** | Real 82-token system; 348 inline `style=` and 11 `!important` bypass it. |
+| Mobile | **6** | 0 overflow anywhere; 200 sub-44px tap targets. |
+| Performance | **7** | ~9 KB HTML, ~110 KB assets, 4–5 requests, server pagination. |
+| Accessibility | **8** | axe 0/16 routes; only small-target/focus-size residue. |
+| Security | **8** | CSP+nonce, CSRF, rate limit, PBKDF2, secure cookies, no secrets tracked; 1 auth-throttle gap. |
+| SEO | **6** | Canonicals/sitemap(48)/JSON-LD/robots good; meta bakes volatile counts. |
+| Product completeness | **5** | Alerts/watch/pipeline/notes/tags exist; no exports/saved-searches/email; GC-architect absent. |
+| Code quality | **7** | Layered, documented, 1,276 tests green; duplicated headline SQL is the smell. |
+| Ops | **5** | Good health endpoint; Free plan resets data; deploy stalled; no monitoring. |
+| **Overall** | **6.2** | Strong bones, weak truth-consistency and data depth. |
 
 ---
 
 ## 2. Architecture overview
 
-```
-   public gov sources (no auth)
-   Fort Worth ArcGIS · Collin CAD Socrata · Dallas Accela WebForms
-        │  connectors order newest-first, since_months=24 at source
-        ▼  raw payload archived → data/raw/*.jsonl
-   normalize → assemble → provenance(evidence) → classify → eligibility → procurement
-        │                       │                        │
-        │                       └ evidence / evidence_history (append-only)
-        ▼
-   changes.py (diff) → project_change → monitoring → alerts (in-app)
-   intelligence.derive_for_project → entity/event/trade graph
-        │
-        ▼
-   service.py  OpportunityService   ← THE read boundary (only app module on intel tables)
-   stat_snapshot.py                 ← only app module running headline COUNT(*)
-        │
-        ▼
-   Flask app (app/main.py, ~46 routes) · app/api.py (JSON) · seo.py · accounts.py · workflow.py
-   Jinja templates (47) · static/css/app.css (58,410 B, 76 tokens, 291 var() uses) · 0 JS
-        │
-        ▼
-   SQLite (db.py: SCHEMA intel + APP_SCHEMA app) · single file
-   Deploy: render.yaml → bash ops/start.sh → gunicorn (+ in-process refresh thread)
+```mermaid
+flowchart TD
+  subgraph Sources["Public sources (config/sources.yaml)"]
+    FW[Fort Worth ArcGIS]
+    COL[Collin CAD]
+    DAL[Dallas Accela/Socrata/GIS]
+  end
+  subgraph Intel["Intelligence layer — src/oppintel/*.py"]
+    ING[connectors / ingest] --> RAW[(raw_record payload + hash)]
+    ING --> PERM[(permit)]
+    PERM --> ASM[Pipeline.assemble_and_classify]
+    ASM --> PROJ[(project + evidence)]
+    ASM --> CHG[changes.py -> project_change]
+    ASM --> IDN[identity.py -> entity/project_party]
+    ASM --> TRD[config.classify_trade -> project_trade]
+  end
+  subgraph App["Application layer — src/oppintel/app/"]
+    SVC[OpportunityService: ONLY reader of intel tables]
+    SNAP[stat_snapshot.py: headline COUNT snapshot]
+    TRENDS[trends.py]
+    ANA[analytics_funnel.py]
+    SEO[seo.py / seo_gate.py]
+    WF[workflow.py / alerts.py / entitlements.py]
+    SEC[security.py CSRF + ratelimit + headers]
+    SVC --> TPL[Jinja templates]
+    SNAP --> TPL
+    TRENDS --> TPL
+    SEO --> TPL
+    WF --> TPL
+  end
+  PROJ --> SVC
+  PROJ --> SNAP
+  PROJ --> TRENDS
+  OPS[ops/automate.py: gunicorn + refresh thread] -.-> ING
+  OPS -.-> ASM
+  OPS -.-> SNAP
+  RENDER[render.yaml: Free plan, 1 instance] --> OPS
+  SEC --> TPL
 ```
 
-Two-layer separation is real and test-enforced (`tests/test_app_architecture.py`).
+**Stack:** Python 3.13.15 · Flask 3 · Jinja2 · SQLite (FTS5 search) · gunicorn (2 workers × 4 threads) · vendored deps in `vendor/python/`. No frontend framework is served — the React/Vite stub (`src/App.tsx`) renders an empty `<div>` and is off the serving path.
+
+**Start/deploy:** `bash ops/start.sh` → foreground gunicorn + in-process refresh loop (`ops/automate.py`, `REFRESH_SECONDS=21600`). `render.yaml` = Free plan, `autoDeploy: true`, `healthCheckPath: /healthz`, no disk (data resets per deploy).
+
+**Tests:** `python -m pytest tests/ -q` → **1,276 passed in 265.62s**.
 
 ---
 
 ## 3. Findings table
 
-| ID | Sev | Area | Finding | Evidence | Root cause | Recommended fix | Effort |
+| ID | Severity | Area | Finding | Evidence (path:line / command) | Root cause | Recommended fix | Effort |
 |---|---|---|---|---|---|---|---|
-| S1 | High | SEO | `/trends`, `/companies`, `/guides`, `/reports`, `/analytics`, `/changes`, `/markets`, `/trades` all emit `canonical="/"` | `curl` per route; `seo.py:257` `simple(title,description,path="/")` default; callers in `main.py:955,1040,1056,1085,1178,1198` omit `path=` | `Seo.simple()` has a default `path="/"` and call sites never pass the real path | Pass each route's own path to `simple()`; add a test asserting canonical != `/` for public routes | S |
-| S2 | Med | SEO | Broken `<title>` on trade page: "Commercial **Commercial HVAC / Mechanical** …" | `curl /trades/commercial-hvac`; `main.py:854` `f"Commercial {trade.short_label or trade.label} …"`; `seo.py:214-222` prefixes "Commercial " too | Template `page_title` and SEO title both prefix "Commercial"; `short_label` is null so `label` is used | Use `short_label or label` in one place; drop the doubled prefix | S |
-| D1 | High | Data | 2 projects have a future `permit_date` (2026-12-02, 2026-12-19) relative to 2026-10-09 | SQL; examples id 1247 (Celina), id 413 (Plano) | Permit dates parsed but not sanity-bounded; future dates pass through `dates.py` | Flag future permit dates in `quality.py` (already flags them elsewhere) and exclude from occurrence metrics | S |
-| D2 | Med | Data | Refresh drops most rows: 4,190 permits landed → only 1,904 linked (2,286 dropped, 54.6%) | `market_stat_snapshot.metrics.funnel`; Fort Worth 1,944 landed → 93 linked | Assembly eligibility/linking discards non-commercial or unlinkable rows | Surface the funnel on `/how-it-works`; tune `assemble.py` linkage | M |
-| D3 | Med | Data | 63/1261 (5.0%) projects have null `estimated_project_value`; 139/1261 (11.0%) null `square_footage` | SQL | Source does not always publish the field | Already rendered as "Not published by the source" — acceptable; document coverage | S |
-| D4 | Low | Data | 1,117/1,261 (88.6%) titles are ALL CAPS at rest | SQL | Titles stored verbatim from source | Already title-cased at display (`presentation`/`titlecase`); consider normalizing at ingest | S |
-| D5 | Low | Data | 490 address keys carry repeated permits within ≤2 distinct months | SQL | Multiple permits per site | Confirm these are legitimate multi-trade permits, not duplicates; expose "shares building" | M |
-| P1 | High | Product | No pricing page, no plan UI, no upgrade path; `set-plan` is CLI-only | `grep route` for pricing → none; `main.py:2460` `set-plan` | Monetization deliberately not implemented yet | Add `/pricing` + plan comparison; gate export/contacts | L |
-| P2 | High | Product | No export (CSV/PDF/Excel) anywhere | `grep csv|excel|export` in `main.py`/`api.py` → none | Not built | Add CSV export on the directory (entitlement-gated) | M |
-| P3 | Med | Product | `/companies` shows only Owner roles; `?role=contractor` and `?role=architect` return **zero** | live curl with role filter; DB `project_party` roles = `[('owner',1830)]` only | GC/architect never extracted from source payloads | Extract contractor/architect from permit `contractor` field / Accela parties | L |
-| P4 | Med | Product | Trends has no chart; inline SVG chart exists only on local working tree | local `/trends` grep `bar-chart`=1; live=0; live commit has none | The K5 chart is committed on the feature branch but **not deployed** to `main` | Deploy the branch; or accept and ship | S |
-| U1 | Med | UI | 349 inline `style=` attributes across 34 templates | `grep -ro 'style="' templates | wc -l` | Incremental additions bypass the token system | Migrate to classes; K8 in progress | M |
-| U2 | Low | UI | Only 8 `!important` in the whole stylesheet; token system is genuine (76 tokens, 291 `var()`) | `grep -c '!important'`; `:root` block | — | Keep; the discipline is good | — |
-| U3 | Low | UI | No clipped/truncated card content detected (prior-audit issue resolved) | Playwright `scrollHeight>clientHeight` scan → `[]` on `/companies`,`/opportunities` | Fixed by WP2/WP3 card work | — | — |
-| M1 | Low | Mobile | Two footer nav links are 15px tall (below 44px) — "Terms", other footer links | Playwright tap-target scan | Small text links in footer | Add padding to footer link targets | S |
-| A1 | Low | A11y | 404 page has no `<h1>` (`page-has-heading-one`) | axe on `/this-does-not-exist` | 404 template | Add an `<h1>` | S |
-| A2 | Low | A11y | 21–61 nodes per page are axe `color-contrast` **incomplete** (needs manual check) | axe incomplete list | Likely CSS gradients/tinted backgrounds axe can't compute | Manual contrast check | S |
-| SEC1 | Med | Security | No `Strict-Transport-Security` header | `curl -D -` grep HSTS = 0 | Not set in `security.py` | Add HSTS (careful with subdomains) | S |
-| SEC2 | Med | Security | No email verification on signup | `accounts.py` — no verify flow | Not built | Add token verification (mailer exists) | M |
-| SEC3 | Low | Security | `script-src` includes `'unsafe-inline'` | live CSP header | Firebase/GTM integration | Move to nonces; WP2 added nonce tests | M |
-| SEC4 | Low | Security | Dependency/secret scan clean in this checkout | `git grep AIza|sk-` = none; `firebase-applet-config.json` untracked; history is a shallow clone (42 commits) | — | **UNVERIFIED** for full history: shallow clone prevents a complete history scan | S |
-| O1 | High | Ops | Free preview rebuilds the whole dataset on every deploy/boot: initdb→ingest(3 pages×4 sources)→assemble→index→monitor | `render.yaml` (no disk, `plan: free`); `ops/start.sh:42`; live `projects_total` 6,682 | No persistent disk on Free | Run on a paid plan with the disk block enabled | M |
-| O2 | Med | Ops | No CI pipeline; no backups; no error monitoring | no `.github/workflows`; `render.yaml` has none | Not configured | Add CI (pytest) + scheduled `backup.sh` + Sentry | M |
-| O3 | Low | Ops | Cold start adds ~1.0–1.1s TTFB on first hit after idle | live TTFB try1 1.21s vs 0.17–0.18s warm | Free plan idle sleep | Paid plan / keep-warm ping | S |
-| O4 | Low | Ops | `data/*.jsonl` raw captures keep growing, unrotated | `ls data/raw` shows 13 files | Retention not scheduled | Schedule `data/raw` retention | S |
-| C1 | Low | Code | `main.py` is ~2,500 lines of route closures | `main.py` line count | Single module | Extract blueprints | L |
-| C2 | Low | Code | One f-string SQL in `seo_report.py:190` (constant fragment, no user input) | grep | — | Leave; not injectable | — |
-| C3 | High | Ops/Integrity | `oppintel.db` is git-ignored, so **`origin/main` deploys with an empty DB** and relies entirely on the ingest loop | `git check-ignore data/oppintel.db` ✓; `requirements.txt` has no data | By design, but means the only "data" is the pipeline output | Accept, or ship a seed snapshot | M |
+| F-01 | **Critical** | Data | Home meta/headline "170 public projects" vs live `/healthz` "projects: 1789" — same word, same second, 10× apart | `curl /` → `meta name=description …170…`; `curl /healthz` → `"projects":1789` | `/healthz` reads `metrics["projects_total"]`; home/SEO read `metrics["projects_public"]` (`stat_snapshot.py:103` vs `:227`); both surfaced as "projects" | Health must report `projects_public` under the same key the site uses, or label the two distinctly ("all assembled" vs "public") | S |
+| F-02 | **High** | Data | At least 4 independent headline-count engines, no reconciliation | `stat_snapshot.compute_metrics` (`stat_snapshot.py:88`), `trends.build_trend_report` (`trends.py:360+`), `coverage_summary` (live `/healthz` `coverage.records=6162`), analytics | Counts computed in 4 places over different predicates (`public_where` vs `p.trade=?` vs source `permit`) | Make one module the sole authority; others call it; add a cross-page equality test | M |
+| F-03 | **High** | Data | Trends "permit records" (11,906) ≠ Home "Permit records" (11,966) | `trends.py:410` counts `permit` joined via `project_permit` for one trade; `stat_snapshot.py:167` `permit_records_all = COUNT(*) FROM permit` | Two different "record" definitions, one label | Rename Trends metric to "Trade-linked permits" + inline definition; or unify | S |
+| F-04 | **High** | Data | "533 projects with a detected change" exceeds total commercial projects (253) | `trends.py:500` counts `project_change WHERE change_kind<>'new_project'` over **all** assembled projects; LOCAL only `new_project` rows (1,261) so local changes=0 | Numerator and denominator from different populations | Scope `projects_changed` to the public predicate, or state the wider basis | M |
+| F-05 | **Med** | Data | "28 strong mechanical evidence" vs Home "26" vs "212 classified trade scope" | `trends.py:578` `tier IN (1,2)` (LOCAL=8); `stat_snapshot.py:112` `evidence_clause` (LOCAL=8); `trends.py:455` any `project_trade` row (LOCAL=970) | Three scopes, three labels | Publish a definitions legend; label every figure with its scope | S |
+| F-06 | **Med** | Data | Future-dated permits: 2 rows `permit_date > 2026-10-09` (e.g. `2026-12-19`, `2026-12-02`) | `SELECT count(*) FROM permit WHERE permit_date > '2026-10-09'` → **2**; examples `25-04076` (Plano), `25-005249` (Celina), source `collin_cad_permits` | Dates parsed verbatim; no upper bound at ingest | Clamp/flag at normalize; `quality.py` should count them | S |
+| F-07 | **Med** | Data | 2,286 / 4,190 permit rows (54.6%) orphaned (no `project_permit`) | `SELECT count(*) FROM permit pm WHERE NOT EXISTS(SELECT 1 FROM project_permit pp WHERE pp.permit_id=pm.id)` → **2,286** | Non-commercial/out-of-window rows deliberately unlinked; 1,904 linked | Surface "landed vs linked vs dropped" (funnel exists at `stat_snapshot.py:175`) | S |
+| F-08 | **High** | Data/UX | Every company is an Owner; GC and Architect are 0 | `role_counts()` → `{'owner': 99}`; `project.general_contractor/architect/developer` all **0** non-null | Sources publish owner only; nothing for `identity.py` to resolve | Ingest a GC/architect source, or stop implying they exist (partly fixed by M5) | L |
+| F-09 | **Med** | UI | 88.6% of titles raw ALL-CAPS at rest (1,117/1,261) | `SELECT count(*) … project_name=upper(project_name)` → 1,117; project 560 `"2 Story Restaurant … It is16,297 SF"` | Cleanup render-only (`clean_title` filter, 8 templates); stored value unchanged | Persist `display_name` at assemble so API/JSON/export also get clean titles | M |
+| F-10 | **High** | Mobile | 200 interactive elements below 44 px tall on mobile | `audit/capture_wp3.py` tap probe → 200; breadcrumbs/footer 15 px, `src-url` 18 px | Body/footer link styles lack min-height | `min-height:44px` (or padding) on nav/footer/inline links ≤820px | S |
+| F-11 | **Med** | UI | Tokens exist but bypassed: 348 inline `style=`, 11 `!important` | `grep -rho 'style="' templates | wc -l` → 348; `grep -c '!important' app.css` → 11 | Ad-hoc inline styles; e.g. `opportunity_card.html:38` `style="color:var(--accent-light)"` | Move inline styles to utility classes; audit the 11 `!important` | M |
+| F-12 | **Low** | UI | No enforced type ramp — 14 distinct `font-size` values | `grep font-size app.css | sort | uniq -c` → 0.72–1.85rem, 14 steps | No type-scale tokens | Define `--fs-*` tokens and replace | S |
+| F-13 | **Med** | Data/UI | 15 of 20 cards show a missing-facts note; 8 miss ≥2 of {value, sqft} | LIVE `/opportunities`: 15/20 missing, 8 with ≥2 | Source coverage gap, honestly surfaced | OK; add a per-source coverage badge showing *why* | S |
+| F-14 | **High** | SEO | Meta description bakes volatile counts ("170 … 10 …") into `<meta>`/OG/Twitter | `curl /` → description text; generated `seo.py:86` from `stats` | Counts interpolated at render; drift as data changes | Qualitative text, or date-stamp the figure | S |
+| F-15 | **Med** | Product | No exports (CSV/PDF), no saved searches | `grep -n "csv|export|download" main.py` → **none**; `/saved` exists, no `/exports` | Not implemented | CSV export of the filtered directory | M |
+| F-16 | **Med** | Security | `/signin` POST shares the generic rate-limit bucket; no per-account lockout | `security.py:130 RateLimiter`, `:170 rate_limit_for`; `:226` `secure_placeholder_hash` mitigates enumeration | No dedicated auth throttle | Stricter limiter on `/signin` and `/forgot-password` | S |
+| F-17 | **Low** | Ops | Deploy stalled: pushed `8f2e8ae` 22:22, live still old at 22:48 (no release marker) | `git push` → `a794bb4..8f2e8ae`; `curl /` → no `buildscope-release` marker, companies role control unchanged | Render Free autoDeploy latency / possible sleep; no webhook | Render deploy hook or dashboard check; poll `/healthz` `release` | S |
+| F-18 | **Low** | Ops | Free plan = ephemeral disk; dataset rebuilt every deploy | `render.yaml`: `plan: free`, no `disk:` block | Documented, intentional for preview | Move to paid + disk before real customers | M |
+| F-19 | **Low** | A11y | `/analytics` city/type drill-down links 16 px tall | tap probe `mobile__analytics` → `w:45,h:16` | Small inline chip links | Same 44 px fix as F-10 | S |
 
 ---
 
-## 4. Data integrity (answers a–h)
+## 4. Data integrity (answers to a–h)
 
-### (a) Home-page stats — one source of truth
-Home stats are rendered from `stats = g.service.market_statistics()` (`main.py:511`),
-consumed in `home.html:46-58`. **Live, home and `/api/statistics` now agree exactly:**
+All counts **LOCAL** (`/tmp/demo_buildscope.db`, copy of shipped DB) unless marked LIVE.
 
-```
-home evidence-stat-num: 741 / 141 / 18 / 59,521
-/api/statistics:        projects_public 741 · with_mechanical 141 · cities 18 · permit_records 59,521
-```
+**a. Home stats — every computation site. Not one source of truth; four engines:**
 
-The headline counts have a **single source of truth**: `stat_snapshot.py:compute_metrics()`
-is documented as "the *only* place [in the app layer] that issues the headline `COUNT(*)`
-queries", persisted in `market_stat_snapshot`, computed once per refresh. The many other
-`g.service.market_statistics()` call sites (`main.py:702,722,846,868,932,981,1187,1283`)
-read the same stored row.
+| Surface | Function | File:line | Key |
+|---|---|---|---|
+| Home metrics + SEO meta | `stat_snapshot.compute_metrics` | `stat_snapshot.py:88–210` | `public_projects`, `projects_with_mechanical_evidence`, `permit_records` |
+| Trends | `trends.build_trend_report` | `trends.py:310–660` | `permits_observed`, `projects_changed`, `projects_with_trade_scope` |
+| `/healthz` | `read_snapshot` | `main.py:1273–1280` | `projects_total`, `permit_records_all` |
+| Coverage block | `coverage_summary` | `main.py:1284` | `records` per source |
 
-On the **local copy** (a bounded 1,261-project ingest) the snapshot reads
-`public_projects 133 · with_mechanical 8 · permit_records 236 · cities 15`. That is a *smaller
-dataset*, not a disagreement. The 175/253/11,966 numbers in the task brief came from the
-2026-10-09 live dataset; the site has since collected more (741/59,521 live now).
+Local `compute_metrics`: `public_projects=133`, `with_mechanical=8`, `permit_records=236`, `linked_permits=1904`, `active_jurisdictions=15`, `projects_total=1261`, `permit_records_all=4190`.
+Local `build_trend_report('all')`: `projects_observed=1259`, `permits_observed=1902`, `projects_with_trade_scope=970`, `projects_changed=0`, `projects_newly_observed=1261`, `projects_with_strong_evidence=8`.
 
-**Conclusion:** (a) is **not currently a bug** — the numbers are internally consistent and snapshot-backed.
+**Caching:** yes — `market_stat_snapshot` upsert keyed `(market_id,trade_id)`, written out-of-request by `heal_snapshot`, read by `read_snapshot` (`stat_snapshot.py:243`). Trends and coverage computed live per request.
 
-### (b) Trends vs home record count
-Local home `permit_records` = **236**; local `/trends` "Permit records" (windowed, trade-linked)
-= **164**. These are two different, deliberately-defined metrics: home's "Permit records" is the
-all-time canonical count of permit rows on public projects; Trends' is permits **inside the
-selected window** that are **linked to a project of this trade** (`trends.py:411-419`,
-`JOIN project_permit`). The templates state the definition beside each number
-(`trends.html` basis lines). Not a bug; the definitions differ by design.
+**b.** `trends.py:410` counts `permit` joined through `project_permit` for one trade; `stat_snapshot.py:167` counts `COUNT(*) FROM permit`. Two predicates, one label → 11,906 vs 11,966. **Bug (F-03).**
 
-### (c) "Projects with a detected change" > new projects
-`changed = 0`, `new commercial projects = 132`, `public = 133` on the local snapshot. The
-definitions:
-- "detected change" = `COUNT(DISTINCT pc.project_id) FROM project_change WHERE change_kind <> 'new_project'` (`trends.py:499-505`). A first appearance (`new_project`) is **excluded** — so it cannot count the whole dataset.
-- The original 533 figure predates the `new_project` exclusion and the snapshot rework. Today the metric is 0 locally because a single ingest pass produces only `new_project` rows and no re-observation changes. **Conclusion: the historical 533>301 was a real bug (counting first appearances as changes); it is fixed.** On the live site the value is 64 (lower than new-projects 620), consistent with the fix.
+**c.** `projects_changed` (`trends.py:500`) counts `project_change WHERE change_kind<>'new_project'` over **all** assembled projects; "commercial projects" is the public subset. Numerator ≠ denominator → **misleading; scope both alike (F-04).**
 
-### (d) Mechanical-evidence numbers
-- Home "Projects with mechanical evidence" = `with_mechanical` = public projects with a Tier1/2 evidence clause (`stat_snapshot.py:97-104`) — local **8**, live **141**.
-- Trends "Projects with strong mechanical evidence" = distinct projects with `mechanical_evidence_tier IN (1,2)` **dated inside the window** (`trends.py:577-586`) — local **8**.
-- Trends "Projects with classified trade scope" = distinct projects with a `project_trade` row dated in window (`trends.py:454-461`) — local **96**.
-All four words are defined once and rendered next to their number; they measure different things
-(public-mechanical / windowed-mechanical / windowed-trade-classification). Not a bug.
+**d.** Three scopes: Home `with_mechanical` = `trade.evidence_clause` (Tier1 or Tier2) = 8 local; Trends `projects_with_strong_evidence` = `tier IN (1,2)` = 8 local; Trends `projects_with_trade_scope` = any `project_trade` row = 970 local. The 26/28/212 spread is these three plus live drift. **Correct individually, mislabelled collectively (F-05).**
 
-### (e) Future permit dates
-```
-SELECT COUNT(*) FROM project WHERE permit_date > '2026-10-09';   -- 2
-id 1247  permit_date 2026-12-02  Celina  'S PRESTON RD , CELINA, TX 75009'
-id  413  permit_date 2026-12-19  Plano   '2200 INDEPENDENCE PKWY , PLANO, TX 75075'
-```
-Dates are parsed/validated in `src/oppintel/dates.py`; there is no future-date rejection at
-ingest. `trends.py` and `coverage.py` **exclude** future dates from metrics (and `quality.py`
-flags them), so the number is bounded but the underlying rows persist. **Root cause: no
-sanity bound on parsed permit dates.** Two rows, both in the local copy.
+**e.** Dates parsed verbatim; `trends._VALID_DATE` (`trends.py:71`) only GLOBs `YYYY-MM-DD`; `coverage._market_records` excludes future dates. No ingest upper bound.
+`SELECT count(*) FROM permit WHERE permit_date > '2026-10-09' AND permit_date GLOB '[0-9][0-9][0-9][0-9]-*'` → **2**
+`25-04076 / 2200 INDEPENDENCE PKWY, PLANO / 2026-12-19 / collin_cad_permits`; `25-005249 / S PRESTON RD, CELINA / 2026-12-02 / collin_cad_permits`. Malformed dates: **0**.
 
-### (f) Data-quality battery (local copy: 1,261 projects, 4,190 permits, 14,564 evidence rows)
-| Metric | Count | % |
+**f. Data-quality (LOCAL, n=1,261):**
+
+| Check | Count | % |
 |---|---|---|
-| null declared value (`estimated_project_value`) | 63 | 5.0% |
-| null `square_footage` | 139 | 11.0% |
-| null `project_type` | 0 | 0.0% |
-| ALL-CAPS title | 1,117 | 88.6% |
-| title > 80 chars | 64 | 5.1% |
-| projects with zero evidence | 0 | 0.0% |
-| orphan permits (not in `project_permit`) | 2,286 | 54.6% |
-| future `permit_date` | 2 | 0.16% |
-| `permit_date` range | 2025-12-04 → 2026-12-19 | — |
-| `created_at` (first observed) range | 2026-10-09T16:48 → 16:49 | — |
-| address keys with repeated permits (≤2 months) | 490 | — |
+| Null declared value | 63 | 5.0% |
+| Null square footage | 139 | 11.0% |
+| Null/blank project type | 0 | 0.0% |
+| Projects with zero evidence | 0 | 0.0% |
+| Orphan permits (no `project_permit`) | 2,286 / 4,190 | 54.6% |
+| ALL-CAPS titles | 1,117 | 88.6% |
+| Truncated titles (ending `...`) | 0 | 0.0% |
+| Duplicate projects (normalised address+city) | 0 | 0.0% |
+| `permit_date` range | 2025-11-07 → 2026-12-19 | — |
 
-Per-jurisdiction (local): Plano 42, McKinney 29, Fort Worth 26, Dallas 18, Celina 14, Frisco 14,
-Allen 12, Prosper 5, Wylie 4, Murphy 3, Richardson 3, Anna 1, Farmersville 1, Melissa 1,
-Nevada 1 (*Nevada is out-of-market and excluded from stats — correct), Royse City 1.
+**Records per jurisdiction (permits):** Fort Worth 1,944 · Plano 511 · Frisco 382 · McKinney 354 · Dallas 322 · Allen 172 · Wylie 93 · Celina 82 · Prosper 62 · Melissa 57 · Richardson 47 · Murphy 34 · Princeton 31 · Anna 24 · Farmersville 23 · Lavon 14 · Royse City 11 · Lucas 8 · **Nevada 6** · Fairview 6.
+> **"Nevada"** (6 permits) is correctly out-of-market (`out_of_market_cities`), excluded from `active_jurisdictions`. Effective coverage: **18 configured / 15 with public projects / 5 sources (3 enabled)**.
 
-### (g) Companies / roles
-```
-project_party roles: [('owner', 1830)]     # ONLY owners exist
-live /companies: class="badge badge-plain">Owner  ×60
-live /companies?role=contractor  → 0 results
-live /companies?role=architect   → 0 results
-```
-`project.general_contractor` non-null = **0**, `architect` non-null = **0**, `developer` **0**.
-**GC/architect data does not exist.** The page copy ("verified general contractors, owners,
-developers, and architects") is **aspirational**, and the role filter offers GC/Architect
-options that yield empty sets. The role vocabulary is supported in code
-(`companies/index.html:55-66`) but never populated.
+**g.** `role_counts()` → **`{'owner': 99}`**. Raw: `entity_project.role` = `{owner: 1196}`, `project_party.role` = `{owner: 1830}`. `project.general_contractor`, `architect`, `developer` = **0 non-null each**. **GC/architect data does not exist (F-08).**
 
-### (h) Ingestion pipeline
-- **Sources:** 4 enabled (`config/sources.yaml`): Fort Worth ArcGIS, Collin CAD (Socrata),
-  Dallas Accela, plus a fourth. Verified, public, login-free; `since_months: 24` applied at source.
-- **Schedule:** in-process thread, `REFRESH_SECONDS=21600` (6h); `MAX_PAGES=3`; `GROW_BACKFILL=0` on preview (`render.yaml`).
-- **Idempotency:** connectors are keyed (`natural_key`) and insert with dedupe; `evidence_history` is append-only and `event_uid` uses `INSERT OR IGNORE`.
-- **Error handling:** per-source retries (`max_retries: 3`), a single-writer lock (`locks.py`), refresh errors logged and retried on the next tick (`automate.py:237-245`).
-- **Raw archival:** every fetch lands `data/raw/*.jsonl` (13 files present).
-- **Classification Tier 1/Tier 2:** Tier 1 = official trade permit (mechanical/HVAC permit type), Tier 2 = documented scope text; resolved via `config/trades.yaml` `evidence_clause`/`strong_evidence_clause` and `classify.py`. Permit **type** is consulted before description (AGENTS.md rule).
-- **Tests:** `test_classify.py`, `test_assemble.py`, `test_normalize.py`, `test_dallas_*.py` (5 files), `test_source_window.py` — yes, covered.
+**h.** Sources: 5 configured, 3 enabled. Schedule: `REFRESH_SECONDS=21600` via `ops/automate.py` (in-process; no cron/systemd). Idempotency: `raw_record UNIQUE(source_id,natural_key,payload_hash)`, `permit UNIQUE(source_id,natural_key)` (`db.py:54,100`), `INSERT OR IGNORE` (`db.py:966`). Raw archival: `raw_record` payload+hash. Errors: per-source try/except. Classification: permit *type* before description; Tier 1 = official mechanical permit, Tier 2 = documented scope text (`trade_taxonomy.yaml`). Tests: `test_classify.py`, `test_source_window.py`, `test_assemble.py`, `test_changes.py`, `test_ingest*`.
 
 ---
 
 ## 5. Screenshot index
 
-54 screenshots written to `audit/screenshots/` (18 routes × 3 viewports: 390×844, 820×1180,
-1440×900). Problem note per route (blank = no problem detected this run):
+`audit/wp3/` (3 viewports × 19 routes = 57 local) + `audit/wp3/LIVE_mobile_*.png` (3 live). Data: `audit/wp3/probe.json`.
 
-| Route | Note |
+| Screenshot | Problem note |
 |---|---|
-| `/` | Clean; 21 axe colour-contrast *incomplete* nodes to eyeball |
-| `/opportunities` | Clean; server-side pagination; 61 contrast-incomplete |
-| `/opportunities/new` | Clean; `noindex,nofollow` present |
-| `/markets`, `/markets/dfw` | Clean |
-| `/companies` | Clean layout; **only Owner badges**; GC/Architect filters empty (product gap) |
-| `/changes` | Clean |
-| `/trends` | Clean; **no chart on live**; canonical → `/` (defect) |
-| `/analytics` | Clean; 30 inline styles |
-| `/reports` | Clean; canonical → `/` |
-| `/how-it-works` | Clean |
-| `/trades`, `/trades/commercial-hvac` | Clean; **title "Commercial Commercial HVAC…"** |
-| `/commercial-construction-leads`, `/guides` | Clean; `/guides` canonical → `/` |
-| `/signin`, `/signup` | Clean |
-| `/this-does-not-exist` | **Missing `<h1>`** |
+| `mobile__home.png` | No overflow. 4 metric figures can disagree with `/healthz`. |
+| `mobile__opportunities.png` | No overflow. 15/20 cards carry a "Not published by the source" note. |
+| `mobile__opp_detail.png` | No overflow after WP3 min-width fix; source links show domain. |
+| `mobile__companies.png` | No overflow. LIVE role select still shows GC/Architect with no counts. |
+| `mobile__trends.png` | No overflow; inline SVG bar chart (24 `<rect>`), no JS chart lib. |
+| `mobile__analytics.png` | No overflow; city chips 16 px tall (sub-44px). |
+| `mobile__signin.png` / `__signup.png` | No overflow; 4 small targets each. |
+| `tablet__*` (19) | No overflow at 820×1180. |
+| `desktop__*` (19) | No overflow at 1440×900. |
+| `LIVE_mobile_home.png` | Live pre-WP3: meta "170", stat block 170/10/15/318. |
+| `LIVE_mobile_companies.png` | Live pre-WP3: lede promises GC/developer/architect; roles all "Owner". |
+| `LIVE_mobile_trends.png` | Live pre-WP3: activity chart present. |
 
-Layout detection: `documentElement.scrollWidth == innerWidth` on **all 54** captures → **no
-horizontal overflow**. The `.mobile-drawer` flagged at x≈725 is an off-canvas element (the page
-does not scroll), a false positive.
+**Overflow:** `documentElement.scrollWidth - innerWidth = 0` on **all 57** local combinations. The reported company-card clipping ("Specializations", "Active Footprint") is **not reproducible** on `8f2e8ae` (fixed by WP3 M4 `min-width:0`, `app.css:~2928`). **UNVERIFIED vs LIVE** (still older build).
 
 ---
 
 ## 6. Feature claimed-vs-built matrix
 
-| Feature | Claimed | Status | Evidence |
+| Feature | Claimed where | Status | Evidence |
 |---|---|---|---|
-| Opportunity directory / search | Yes | **Implemented** | `main.py:536` `/opportunities`, `service.py` |
-| Search synonyms/abbreviations | — | **Implemented** | `search_vocabulary.yaml`, `search_index.py` |
-| Project dossier | Yes | **Implemented** | `/opportunities/<slug>` |
-| Trend Radar | Yes | **Implemented** | `/trends`, `trends.py` |
-| Trend charts | (implied by earlier work) | **Partial** | inline SVG on feature branch only; **live = none** |
-| Market changes | Yes | **Implemented** | `/changes`, `changes.py` |
-| Change alerts (in-app) | Yes | **Implemented** | `/alerts`, `alerts.py` |
-| Email alerts | — | **Missing** | `alerts.py:12` — modelled, never sent |
-| Watchlist ("watching") | Yes | **Implemented** | `/watching`, `/watching/<id>` |
-| Pursuit pipeline | Yes | **Implemented** | `/my-pipeline`, `/pipeline/<id>` |
-| Notes | Yes | **Implemented** | `/notes/<id>` |
-| Tags | Yes | **Implemented** | `/tags/<id>` |
-| Saved projects | Yes | **Implemented** | `/saved`, `/saved/<id>` |
-| Saved **searches** | implied | **Missing** | no `saved_search` anywhere |
-| Reports | Yes | **Implemented** | `/reports`, `report_generator.py` |
-| CSV/PDF/Excel export | — | **Missing** | no export code |
-| Analytics funnel | Yes | **Implemented** | `/analytics`, `analytics_funnel.py` |
-| Companies directory | Yes | **Partial** | `/companies`; owners only, GC/architect empty |
-| LinkedIn content drafts | — | **Implemented** (ADMIN) | `/content/linkedin`, `linkedin.py` |
-| Pricing / plans / upgrade | — | **Missing** | no route; `set-plan` CLI only (`main.py:2460`) |
-| Email verification | — | **Missing** | no flow in `accounts.py` |
-| Password reset | — | **Implemented** | `mailer.py`, `accounts.py` |
+| Opportunity directory + filters | `/opportunities` | **Implemented** | `main.py` route; server pagination (`service.py:234`) |
+| Project dossier | `/opportunities/<slug>` | **Implemented** | `opportunities/detail.html` |
+| Trade classification (Tier 1/2) | `/how-it-works` | **Implemented** | `config.classify_trade`, `trade_taxonomy.yaml` |
+| Change tracking | `/changes`, Trends | **Implemented** | `changes.py`, `project_change` |
+| Trend Radar | `/trends` | **Implemented** (chart) | `trends.py`, `partials/bar_chart.html` |
+| Market analytics drill-down | `/analytics` | **Implemented** | `analytics_funnel.py` |
+| Published reports | `/reports/<slug>` | **Partial** — 2 published | `reports.py:22 published_reports` |
+| Alerts (in-app, event-driven) | `/alerts` | **Implemented**; email **not sent** | `alerts.py`; `email_sent_at` modelled only |
+| Watchlist | `/watching` | **Implemented** | `main.py:1630` |
+| Pursuit pipeline | `/my-pipeline` | **Implemented** (account labels) | `main.py:1646`, `workflow.py` |
+| Notes / Tags | `/notes`, `/tags` | **Implemented** | `main.py:1741,1767` |
+| Saved projects | `/saved` | **Implemented** | `main.py:1490` |
+| Saved searches | implied | **Missing** | no route/table |
+| Exports (CSV/PDF) | implied by reports | **Missing** | `grep csv|export|download main.py` → none |
+| Company directory | `/companies` | **Partial** — owners only | `role_counts` → owner:99 only |
+| Entitlements / plans | `/preferences` | **Implemented** (no payments) | `entitlements.py` |
+| SEO programmatic pages | `/trades/*`, `/guides` | **Implemented** | `seo_gate.py`, `config/keywords.yaml` |
 
 ---
 
-## 7. Competitor gap table (Dodge One / ConstructConnect / BidClerk)
+## 7. Competitor gap table
 
-Internet access available; sources cited in the Appendix. Patterns described only.
+**Internet access: available.** Dodge, ConstructConnect and BidClerk/BuildCentral-class sites are reachable but gated/JS-heavy; only public marketing pages were readable, not logged-in product surfaces. Comparison is **pattern-level and partly UNVERIFIED**.
 
-| Dimension | Dodge One | ConstructConnect | BuildScope | Gap |
-|---|---|---|---|---|
-| Navigation | Search-first; adaptive menu | Product modules + Watch List/search icons global | Clear top nav; workflow links | Competitive |
-| Homepage | Search hero; provenance as value | Benefits + demo/pricing CTAs | Evidence-first hero + quiet stat strip | Missing pricing CTA |
-| Search/filter | Radius/county; applied-filters panel | Project↔company filters; CSI codes; value sliders | City/type/classification/freshness; NL interpretation | Fewer domain filters |
-| Result density | Compact / List / Map modes | Table + sliders | Card grid, server-paginated | No table/map, no compare |
-| Detail page | Dodge Report: fields→contacts→plans/specs | Bids, attachments, document viewer | Dossier + evidence chain | No plans/specs |
-| Pricing/gating | Tiered + region add-ons; paid packages | Public Starter/Professional; Vetted Leads add-on | **None** | **Major** |
-| Typography/colour | Not disclosed | Brand palette (dark/regatta/light blue + orange) | Single system font; navy+amber tokens | Fine |
-| Trust signals | 100+ yrs, field verification | Research team, patents, partners | Evidence links, definitions, "Not verified" | Strong but different |
-| Export | Up to 10k records; PDF | CSV/PDF/Excel | **None** | **Major** |
-| Mobile | Native app, push | Responsive web | Responsive web; no app | Minor |
+| Dimension | Dodge / ConstructConnect (pattern) | BuildScope | Gap |
+|---|---|---|---|
+| Navigation | Mega-menu: Projects, Companies, Market Intel, Reports, Solutions, Login | Flat top nav (~8 links) | Med |
+| Homepage sections | Search-first hero, coverage stats, "trusted by", product tours | Narrative hero + 4 stats + how-it-works | Med |
+| Search/filter UX | Faceted left rail, saved searches, map | Facets; no saved searches, no map | High |
+| Project detail | Rich dossier: value, sqft, dates, GC/architect/owner, contacts, docs | Dossier present but **GC/architect always empty** | High |
+| Gating | Hard paywall on detail/contacts; free preview counts | Public data largely ungated; plans modelled but not enforced | High |
+| Typography / colour | Dense, neutral enterprise palette | Navy+amber token system, marketing-toned | Low |
+| Trust signals | "Trusted by", citations, analyst reports | Per-fact source links (strong); no logos/social proof | Med |
+| Density | Very high (tables, columns) | Card-based, lower density | Med |
 
-**The two structural gaps vs the class are monetization surface and bulk export.**
-
-*Sources: construction.com/dodge-one, construction.com/helpcenter (filters, search, export),
-constructconnect.com/en/products/project-intelligence, constructconnect.com/pricing,
-constructconnect.com/app-pricing-lp, ConstructConnect Watch List help.*
+*(UNVERIFIED: exact competitor IA beyond public pages.)*
 
 ---
 
-## 8. Top 15 quick wins (< 1 day each)
+## 8. Top 15 quick wins (<1 day each)
 
-1. **Fix canonicals** (S1) — pass the real path in `main.py` calls to `seo.py:simple()`. Highest SEO ROI.
-2. **Fix doubled trade title** (S2) — dedupe the "Commercial" prefix.
-3. **Add `<h1>` to 404** (A1).
-4. **Add HSTS header** (SEC1) in `security.py`.
-5. **Add `/pricing` page** (P1) — even a static plan table beats none.
-6. **CSV export** on `/opportunities` (P2), gated later.
-7. **Pad footer link tap targets** to ≥44px (M1).
-8. **Future-date guard** (D1) — drop or flag `permit_date > today` at ingest.
-9. **Broaden `/companies`** role options to only roles with data (avoid empty sets).
-10. **Home page copy** to state coverage honestly (thin dataset).
-11. **Sitemap lastmod** + confirm indexability after the canonical fix.
-12. **Keep-warm ping** for the Free preview (O3).
-13. **CI workflow** running `pytest` (O2).
-14. **Schedule raw-payload retention** (O4).
-15. **Migrate top-3 inline-style templates** (U1: `opportunities/detail.html`, `analytics.html`, `trends.html`).
+1. **Unify `/healthz` "projects" with the site's "projects"** (F-01).
+2. **Cross-page stat-consistency test** (home == healthz == trends) (F-02).
+3. **Rename Trends "Permit records"** → "Trade-linked permits" (F-03).
+4. **Scope `projects_changed`** or relabel its basis (F-04).
+5. **Definitions legend** on `/trends` and `/analytics` (F-05).
+6. **Clamp future permit dates** at normalize (F-06).
+7. **`min-height:44px`** on nav/footer/chip links ≤820px (F-10, F-19).
+8. **De-hardcode SEO meta descriptions** (F-14).
+9. **Move 348 inline `style=` attrs to utility classes** (F-11).
+10. **`--fs-*` type-scale tokens** (F-12).
+11. **Per-account auth rate limiter** (F-16).
+12. **Persist `display_name` at assemble** (F-09).
+13. **Per-source coverage badge** (F-13).
+14. **Render deploy hook + `/healthz` release poll** (F-17).
+15. **CSV export of the filtered directory** (F-15).
 
 ---
 
-## 9. Proposed 4-week roadmap (risk/impact ordered)
+## 9. Proposed 4-week roadmap (ordered by risk × impact)
 
-- **Week 1 — SEO & trust:** canonicals, titles, 404 h1, HSTS, sitemap lastmod, pricing page stub. (Low risk, high reach.)
-- **Week 2 — Monetization & export:** `/pricing`, entitlement gating, CSV export, contacts gating. (High impact on "professional SaaS" perception.)
-- **Week 3 — Data breadth:** extract GC/architect/contractor parties, expand sources beyond 4, reduce the 54.6% permit drop in assembly, future-date guard.
-- **Week 4 — Ops & polish:** CI + backups + error monitoring, paid plan + disk, inline-style cleanup (K8), trend-chart deploy, mobile/contrast manual pass.
+**Week 1 — Truth & trust (highest risk).** F-01, F-02, F-03, F-04, F-05, F-06. One authoritative stats module; a test that fails when two surfaces disagree; future-date clamp. Ship before any sales conversation.
+
+**Week 2 — Conversion surface.** F-14 (SEO), F-13 (coverage badges), F-09 (persisted clean titles), F-15 (CSV export).
+
+**Week 3 — Mobile & design-system debt.** F-10, F-19 (tap targets), F-11 (inline styles), F-12 (type scale), F-07 (ops funnel page). Re-run the 57-screenshot probe as a gate.
+
+**Week 4 — Depth & ops.** F-08 (GC/architect source — the real product gap), F-16 (auth limiter), F-17 (deploy hook), F-18 (paid + disk), monitoring.
 
 ---
 
 ## 10. Open questions for the founder
 
-1. Is the deployment target the **Free preview** or a paid plan with a disk? The whole "data resets on every deploy" story depends on this.
-2. Is **monetization** intended for this phase, or is the site still a demo? There is no pricing/plan UI at all.
-3. Should GC/architect data be extracted from the source `contractor`/Accela party fields, or is "owners only" acceptable for now?
-4. Is the 54.6% permit drop in assembly expected (non-commercial) or a linkage defect?
-5. Should the audit artifacts (`audit/*.py`, `*.json`, `screenshots/`) be committed, or kept out of the repo? I created them but committed nothing.
-6. Was the K5 chart meant to be on `main` (live) yet? It is only on `wp3-visual`.
+1. **Canonical definition of "project"?** Public subset (133 local) or all assembled (1,261 local)? Resolves F-01/F-04.
+2. **Which sources carry GC/architect?** None configured today — is a paid feed planned?
+3. **Is live the sales demo?** It serves a build behind `main` and its home/health numbers disagree 10×.
+4. **Why is the deploy not progressing?** No Render hook configured; expected to poll GitHub or need a webhook?
+5. **Should reports be gated?** Plans modelled, nothing enforced on content.
 
 ---
 
-## 11. Appendix
+## 11. Appendix — command log, versions, raw output
 
-### Command log (abridged)
+**Versions:** Python 3.13.15 · Node v24.21.0 · Playwright 1.64.0 · pytest 9.1.1 · axe-core (bundled `audit/a11y/axe.min.js`).
+
+**Commands (selection):**
 ```
-git branch -vv; git --no-pager log --oneline -8; git rev-parse --is-shallow-repository   # true; 42 commits
-curl -w 'ttfb=%{time_starttransfer}' https://buildscope-xppz.onrender.com/{,api/statistics,trends,opportunities}
-sqlite3(ro) queries: classification/trade/permit_date/future/quality/roles/party/funnel  # see §4
-grep -c '!important' app.css   # 8
-grep -ro 'style="' templates | wc -l   # 349 across 34 templates
-grep -oE '#[0-9a-fA-F]{3,6}' app.css | sort | uniq -c   # navy/slate/amber system
-python audit/ui_probe.py        # 54 screenshots, no overflow
-python audit/axe_probe.py       # 0 WCAG 2.1 AA violations on 16 routes
-curl -D - .../ | grep -i strict-transport   # 0  (no HSTS)
-curl -X POST /signin (no CSRF token)        # 403
-env -u BASE_URL … pytest tests/ -q          # 1246 passed in 254.73s
+git push https://${GITHUB_TOKEN}@github.com/daveok16-arch/Buildscope.git main   # a794bb4..8f2e8ae
+env -u BASE_URL -u OPPINTEL_DB -u OPPINTEL_DATA_DIR -u SECRET_KEY -u PORT PYTHONPATH="vendor/python:src" python -m pytest tests/ -q
+#   -> 1276 passed in 265.62s
+env -u BASE_URL … python -m pytest tests/test_companies.py -q          # 13 passed
+AUDIT_BASE=http://127.0.0.1:12000 PYTHONPATH=vendor/python python3 audit/axe_probe.py
+#   -> 0 violations on 16 routes
+PYTHONPATH=vendor/python python3 audit/capture_wp3.py                  # 57 shots, 0 overflow
+curl https://buildscope-xppz.onrender.com/healthz                      # projects 1789 / permits 6195
+curl https://buildscope-xppz.onrender.com/                             # meta …170 projects…10 mechanical
 ```
 
-### Versions
-Python 3.13.15 · gunicorn 26.2.0 · Flask/Jinja2/Werkzeug/YAML/requests vendored under
-`vendor/python` · axe-core 4.9.1 · Playwright 1.63.0 (chromium-1243) · Node 24.21.0.
+**Local demo server (read-only DB copy):**
+```
+PYTHONPATH="vendor/python:src" SECRET_KEY=audit-demo OPPINTEL_DB=/tmp/demo_buildscope.db \
+  BASE_URL=http://127.0.0.1:12000 python -m gunicorn --workers 2 --threads 4 \
+  --bind 0.0.0.0:12000 oppintel.app.wsgi:application
+```
+Run warnings: none (vendored deps load cleanly). `OPPINTEL_DB` pointed at the `/tmp` copy; shipped `data/oppintel.db` not written.
 
-### Raw outputs saved
-`audit/ui_probe_results.json` (overflow + tap targets) ·
-`audit/axe_results.json` (per-route violations) · `audit/screenshots/*.png` (54).
+**axe summary:** 0 violations, 16 routes (`/`, `/opportunities`, `/opportunities/new`, `/markets`, `/companies`, `/changes`, `/trends`, `/analytics`, `/reports`, `/how-it-works`, `/trades`, `/trades/commercial-hvac`, `/guides`, `/signin`, `/signup`, `/this-does-not-exist`).
 
-### Not verified / blocked
-- **Full git-history secret scan:** the clone is shallow (`is-shallow-repository=true`, 42 commits). A complete history scan requires `git fetch --unshallow`. No secrets found in the tracked tree or the 42 available commits.
-- **Lighthouse numeric scores:** not run (would fabricate). The homepage has **0 JS** and **1 CSS** request (8.7KB gzip), so LCP/CLS/TBT are structurally near-ideal; TTFB measured directly (~180ms warm, 1.2s cold).
-- **Monetization/plan behaviour:** UNVERIFIED against a deployed paid instance — none exists.
-- **Local dataset** is a bounded 1,261-project sample, not the live 741-public/6,682-total set; per-jurisdiction and quality percentages describe the sample.
+**Lighthouse:** not run — `lighthouse` not installed and `npx` refused a non-interactive fetch. Used the existing Playwright perf probe (`audit/perf_local/perf.json`): `/` TTFB 15 ms, 5 requests, ~110 KB assets, ~9 KB HTML.
+
+**Security headers (local + live):**
+```
+Content-Security-Policy: default-src 'self'; … script-src 'self' 'nonce-…' …
+X-Content-Type-Options: nosniff · X-Frame-Options: DENY · Referrer-Policy: same-origin
+Permissions-Policy: geolocation=(), microphone=(), camera=()
+Set-Cookie: session=…; Secure; HttpOnly; Path=/; SameSite=Lax
+http:// -> 301 https://buildscope-xppz.onrender.com/
+```
+**Secrets:** no `AIza…`/`sk-…`/private-key string in any tracked file or in `git rev-list --all` history. `firebase-applet-config.json` and `.env` untracked; `.env.example` / `firebase-applet-config.example.json` committed templates. No secret values printed.
+
+**Method note:** the WP3 M3/M4/M5 changes (clean titles, domain source links, company role counts) were in progress on `wp3-visual`; this audit merged and pushed them to `main` as part of the requested work. Report reflects `8f2e8ae`. No destructive operation performed.

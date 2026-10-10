@@ -1,0 +1,4248 @@
+{
+  "routes": {
+    "mobile__home": {
+      "route": "/",
+      "viewport": "mobile",
+      "overflow": 0,
+      "scrollWidth": 390,
+      "vw": 390,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 705,
+          "left": 671,
+          "width": 34,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "New Filings"
+        }
+      ],
+      "small_targets": [
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 229,
+          "h": 15,
+          "text": "See how they change over time \u2192"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 250,
+          "h": 35,
+          "text": "City of Dallas Building Records (DallasN"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 281,
+          "h": 21,
+          "text": "Renovation of HVAC system"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 250,
+          "h": 35,
+          "text": "City of Dallas Building Records (DallasN"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 248,
+          "h": 15,
+          "text": "City of Fort Worth Development Permits"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 92,
+          "h": 15,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 53,
+          "h": 15,
+          "text": "Markets"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 75,
+          "h": 15,
+          "text": "Companies"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 58,
+          "h": 15,
+          "text": "Changes"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 44,
+          "h": 15,
+          "text": "Trends"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 61,
+          "h": 15,
+          "text": "Analytics"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 52,
+          "h": 15,
+          "text": "Reports"
+        }
+      ]
+    },
+    "mobile__opportunities": {
+      "route": "/opportunities",
+      "viewport": "mobile",
+      "overflow": 0,
+      "scrollWidth": 390,
+      "vw": 390,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 705,
+          "left": 671,
+          "width": 34,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "New Filings"
+        }
+      ],
+      "small_targets": [
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 39,
+          "h": 15,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 250,
+          "h": 35,
+          "text": "City of Dallas Building Records (DallasN"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 281,
+          "h": 21,
+          "text": "Renovation of HVAC system"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 250,
+          "h": 35,
+          "text": "City of Dallas Building Records (DallasN"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 248,
+          "h": 15,
+          "text": "City of Fort Worth Development Permits"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 250,
+          "h": 35,
+          "text": "City of Dallas Building Records (DallasN"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 248,
+          "h": 15,
+          "text": "City of Fort Worth Development Permits"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 248,
+          "h": 15,
+          "text": "City of Fort Worth Development Permits"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 248,
+          "h": 15,
+          "text": "City of Fort Worth Development Permits"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 250,
+          "h": 35,
+          "text": "City of Dallas Building Records (DallasN"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 250,
+          "h": 35,
+          "text": "City of Dallas Building Records (DallasN"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 248,
+          "h": 15,
+          "text": "City of Fort Worth Development Permits"
+        }
+      ]
+    },
+    "mobile__opp_detail": {
+      "route": "/opportunities/1701-s-university-dr-fort-worth-9c5275",
+      "viewport": "mobile",
+      "overflow": 0,
+      "scrollWidth": 390,
+      "vw": 390,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 705,
+          "left": 671,
+          "width": 34,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "New Filings"
+        }
+      ],
+      "small_targets": [
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 39,
+          "h": 15,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 89,
+          "h": 15,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 69,
+          "h": 15,
+          "text": "Fort Worth"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 258,
+          "h": 39,
+          "text": "MLMT 2005-CIPI COMPLEX 1701 LC"
+        },
+        {
+          "tag": "a",
+          "cls": "src-url",
+          "w": 47,
+          "h": 18,
+          "text": "source"
+        },
+        {
+          "tag": "a",
+          "cls": "src-url",
+          "w": 47,
+          "h": 18,
+          "text": "source"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 301,
+          "h": 42,
+          "text": "Renovation & Expansion of Existing Space"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 241,
+          "h": 42,
+          "text": "Tear off, haul and dispose of modified b"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 268,
+          "h": 42,
+          "text": "New Construction of a Core and Shell for"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 230,
+          "h": 42,
+          "text": "(Post Public Frontage Road Widening proj"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 92,
+          "h": 15,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 53,
+          "h": 15,
+          "text": "Markets"
+        }
+      ]
+    },
+    "mobile__markets": {
+      "route": "/markets",
+      "viewport": "mobile",
+      "overflow": 0,
+      "scrollWidth": 390,
+      "vw": 390,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 705,
+          "left": 671,
+          "width": 34,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "New Filings"
+        }
+      ],
+      "small_targets": [
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 39,
+          "h": 15,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 172,
+          "h": 20,
+          "text": "Dallas\u2013Fort Worth"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 92,
+          "h": 15,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 53,
+          "h": 15,
+          "text": "Markets"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 75,
+          "h": 15,
+          "text": "Companies"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 58,
+          "h": 15,
+          "text": "Changes"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 44,
+          "h": 15,
+          "text": "Trends"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 61,
+          "h": 15,
+          "text": "Analytics"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 52,
+          "h": 15,
+          "text": "Reports"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 214,
+          "h": 15,
+          "text": "Commercial Construction Leads"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 46,
+          "h": 15,
+          "text": "Guides"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 88,
+          "h": 15,
+          "text": "How It Works"
+        }
+      ]
+    },
+    "mobile__markets_dfw": {
+      "route": "/markets/dfw",
+      "viewport": "mobile",
+      "overflow": 0,
+      "scrollWidth": 390,
+      "vw": 390,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 705,
+          "left": 671,
+          "width": 34,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "New Filings"
+        }
+      ],
+      "small_targets": [
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 332,
+          "h": 35,
+          "text": "City of Dallas Building Records (DallasN"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 281,
+          "h": 21,
+          "text": "Renovation of HVAC system"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 332,
+          "h": 35,
+          "text": "City of Dallas Building Records (DallasN"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 248,
+          "h": 15,
+          "text": "City of Fort Worth Development Permits"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 332,
+          "h": 35,
+          "text": "City of Dallas Building Records (DallasN"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 248,
+          "h": 15,
+          "text": "City of Fort Worth Development Permits"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 248,
+          "h": 15,
+          "text": "City of Fort Worth Development Permits"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 41,
+          "h": 18,
+          "text": "Plano"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 72,
+          "h": 18,
+          "text": "McKinney"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 43,
+          "h": 18,
+          "text": "Frisco"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 79,
+          "h": 18,
+          "text": "Fort Worth"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 47,
+          "h": 18,
+          "text": "Celina"
+        }
+      ]
+    },
+    "mobile__companies": {
+      "route": "/companies",
+      "viewport": "mobile",
+      "overflow": 0,
+      "scrollWidth": 390,
+      "vw": 390,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 705,
+          "left": 671,
+          "width": 34,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "New Filings"
+        }
+      ],
+      "small_targets": [
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 39,
+          "h": 15,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 105,
+          "h": 20,
+          "text": "PLANO ISD"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 100,
+          "h": 20,
+          "text": "ALLEN ISD"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 193,
+          "h": 20,
+          "text": "BB-8 HOLDINGS LLC"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 130,
+          "h": 20,
+          "text": "PROSPER ISD"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 278,
+          "h": 42,
+          "text": "TDC-DRI MCKINNEY PHASE II LLC"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 308,
+          "h": 42,
+          "text": "COLUMBIA MEDICAL CENTER OF PLANO SUBSIDI"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 156,
+          "h": 20,
+          "text": "COLLIN COUNTY"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 160,
+          "h": 20,
+          "text": "COMMUNITY ISD"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 304,
+          "h": 42,
+          "text": "NORTH FOREST OFFICE SPACE - DALLAS 2 LLC"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 273,
+          "h": 42,
+          "text": "BAYLOR REGIONAL MEDICAL CENTER AT PLANO"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 217,
+          "h": 20,
+          "text": "HP D4 FOOD HALL LLC"
+        }
+      ]
+    },
+    "mobile__changes": {
+      "route": "/changes",
+      "viewport": "mobile",
+      "overflow": 0,
+      "scrollWidth": 390,
+      "vw": 390,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection:"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 705,
+          "left": 671,
+          "width": 34,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "New Filings"
+        }
+      ],
+      "small_targets": [
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 39,
+          "h": 15,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 80,
+          "h": 39,
+          "text": "Anna Retail Addition"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 97,
+          "h": 39,
+          "text": "Renovation of HVAC system"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 102,
+          "h": 39,
+          "text": "Frisco Hospital Addition"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 105,
+          "h": 39,
+          "text": "Vantrust Office Complex"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 103,
+          "h": 39,
+          "text": "Billingsley Office Building"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 177,
+          "h": 18,
+          "text": "Anna Retail Addition"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 257,
+          "h": 18,
+          "text": "Mckinney Industrial Park No 2"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 257,
+          "h": 18,
+          "text": "Mckinney Industrial Park No 2"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 299,
+          "h": 18,
+          "text": "Max O Vaughan Elementary School"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 238,
+          "h": 18,
+          "text": "Renovation of HVAC system"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 244,
+          "h": 41,
+          "text": "Methodist Mckinney Medical Campus Additi"
+        }
+      ]
+    },
+    "mobile__trends": {
+      "route": "/trends",
+      "viewport": "mobile",
+      "overflow": 0,
+      "scrollWidth": 390,
+      "vw": 390,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 705,
+          "left": 671,
+          "width": 34,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "New Filings"
+        }
+      ],
+      "small_targets": [
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 39,
+          "h": 15,
+          "text": "Home"
+        },
+        {
+          "tag": "summary",
+          "cls": "",
+          "w": 316,
+          "h": 34,
+          "text": "View the numbers as a table"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 92,
+          "h": 15,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 53,
+          "h": 15,
+          "text": "Markets"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 75,
+          "h": 15,
+          "text": "Companies"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 58,
+          "h": 15,
+          "text": "Changes"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 44,
+          "h": 15,
+          "text": "Trends"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 61,
+          "h": 15,
+          "text": "Analytics"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 52,
+          "h": 15,
+          "text": "Reports"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 214,
+          "h": 15,
+          "text": "Commercial Construction Leads"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 46,
+          "h": 15,
+          "text": "Guides"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 88,
+          "h": 15,
+          "text": "How It Works"
+        }
+      ]
+    },
+    "mobile__analytics": {
+      "route": "/analytics",
+      "viewport": "mobile",
+      "overflow": 0,
+      "scrollWidth": 390,
+      "vw": 390,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 705,
+          "left": 671,
+          "width": 34,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "New Filings"
+        }
+      ],
+      "small_targets": [
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 39,
+          "h": 15,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 45,
+          "h": 16,
+          "text": "Plano"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 79,
+          "h": 16,
+          "text": "McKinney"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 48,
+          "h": 16,
+          "text": "Frisco"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 88,
+          "h": 16,
+          "text": "Fort Worth"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 50,
+          "h": 16,
+          "text": "Celina"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 50,
+          "h": 16,
+          "text": "Dallas"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 41,
+          "h": 16,
+          "text": "Allen"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 63,
+          "h": 16,
+          "text": "Prosper"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 45,
+          "h": 16,
+          "text": "Wylie"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 62,
+          "h": 16,
+          "text": "Murphy"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 91,
+          "h": 16,
+          "text": "Richardson"
+        }
+      ]
+    },
+    "mobile__reports": {
+      "route": "/reports",
+      "viewport": "mobile",
+      "overflow": 0,
+      "scrollWidth": 390,
+      "vw": 390,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 705,
+          "left": 671,
+          "width": 34,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "New Filings"
+        }
+      ],
+      "small_targets": [
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 39,
+          "h": 15,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 224,
+          "h": 42,
+          "text": "DFW Commercial HVAC Opportunity Brief"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 295,
+          "h": 42,
+          "text": "DFW Commercial Construction Market Summa"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 92,
+          "h": 15,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 53,
+          "h": 15,
+          "text": "Markets"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 75,
+          "h": 15,
+          "text": "Companies"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 58,
+          "h": 15,
+          "text": "Changes"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 44,
+          "h": 15,
+          "text": "Trends"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 61,
+          "h": 15,
+          "text": "Analytics"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 52,
+          "h": 15,
+          "text": "Reports"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 214,
+          "h": 15,
+          "text": "Commercial Construction Leads"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 46,
+          "h": 15,
+          "text": "Guides"
+        }
+      ]
+    },
+    "mobile__how_it_works": {
+      "route": "/how-it-works",
+      "viewport": "mobile",
+      "overflow": 0,
+      "scrollWidth": 390,
+      "vw": 390,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 705,
+          "left": 671,
+          "width": 34,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "New Filings"
+        }
+      ],
+      "small_targets": [
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 39,
+          "h": 15,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 92,
+          "h": 15,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 53,
+          "h": 15,
+          "text": "Markets"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 75,
+          "h": 15,
+          "text": "Companies"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 58,
+          "h": 15,
+          "text": "Changes"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 44,
+          "h": 15,
+          "text": "Trends"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 61,
+          "h": 15,
+          "text": "Analytics"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 52,
+          "h": 15,
+          "text": "Reports"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 214,
+          "h": 15,
+          "text": "Commercial Construction Leads"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 46,
+          "h": 15,
+          "text": "Guides"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 88,
+          "h": 15,
+          "text": "How It Works"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 119,
+          "h": 15,
+          "text": "Dallas\u2013Fort Worth"
+        }
+      ]
+    },
+    "mobile__trades": {
+      "route": "/trades",
+      "viewport": "mobile",
+      "overflow": 0,
+      "scrollWidth": 390,
+      "vw": 390,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 705,
+          "left": 671,
+          "width": 34,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "New Filings"
+        }
+      ],
+      "small_targets": [
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 39,
+          "h": 15,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 299,
+          "h": 20,
+          "text": "Commercial HVAC / Mechanical"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 92,
+          "h": 15,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 53,
+          "h": 15,
+          "text": "Markets"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 75,
+          "h": 15,
+          "text": "Companies"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 58,
+          "h": 15,
+          "text": "Changes"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 44,
+          "h": 15,
+          "text": "Trends"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 61,
+          "h": 15,
+          "text": "Analytics"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 52,
+          "h": 15,
+          "text": "Reports"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 214,
+          "h": 15,
+          "text": "Commercial Construction Leads"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 46,
+          "h": 15,
+          "text": "Guides"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 88,
+          "h": 15,
+          "text": "How It Works"
+        }
+      ]
+    },
+    "mobile__trades_hvac": {
+      "route": "/trades/commercial-hvac",
+      "viewport": "mobile",
+      "overflow": 0,
+      "scrollWidth": 390,
+      "vw": 390,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 705,
+          "left": 671,
+          "width": 34,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "New Filings"
+        }
+      ],
+      "small_targets": [
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 332,
+          "h": 35,
+          "text": "City of Dallas Building Records (DallasN"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 281,
+          "h": 21,
+          "text": "Renovation of HVAC system"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 332,
+          "h": 35,
+          "text": "City of Dallas Building Records (DallasN"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 248,
+          "h": 15,
+          "text": "City of Fort Worth Development Permits"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 332,
+          "h": 35,
+          "text": "City of Dallas Building Records (DallasN"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 248,
+          "h": 15,
+          "text": "City of Fort Worth Development Permits"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 248,
+          "h": 15,
+          "text": "City of Fort Worth Development Permits"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 92,
+          "h": 15,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 53,
+          "h": 15,
+          "text": "Markets"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 75,
+          "h": 15,
+          "text": "Companies"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 58,
+          "h": 15,
+          "text": "Changes"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 44,
+          "h": 15,
+          "text": "Trends"
+        }
+      ]
+    },
+    "mobile__commercial_leads": {
+      "route": "/commercial-construction-leads",
+      "viewport": "mobile",
+      "overflow": 0,
+      "scrollWidth": 390,
+      "vw": 390,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 705,
+          "left": 671,
+          "width": 34,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "New Filings"
+        }
+      ],
+      "small_targets": [
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 39,
+          "h": 15,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 332,
+          "h": 35,
+          "text": "City of Dallas Building Records (DallasN"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 281,
+          "h": 21,
+          "text": "Renovation of HVAC system"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 332,
+          "h": 35,
+          "text": "City of Dallas Building Records (DallasN"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 248,
+          "h": 15,
+          "text": "City of Fort Worth Development Permits"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 332,
+          "h": 35,
+          "text": "City of Dallas Building Records (DallasN"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 92,
+          "h": 15,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 53,
+          "h": 15,
+          "text": "Markets"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 75,
+          "h": 15,
+          "text": "Companies"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 58,
+          "h": 15,
+          "text": "Changes"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 44,
+          "h": 15,
+          "text": "Trends"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 61,
+          "h": 15,
+          "text": "Analytics"
+        }
+      ]
+    },
+    "mobile__guides": {
+      "route": "/guides",
+      "viewport": "mobile",
+      "overflow": 0,
+      "scrollWidth": 390,
+      "vw": 390,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 705,
+          "left": 671,
+          "width": 34,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "New Filings"
+        }
+      ],
+      "small_targets": [
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 39,
+          "h": 15,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 92,
+          "h": 15,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 53,
+          "h": 15,
+          "text": "Markets"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 75,
+          "h": 15,
+          "text": "Companies"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 58,
+          "h": 15,
+          "text": "Changes"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 44,
+          "h": 15,
+          "text": "Trends"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 61,
+          "h": 15,
+          "text": "Analytics"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 52,
+          "h": 15,
+          "text": "Reports"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 214,
+          "h": 15,
+          "text": "Commercial Construction Leads"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 46,
+          "h": 15,
+          "text": "Guides"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 88,
+          "h": 15,
+          "text": "How It Works"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 119,
+          "h": 15,
+          "text": "Dallas\u2013Fort Worth"
+        }
+      ]
+    },
+    "mobile__signin": {
+      "route": "/signin",
+      "viewport": "mobile",
+      "overflow": 0,
+      "scrollWidth": 390,
+      "vw": 390,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 705,
+          "left": 671,
+          "width": 34,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "New Filings"
+        }
+      ],
+      "small_targets": [
+        {
+          "tag": "a",
+          "cls": "muted small",
+          "w": 118,
+          "h": 22,
+          "text": "Forgot password?"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 92,
+          "h": 22,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 87,
+          "h": 22,
+          "text": "Methodology"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 57,
+          "h": 22,
+          "text": "Platform"
+        }
+      ]
+    },
+    "mobile__signup": {
+      "route": "/signup",
+      "viewport": "mobile",
+      "overflow": 0,
+      "scrollWidth": 390,
+      "vw": 390,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 705,
+          "left": 671,
+          "width": 34,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "New Filings"
+        }
+      ],
+      "small_targets": [
+        {
+          "tag": "a",
+          "cls": "auth-link-primary",
+          "w": 55,
+          "h": 23,
+          "text": "Sign in"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 92,
+          "h": 22,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 87,
+          "h": 22,
+          "text": "Methodology"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 57,
+          "h": 22,
+          "text": "Platform"
+        }
+      ]
+    },
+    "mobile__not_found": {
+      "route": "/this-does-not-exist-xyz",
+      "viewport": "mobile",
+      "overflow": 0,
+      "scrollWidth": 390,
+      "vw": 390,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 725,
+          "left": 391,
+          "width": 334,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 705,
+          "left": 671,
+          "width": 34,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 705,
+          "left": 411,
+          "width": 294,
+          "text": "New Filings"
+        }
+      ],
+      "small_targets": [
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 92,
+          "h": 15,
+          "text": "Opportunities"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 53,
+          "h": 15,
+          "text": "Markets"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 75,
+          "h": 15,
+          "text": "Companies"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 58,
+          "h": 15,
+          "text": "Changes"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 44,
+          "h": 15,
+          "text": "Trends"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 61,
+          "h": 15,
+          "text": "Analytics"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 52,
+          "h": 15,
+          "text": "Reports"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 214,
+          "h": 15,
+          "text": "Commercial Construction Leads"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 46,
+          "h": 15,
+          "text": "Guides"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 88,
+          "h": 15,
+          "text": "How It Works"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 119,
+          "h": 15,
+          "text": "Dallas\u2013Fort Worth"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "w": 111,
+          "h": 15,
+          "text": "Austin (Planned)"
+        }
+      ]
+    },
+    "tablet__home": {
+      "route": "/",
+      "viewport": "tablet",
+      "overflow": 0,
+      "scrollWidth": 820,
+      "vw": 820,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-divider",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 1140,
+          "left": 1111,
+          "width": 29,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Opportunities"
+        }
+      ],
+      "small_targets": []
+    },
+    "tablet__opportunities": {
+      "route": "/opportunities",
+      "viewport": "tablet",
+      "overflow": 0,
+      "scrollWidth": 820,
+      "vw": 820,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-divider",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 1140,
+          "left": 1111,
+          "width": 29,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Opportunities"
+        }
+      ],
+      "small_targets": []
+    },
+    "tablet__opp_detail": {
+      "route": "/opportunities/1701-s-university-dr-fort-worth-9c5275",
+      "viewport": "tablet",
+      "overflow": 0,
+      "scrollWidth": 820,
+      "vw": 820,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-divider",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 1140,
+          "left": 1111,
+          "width": 29,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Opportunities"
+        }
+      ],
+      "small_targets": []
+    },
+    "tablet__markets": {
+      "route": "/markets",
+      "viewport": "tablet",
+      "overflow": 0,
+      "scrollWidth": 820,
+      "vw": 820,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-divider",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 1140,
+          "left": 1111,
+          "width": 29,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Opportunities"
+        }
+      ],
+      "small_targets": []
+    },
+    "tablet__markets_dfw": {
+      "route": "/markets/dfw",
+      "viewport": "tablet",
+      "overflow": 0,
+      "scrollWidth": 820,
+      "vw": 820,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-divider",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 1140,
+          "left": 1111,
+          "width": 29,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Opportunities"
+        }
+      ],
+      "small_targets": []
+    },
+    "tablet__companies": {
+      "route": "/companies",
+      "viewport": "tablet",
+      "overflow": 0,
+      "scrollWidth": 820,
+      "vw": 820,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-divider",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 1140,
+          "left": 1111,
+          "width": 29,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Opportunities"
+        }
+      ],
+      "small_targets": []
+    },
+    "tablet__changes": {
+      "route": "/changes",
+      "viewport": "tablet",
+      "overflow": 0,
+      "scrollWidth": 820,
+      "vw": 820,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-divider",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection:"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 1140,
+          "left": 1111,
+          "width": 29,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Opportunities"
+        }
+      ],
+      "small_targets": []
+    },
+    "tablet__trends": {
+      "route": "/trends",
+      "viewport": "tablet",
+      "overflow": 0,
+      "scrollWidth": 820,
+      "vw": 820,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-divider",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 1140,
+          "left": 1111,
+          "width": 29,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Opportunities"
+        }
+      ],
+      "small_targets": []
+    },
+    "tablet__analytics": {
+      "route": "/analytics",
+      "viewport": "tablet",
+      "overflow": 0,
+      "scrollWidth": 820,
+      "vw": 820,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-divider",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 1140,
+          "left": 1111,
+          "width": 29,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Opportunities"
+        }
+      ],
+      "small_targets": []
+    },
+    "tablet__reports": {
+      "route": "/reports",
+      "viewport": "tablet",
+      "overflow": 0,
+      "scrollWidth": 820,
+      "vw": 820,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-divider",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 1140,
+          "left": 1111,
+          "width": 29,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Opportunities"
+        }
+      ],
+      "small_targets": []
+    },
+    "tablet__how_it_works": {
+      "route": "/how-it-works",
+      "viewport": "tablet",
+      "overflow": 0,
+      "scrollWidth": 820,
+      "vw": 820,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-divider",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 1140,
+          "left": 1111,
+          "width": 29,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Opportunities"
+        }
+      ],
+      "small_targets": []
+    },
+    "tablet__trades": {
+      "route": "/trades",
+      "viewport": "tablet",
+      "overflow": 0,
+      "scrollWidth": 820,
+      "vw": 820,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-divider",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 1140,
+          "left": 1111,
+          "width": 29,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Opportunities"
+        }
+      ],
+      "small_targets": []
+    },
+    "tablet__trades_hvac": {
+      "route": "/trades/commercial-hvac",
+      "viewport": "tablet",
+      "overflow": 0,
+      "scrollWidth": 820,
+      "vw": 820,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-divider",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 1140,
+          "left": 1111,
+          "width": 29,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Opportunities"
+        }
+      ],
+      "small_targets": []
+    },
+    "tablet__commercial_leads": {
+      "route": "/commercial-construction-leads",
+      "viewport": "tablet",
+      "overflow": 0,
+      "scrollWidth": 820,
+      "vw": 820,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-divider",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 1140,
+          "left": 1111,
+          "width": 29,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Opportunities"
+        }
+      ],
+      "small_targets": []
+    },
+    "tablet__guides": {
+      "route": "/guides",
+      "viewport": "tablet",
+      "overflow": 0,
+      "scrollWidth": 820,
+      "vw": 820,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-divider",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 1140,
+          "left": 1111,
+          "width": 29,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Opportunities"
+        }
+      ],
+      "small_targets": []
+    },
+    "tablet__signin": {
+      "route": "/signin",
+      "viewport": "tablet",
+      "overflow": 0,
+      "scrollWidth": 820,
+      "vw": 820,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-divider",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 1140,
+          "left": 1111,
+          "width": 29,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Opportunities"
+        }
+      ],
+      "small_targets": []
+    },
+    "tablet__signup": {
+      "route": "/signup",
+      "viewport": "tablet",
+      "overflow": 0,
+      "scrollWidth": 820,
+      "vw": 820,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-divider",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 1140,
+          "left": 1111,
+          "width": 29,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Opportunities"
+        }
+      ],
+      "small_targets": []
+    },
+    "tablet__not_found": {
+      "route": "/this-does-not-exist-xyz",
+      "viewport": "tablet",
+      "overflow": 0,
+      "scrollWidth": 820,
+      "vw": 820,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "BUILD SCOPE.\n        Construction Opportunity Intelligence"
+        },
+        {
+          "tag": "nav",
+          "cls": "drawer-nav",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Home\n    Opportunities\n    New Filings\n    Markets\n    Compa"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-divider",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": ""
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-account",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Sign In\n      Get Access"
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-footer-status",
+          "right": 1160,
+          "left": 821,
+          "width": 339,
+          "text": "Active Market: Dallas\u2013Fort Worth\n    Last collection: 09 Oct"
+        },
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "right": 1140,
+          "left": 1111,
+          "width": 29,
+          "text": ""
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Home"
+        },
+        {
+          "tag": "a",
+          "cls": "",
+          "right": 1140,
+          "left": 841,
+          "width": 299,
+          "text": "Opportunities"
+        }
+      ],
+      "small_targets": []
+    },
+    "desktop__home": {
+      "route": "/",
+      "viewport": "desktop",
+      "overflow": 0,
+      "scrollWidth": 1440,
+      "vw": 1440,
+      "offenders": [],
+      "small_targets": []
+    },
+    "desktop__opportunities": {
+      "route": "/opportunities",
+      "viewport": "desktop",
+      "overflow": 0,
+      "scrollWidth": 1440,
+      "vw": 1440,
+      "offenders": [],
+      "small_targets": []
+    },
+    "desktop__opp_detail": {
+      "route": "/opportunities/1701-s-university-dr-fort-worth-9c5275",
+      "viewport": "desktop",
+      "overflow": 0,
+      "scrollWidth": 1440,
+      "vw": 1440,
+      "offenders": [],
+      "small_targets": []
+    },
+    "desktop__markets": {
+      "route": "/markets",
+      "viewport": "desktop",
+      "overflow": 0,
+      "scrollWidth": 1440,
+      "vw": 1440,
+      "offenders": [],
+      "small_targets": []
+    },
+    "desktop__markets_dfw": {
+      "route": "/markets/dfw",
+      "viewport": "desktop",
+      "overflow": 0,
+      "scrollWidth": 1440,
+      "vw": 1440,
+      "offenders": [],
+      "small_targets": []
+    },
+    "desktop__companies": {
+      "route": "/companies",
+      "viewport": "desktop",
+      "overflow": 0,
+      "scrollWidth": 1440,
+      "vw": 1440,
+      "offenders": [],
+      "small_targets": []
+    },
+    "desktop__changes": {
+      "route": "/changes",
+      "viewport": "desktop",
+      "overflow": 0,
+      "scrollWidth": 1440,
+      "vw": 1440,
+      "offenders": [],
+      "small_targets": []
+    },
+    "desktop__trends": {
+      "route": "/trends",
+      "viewport": "desktop",
+      "overflow": 0,
+      "scrollWidth": 1440,
+      "vw": 1440,
+      "offenders": [],
+      "small_targets": []
+    },
+    "desktop__analytics": {
+      "route": "/analytics",
+      "viewport": "desktop",
+      "overflow": 0,
+      "scrollWidth": 1440,
+      "vw": 1440,
+      "offenders": [],
+      "small_targets": []
+    },
+    "desktop__reports": {
+      "route": "/reports",
+      "viewport": "desktop",
+      "overflow": 0,
+      "scrollWidth": 1440,
+      "vw": 1440,
+      "offenders": [],
+      "small_targets": []
+    },
+    "desktop__how_it_works": {
+      "route": "/how-it-works",
+      "viewport": "desktop",
+      "overflow": 0,
+      "scrollWidth": 1440,
+      "vw": 1440,
+      "offenders": [],
+      "small_targets": []
+    },
+    "desktop__trades": {
+      "route": "/trades",
+      "viewport": "desktop",
+      "overflow": 0,
+      "scrollWidth": 1440,
+      "vw": 1440,
+      "offenders": [],
+      "small_targets": []
+    },
+    "desktop__trades_hvac": {
+      "route": "/trades/commercial-hvac",
+      "viewport": "desktop",
+      "overflow": 0,
+      "scrollWidth": 1440,
+      "vw": 1440,
+      "offenders": [],
+      "small_targets": []
+    },
+    "desktop__commercial_leads": {
+      "route": "/commercial-construction-leads",
+      "viewport": "desktop",
+      "overflow": 0,
+      "scrollWidth": 1440,
+      "vw": 1440,
+      "offenders": [],
+      "small_targets": []
+    },
+    "desktop__guides": {
+      "route": "/guides",
+      "viewport": "desktop",
+      "overflow": 0,
+      "scrollWidth": 1440,
+      "vw": 1440,
+      "offenders": [],
+      "small_targets": []
+    },
+    "desktop__signin": {
+      "route": "/signin",
+      "viewport": "desktop",
+      "overflow": 0,
+      "scrollWidth": 1440,
+      "vw": 1440,
+      "offenders": [],
+      "small_targets": []
+    },
+    "desktop__signup": {
+      "route": "/signup",
+      "viewport": "desktop",
+      "overflow": 0,
+      "scrollWidth": 1440,
+      "vw": 1440,
+      "offenders": [],
+      "small_targets": []
+    },
+    "desktop__not_found": {
+      "route": "/this-does-not-exist-xyz",
+      "viewport": "desktop",
+      "overflow": 0,
+      "scrollWidth": 1440,
+      "vw": 1440,
+      "offenders": [],
+      "small_targets": []
+    }
+  }
+}

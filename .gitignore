@@ -42,3 +42,4 @@ reports/
 audit/screenshots/
 audit/releases/**/*.png
 audit/live/*.png
+audit/wp3/*.png
