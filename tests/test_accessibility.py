@@ -205,8 +205,12 @@ def test_touch_targets_meet_44px(live_server, browser, route):
 
 def test_mobile_drawer_focus_and_aria(live_server, browser):
     """Opening the drawer must expose it and move focus inside it; closing must
-    hide it and return focus to the trigger. Regression for the visibility
-    transition that made focus() a no-op."""
+    hide it and return focus to the trigger.
+
+    The drawer is a modal dialog: while open the page behind it is inert and body
+    scroll is locked. The hidden state is expressed with `visibility:hidden` (so it
+    is out of the accessibility tree without a stale `aria-hidden`), not the old
+    hand-toggled `aria-hidden` attribute."""
     context = browser.new_context(viewport=MOBILE, has_touch=True)
     try:
         page = context.new_page()
@@ -216,20 +220,25 @@ def test_mobile_drawer_focus_and_aria(live_server, browser):
         opened = page.evaluate(
             """() => {
               const d = document.getElementById('mobile-nav-drawer');
+              const main = document.getElementById('main');
               return {
                 role: d.getAttribute('role'),
                 modal: d.getAttribute('aria-modal'),
-                hidden: d.getAttribute('aria-hidden'),
                 visibility: getComputedStyle(d).visibility,
                 focusInDrawer: d.contains(document.activeElement),
+                bodyLocked: getComputedStyle(document.body).overflow === 'hidden',
+                backgroundInert: main.hasAttribute('inert'),
+                expanded: document.getElementById('mobile-menu-open-btn').getAttribute('aria-expanded'),
               };
             }"""
         )
         assert opened["role"] == "dialog"
         assert opened["modal"] == "true"
-        assert opened["hidden"] == "false"
         assert opened["visibility"] == "visible"
         assert opened["focusInDrawer"], "focus did not move into the open drawer"
+        assert opened["bodyLocked"], "body scroll was not locked while the drawer is open"
+        assert opened["backgroundInert"], "content behind the drawer is not inert"
+        assert opened["expanded"] == "true"
 
         page.click("#mobile-menu-close-btn")
         # visibility is delayed by the slide-out transition (0.25s) so the close
@@ -239,15 +248,95 @@ def test_mobile_drawer_focus_and_aria(live_server, browser):
             """() => {
               const d = document.getElementById('mobile-nav-drawer');
               return {
-                hidden: d.getAttribute('aria-hidden'),
                 visibility: getComputedStyle(d).visibility,
                 active: document.activeElement.id,
+                bodyLocked: getComputedStyle(document.body).overflow === 'hidden',
+                backgroundInert: document.getElementById('main').hasAttribute('inert'),
               };
             }"""
         )
-        assert closed["hidden"] == "true"
         assert closed["visibility"] == "hidden"
         assert closed["active"] == "mobile-menu-open-btn", "focus did not return to the trigger"
+        assert not closed["bodyLocked"], "body scroll stayed locked after close"
+        assert not closed["backgroundInert"], "background stayed inert after close"
+    finally:
+        context.close()
+
+
+def _assert_focus_stays_inside(page, panel_id: str, presses: int = 20) -> None:
+    """Press Tab (and Shift+Tab) and assert focus never leaves the dialog."""
+    for i in range(presses):
+        page.keyboard.press("Tab")
+        inside = page.evaluate(
+            "p => document.getElementById(p).contains(document.activeElement)", panel_id
+        )
+        assert inside, f"Tab #{i + 1} moved focus outside #{panel_id}"
+    for i in range(presses):
+        page.keyboard.press("Shift+Tab")
+        inside = page.evaluate(
+            "p => document.getElementById(p).contains(document.activeElement)", panel_id
+        )
+        assert inside, f"Shift+Tab #{i + 1} moved focus outside #{panel_id}"
+
+
+@pytest.mark.parametrize("route,panel", [
+    ("/opportunities", "filter-sidebar-panel"),
+    ("/companies", "company-filter-panel"),
+])
+def test_filter_sheet_traps_tab_focus(live_server, browser, route, panel):
+    """E1: Tab and Shift+Tab wrap inside the open filter sheet; the page behind it
+    is inert and body scroll is locked."""
+    context = browser.new_context(viewport=MOBILE, has_touch=True)
+    try:
+        page = context.new_page()
+        page.goto(live_server + route, wait_until="networkidle")
+        page.click("#mobile-filter-btn")
+
+        state = page.evaluate(
+            """p => {
+              const el = document.getElementById(p);
+              return {
+                role: el.getAttribute('role'),
+                modal: el.getAttribute('aria-modal'),
+                bodyLocked: getComputedStyle(document.body).overflow === 'hidden',
+                headerInert: document.querySelector('header.site-header').hasAttribute('inert'),
+                barInert: document.querySelector('.mobile-filter-bar').hasAttribute('inert'),
+              };
+            }""",
+            panel,
+        )
+        assert state["role"] == "dialog", f"{route}: open sheet is not a dialog"
+        assert state["modal"] == "true", f"{route}: open sheet is not aria-modal"
+        assert state["bodyLocked"], f"{route}: body scroll not locked"
+        assert state["headerInert"], f"{route}: header behind the sheet is not inert"
+        assert state["barInert"], f"{route}: filter bar behind the sheet is not inert"
+
+        _assert_focus_stays_inside(page, panel)
+
+        page.keyboard.press("Escape")
+        after = page.evaluate(
+            """p => ({
+              headerInert: document.querySelector('header.site-header').hasAttribute('inert'),
+              bodyLocked: getComputedStyle(document.body).overflow === 'hidden',
+              active: document.activeElement.id,
+            })""",
+            panel,
+        )
+        assert not after["headerInert"], f"{route}: background stayed inert after Escape"
+        assert not after["bodyLocked"], f"{route}: body stayed locked after Escape"
+        assert after["active"] == "mobile-filter-btn", f"{route}: focus did not return"
+    finally:
+        context.close()
+
+
+def test_mobile_drawer_traps_tab_focus(live_server, browser):
+    """E1: Tab and Shift+Tab wrap inside the open nav drawer on a filter route."""
+    context = browser.new_context(viewport=MOBILE, has_touch=True)
+    try:
+        page = context.new_page()
+        page.goto(live_server + "/opportunities", wait_until="networkidle")
+        page.click("#mobile-menu-open-btn")
+        _assert_focus_stays_inside(page, "mobile-nav-drawer")
     finally:
         context.close()
 

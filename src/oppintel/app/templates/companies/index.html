@@ -151,30 +151,12 @@
   var sidebar = document.getElementById('company-filter-panel');
   var backdrop = document.getElementById('filter-sheet-backdrop');
   var closeBtn = document.getElementById('filter-sheet-close');
-  if (!btn || !sidebar) return;
+  if (!btn || !sidebar || !window.BSDialog) return;
 
-  function isOpen() { return document.body.classList.contains('filter-sheet-open'); }
-
-  function open() {
-    document.body.classList.add('filter-sheet-open');
-    btn.setAttribute('aria-expanded', 'true');
-    if (backdrop) backdrop.hidden = false;
-    var first = sidebar.querySelector('input, select, button, a');
-    if (first) first.focus();
-  }
-
-  function close() {
-    document.body.classList.remove('filter-sheet-open');
-    btn.setAttribute('aria-expanded', 'false');
-    if (backdrop) backdrop.hidden = true;
-    btn.focus();
-  }
-
-  btn.addEventListener('click', function() { isOpen() ? close() : open(); });
-  if (closeBtn) closeBtn.addEventListener('click', close);
-  if (backdrop) backdrop.addEventListener('click', close);
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && isOpen()) close();
+  window.BSDialog.register(btn, sidebar, backdrop, {
+    bodyClass: 'filter-sheet-open',
+    closeEls: [closeBtn],
+    dialogRole: true
   });
 })();
 </script>

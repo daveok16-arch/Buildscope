@@ -602,6 +602,12 @@ body.drawer-open .mobile-drawer-backdrop {
   visibility: visible;
 }
 
+/* Lock the page behind the drawer while it is open, so a scroll gesture does not move the
+   content under the modal. */
+body.drawer-open {
+  overflow: hidden;
+}
+
 body.drawer-open .mobile-drawer {
   transform: translateX(0);
   visibility: visible;

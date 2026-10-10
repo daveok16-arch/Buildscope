@@ -31,6 +31,8 @@
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
 
+{% include "partials/dialog_a11y.html" %}
+
 {# 1. Single Calm Professional Header #}
 <header class="site-header">
   <div class="wrap header-inner">
@@ -288,54 +290,13 @@
   var closeBtn = document.getElementById('mobile-menu-close-btn');
   var backdrop = document.getElementById('mobile-drawer-backdrop');
   var drawer = document.getElementById('mobile-nav-drawer');
+  if (!drawer || !window.BSDialog) return;
 
-  function openDrawer() {
-    document.body.classList.add('drawer-open');
-    if (openBtn) openBtn.setAttribute('aria-expanded', 'true');
-    if (drawer) {
-      drawer.setAttribute('aria-hidden', 'false');
-      // Focus the close button rather than the container: the container is
-      // still visibility:hidden for the frame focus() runs in, which makes the
-      // call a no-op, and a control is the conventional first stop anyway.
-      if (closeBtn) closeBtn.focus();
-    }
-  }
-
-  function closeDrawer(returnFocus) {
-    document.body.classList.remove('drawer-open');
-    if (openBtn) openBtn.setAttribute('aria-expanded', 'false');
-    if (drawer) drawer.setAttribute('aria-hidden', 'true');
-    if (returnFocus !== false && openBtn) openBtn.focus();
-  }
-
-  function trapFocus(e) {
-    if (e.key !== 'Tab' || !document.body.classList.contains('drawer-open') || !drawer) return;
-    var focusable = drawer.querySelectorAll(
-      'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    );
-    if (!focusable.length) return;
-    var first = focusable[0];
-    var last = focusable[focusable.length - 1];
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-    }
-  }
-
-  if (drawer) drawer.setAttribute('aria-hidden', 'true');
-  if (openBtn) openBtn.addEventListener('click', openDrawer);
-  if (closeBtn) closeBtn.addEventListener('click', function() { closeDrawer(true); });
-  if (backdrop) backdrop.addEventListener('click', function() { closeDrawer(true); });
-
-  window.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && document.body.classList.contains('drawer-open')) {
-      closeDrawer(true);
-    } else {
-      trapFocus(e);
-    }
+  // The drawer is a modal dialog: BSDialog traps Tab inside it, marks the page behind it inert,
+  // locks body scroll, closes on Escape and returns focus to the hamburger button.
+  window.BSDialog.register(openBtn, drawer, backdrop, {
+    bodyClass: 'drawer-open',
+    closeEls: [closeBtn]
   });
 })();
 </script>

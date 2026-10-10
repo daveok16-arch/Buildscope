@@ -1,0 +1,161 @@
+{# Shared modal/dialog focus management for the mobile nav drawer and the mobile filter
+   bottom sheets. One implementation so the three surfaces cannot drift apart.
+
+   A modal dialog must do five things, and this helper does all five:
+     1. move focus into the dialog on open (first focusable, else the container);
+     2. keep Tab and Shift+Tab inside it (wrap at the ends);
+     3. make the rest of the page inert so nothing behind it is focusable or clickable;
+     4. close on Escape and return focus to the control that opened it;
+     5. lock body scroll while open.
+
+   `inert` is supported in current Chrome/Edge/Firefox/Safari; where it is not, the Tab trap
+   still keeps keyboard focus inside the dialog. The helper degrades rather than throwing. #}
+<script>
+(function () {
+  'use strict';
+
+  var SELECTOR = [
+    'a[href]', 'button:not([disabled])',
+    'input:not([disabled]):not([type="hidden"])',
+    'select:not([disabled])', 'textarea:not([disabled])',
+    '[tabindex]:not([tabindex="-1"])'
+  ].join(',');
+
+  function isVisible(el) {
+    return el.offsetWidth > 0 || el.offsetHeight > 0 || el.getClientRects().length > 0;
+  }
+
+  function focusables(root) {
+    return Array.prototype.filter.call(root.querySelectorAll(SELECTOR), function (el) {
+      return isVisible(el) && el.getAttribute('aria-hidden') !== 'true';
+    });
+  }
+
+  // Mark every sibling on the path from the dialog up to <body> inert, so the page behind the
+  // dialog is removed from the tab order and the accessibility tree. Returns what was marked so
+  // close() restores exactly that (a sibling already inert is left as it was). The backdrop is
+  // exempt: an inert element receives no pointer events, so inerting it would break
+  // click-outside-to-close.
+  function inertSiblings(el, exempt) {
+    var marked = [];
+    var node = el;
+    while (node && node.parentElement) {
+      var parent = node.parentElement;
+      Array.prototype.forEach.call(parent.children, function (sib) {
+        if (sib === node) return;
+        if (sib === exempt) return;
+        if (sib.tagName === 'SCRIPT' || sib.tagName === 'STYLE' || sib.tagName === 'LINK') return;
+        if (sib.hasAttribute('inert')) return;
+        sib.setAttribute('inert', '');
+        marked.push(sib);
+      });
+      node = parent;
+    }
+    return marked;
+  }
+
+  var current = null;
+
+  function onKeydown(e) {
+    if (!current) return;
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      close();
+      return;
+    }
+    if (e.key !== 'Tab') return;
+    var items = focusables(current.panel);
+    if (!items.length) {
+      e.preventDefault();
+      current.panel.focus();
+      return;
+    }
+    var first = items[0];
+    var last = items[items.length - 1];
+    var active = document.activeElement;
+    if (e.shiftKey && (active === first || !current.panel.contains(active))) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && (active === last || !current.panel.contains(active))) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
+  // If focus lands outside the dialog (a stray click, a programmatic focus), pull it back.
+  function onFocusIn(e) {
+    if (!current) return;
+    if (current.panel.contains(e.target)) return;
+    if (e.target === current.backdrop) return;
+    var items = focusables(current.panel);
+    (items[0] || current.panel).focus();
+  }
+
+  function open(cfg) {
+    if (current) close();
+    current = cfg;
+    current.returnTo = document.activeElement;
+    current.inerted = inertSiblings(cfg.panel, cfg.backdrop);
+    // A panel that is a static sidebar on desktop becomes a modal dialog only while open on
+    // mobile. Record the original role/aria-modal so close() restores the desktop semantics.
+    if (cfg.dialogRole) {
+      current.prevRole = cfg.panel.getAttribute('role');
+      current.prevModal = cfg.panel.getAttribute('aria-modal');
+      cfg.panel.setAttribute('role', 'dialog');
+      cfg.panel.setAttribute('aria-modal', 'true');
+    }
+    document.body.classList.add(cfg.bodyClass);
+    if (cfg.trigger) cfg.trigger.setAttribute('aria-expanded', 'true');
+    if (cfg.backdrop) cfg.backdrop.hidden = false;
+    document.addEventListener('keydown', onKeydown, true);
+    document.addEventListener('focusin', onFocusIn, true);
+    var items = focusables(cfg.panel);
+    (items[0] || cfg.panel).focus();
+  }
+
+  function close() {
+    if (!current) return;
+    var cfg = current;
+    current = null;
+    document.removeEventListener('keydown', onKeydown, true);
+    document.removeEventListener('focusin', onFocusIn, true);
+    document.body.classList.remove(cfg.bodyClass);
+    if (cfg.trigger) cfg.trigger.setAttribute('aria-expanded', 'false');
+    if (cfg.backdrop) cfg.backdrop.hidden = true;
+    if (cfg.dialogRole) {
+      if (cfg.prevRole === null) cfg.panel.removeAttribute('role');
+      else cfg.panel.setAttribute('role', cfg.prevRole);
+      if (cfg.prevModal === null) cfg.panel.removeAttribute('aria-modal');
+      else cfg.panel.setAttribute('aria-modal', cfg.prevModal);
+    }
+    (cfg.inerted || []).forEach(function (el) { el.removeAttribute('inert'); });
+    var target = cfg.trigger || cfg.returnTo;
+    if (target && target.focus) target.focus();
+  }
+
+  function isOpen() { return current !== null; }
+
+  window.BSDialog = {
+    register: function (trigger, panel, backdrop, opts) {
+      if (!trigger || !panel) return;
+      opts = opts || {};
+      var bodyClass = opts.bodyClass || 'dialog-open';
+      function toggle() {
+        if (isOpen()) { close(); return; }
+        open({
+          trigger: trigger, panel: panel, backdrop: backdrop, bodyClass: bodyClass,
+          dialogRole: opts.dialogRole
+        });
+      }
+      trigger.addEventListener('click', toggle);
+      (opts.closeEls || []).forEach(function (el) {
+        if (el) el.addEventListener('click', close);
+      });
+      if (backdrop) backdrop.addEventListener('click', close);
+    },
+    open: open,
+    close: close,
+    isOpen: isOpen
+  };
+})();
+</script>
