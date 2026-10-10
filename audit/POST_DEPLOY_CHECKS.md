@@ -1,17 +1,17 @@
 # Post-deploy checks (change tracking on live data)
 
 Run these **24 hours after a deploy** to prove that change tracking is working on live data.
-They are read-only. Substitute the path to the live database if the service runs with a disk
-(`/var/data/oppintel.db`); otherwise open a Render shell on the running service first.
+They are read-only. Substitute the path to the live database if the service runs with persistent
+storage; otherwise open a shell on the running service first.
 
 ```bash
 export PYTHONPATH=src
-export OPPINTEL_DB="${OPPINTEL_DB:-/var/data/oppintel.db}"
+export OPPINTEL_DB="${OPPINTEL_DB:-${OPPINTEL_DATA_DIR:-./data}/oppintel.db}"
 ```
 
-If the service has no persistent disk, the container filesystem is ephemeral and the shell's
-copy of the database is not the one the web process holds — in that case the check is best run
-from the service's own refresh, which logs its steps to `data/automation.log`.
+If the service has **no persistent storage**, the container filesystem is ephemeral and the
+shell's copy of the database is not the one the web process holds — in that case run the check
+from the service's own refresh instead, which logs its steps to `data/automation.log`.
 
 ## 1. Count real differences (not first observations)
 

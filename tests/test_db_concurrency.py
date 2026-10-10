@@ -264,3 +264,110 @@ def test_concurrent_readers_and_web_writes_against_an_ingest_writer(tmp_path):
     assert ingest_writes[0] > 0 and reads[0] > 0 and web_writes[0] > 0, (
         ingest_writes[0], reads[0], web_writes[0]
     )
+
+
+# --- J5: crash-during-ingest queue safety --------------------------------------
+
+def _spawn_killed_writer(path) -> None:
+    """Start a child that opens a run, commits a permit, then hangs until killed."""
+    import os
+    import signal
+    import subprocess
+    import sys
+    import textwrap
+    from pathlib import Path
+
+    repo = Path(__file__).resolve().parents[1]
+    child = subprocess.Popen(
+        [sys.executable, "-c", textwrap.dedent(f"""
+            import sys, time, datetime as dt
+            sys.path.insert(0, {str(repo / 'src')!r})
+            from oppintel.db import Database
+            from oppintel.models import Permit, normalize_address
+            db = Database({str(path)!r})
+            db.init_schema()
+            db.conn.execute(
+                "INSERT OR IGNORE INTO source (id, name, kind, market_coverage, updated_at) "
+                "VALUES ('fort_worth_permits', 'City of Fort Worth', 'arcgis', 'current', "
+                "'2026-10-09T00:00:00+00:00')")
+            db.conn.commit()
+            run_id = db.begin_run("fort_worth_permits")
+            db.land_raw("fort_worth_permits", run_id, "PB-CRASH",
+                        {{"Permit_No": "PB-CRASH"}}, "hash-crash",
+                        dt.datetime.now(dt.timezone.utc))
+            db.upsert_permit(Permit(
+                source_id="fort_worth_permits", permit_number="PB-CRASH",
+                natural_key="PB-CRASH", permit_type="Commercial Building Permit",
+                permit_date=dt.date(2026, 9, 1), status="Issued",
+                address="9 CRASH AVE", city="Fort Worth", state="TX",
+                work_description="crashed ingest", is_commercial=True,
+            ), normalize_address("9 CRASH AVE"))
+            db.commit()
+            print("committed", flush=True)
+            time.sleep(60)
+        """)],
+        stdout=subprocess.PIPE, text=True,
+    )
+    try:
+        assert child.stdout.readline().strip() == "committed"
+    finally:
+        os.kill(child.pid, signal.SIGKILL)
+        child.wait(timeout=10)
+
+
+def test_a_killed_ingest_leaves_a_recoverable_run_and_no_stale_lock(tmp_path):
+    """A SIGKILL mid-ingest must not wedge the writer lock or corrupt the run ledger.
+
+    The killed child has committed a permit and an ingest_run row (status 'running') but never
+    called ``finish_run``. The crash therefore leaves exactly the state a queue must recover
+    from: an orphaned run. The parent proves (1) the writer lock is free immediately, (2) the
+    committed permit survives, and (3) the orphaned run is visible so an audit can name it.
+    """
+    import time as _time
+
+    from oppintel.locks import writer_lock
+
+    path = tmp_path / "crash.db"
+    _spawn_killed_writer(path)
+
+    # (1) No stale lock: acquiring is immediate, not a timeout wait.
+    t0 = _time.monotonic()
+    with writer_lock(path, timeout=5) as held:
+        assert held is True
+    assert _time.monotonic() - t0 < 2.0, "a dead holder's lock should be free immediately"
+
+    db = Database(path)
+    # (2) The committed permit survived the kill.
+    assert db.conn.execute(
+        "SELECT COUNT(*) FROM permit WHERE natural_key = 'PB-CRASH'"
+    ).fetchone()[0] == 1
+    # (3) The orphaned run is recorded as running with no finished_at.
+    orphan = db.conn.execute(
+        "SELECT status, finished_at FROM ingest_run WHERE source_id = 'fort_worth_permits'"
+    ).fetchall()
+    assert len(orphan) == 1, orphan
+    assert orphan[0][0] == "running" and orphan[0][1] is None, orphan
+    db.close()
+
+
+def test_an_orphaned_run_does_not_block_the_next_ingest(tmp_path):
+    """After a crash, the run ledger still accepts a new run and can close the orphan."""
+    path = tmp_path / "crash2.db"
+    _spawn_killed_writer(path)
+
+    db = Database(path)
+    orphan_id = int(db.conn.execute(
+        "SELECT id FROM ingest_run ORDER BY id LIMIT 1"
+    ).fetchone()[0])
+    # A new run gets a distinct id: the ledger is append-only, not blocked by the orphan.
+    new_id = db.begin_run("fort_worth_permits")
+    assert new_id != orphan_id
+    # The orphan can be reconciled (closed as an error), which is the recovery path.
+    db.finish_run(orphan_id, "error", error="interrupted")
+    db.finish_run(new_id, "ok", rows_fetched=1, rows_landed=1, permits_created=1)
+    still_running = db.conn.execute(
+        "SELECT COUNT(*) FROM ingest_run WHERE status = 'running'"
+    ).fetchone()[0]
+    assert still_running == 0
+    db.close()
+

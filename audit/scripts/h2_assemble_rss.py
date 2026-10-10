@@ -62,7 +62,7 @@ def main() -> int:
         print(f"extrapolated to {full:,} permits:")
         print(f"  load-delta method = {base + load_per_1000*full/1000:,.0f} MB")
         print(f"  peak-delta method = {base + peak_per_1000*full/1000:,.0f} MB")
-        print("  512 MB Starter is NOT safe for a full in-process seed if either figure")
+        print("  a 512 MB host is NOT safe for a full in-process seed if either figure")
         print("  exceeds ~350 MB (leaves headroom for Python + the web worker).")
     return 0
 

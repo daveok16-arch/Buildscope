@@ -4,26 +4,17 @@
 # The same container also runs the online-search refresh loop, so there is no separate worker,
 # cron job or external scheduler to configure.
 #
-# This ships with `plan: starter` and a persistent disk attached, because stable public counts
-# require the database to survive a deploy. The disk is mounted at /var/data and OPPINTEL_DB
-# points at it, so a deploy replaces the code, not the data.
-#
-# WHY A DISK IS REQUIRED FOR STABLE COUNTS: the database is SQLite (a file). On a host with no
-# disk it is rebuilt from a bounded, partial ingest after every deploy, so a headline count taken
-# before a deploy and again after it describes two different datasets. With the disk mounted at
-# /var/data and OPPINTEL_DB pointing at it, a deploy replaces the code, not the data.
-#
-# A Blueprint that declares a `disk` on a Free instance does not apply at all, so the disk and the
-# paid plan go together. If you must run without a disk, set `plan: free`, remove the `disk` block
-# and remove both OPPINTEL_* variables below — otherwise the Blueprint is rejected.
+# This defaults to the Free plan, which has no persistent disk. That is enough to get the service
+# up, but the database then lives in the checkout and is replaced on every deploy. To keep the
+# assembled dataset, switch to a paid plan and enable the disk block at the bottom of this file.
 
 services:
   - type: web
     name: buildscope
     runtime: python
-    # Free has no disk and sleeps after inactivity. `starter` is the smallest paid plan that can
-    # attach the persistent disk below, which is what keeps public counts stable across deploys.
-    plan: starter
+    # Free has no disk and sleeps after inactivity. Change to `starter` (or higher) together with
+    # the disk block below to keep the database across deploys.
+    plan: free
     region: oregon
     branch: main
     # Render injects RENDER=true; ops/start.sh detects it and runs in the foreground on $PORT.
@@ -61,16 +52,17 @@ services:
         value: "21600"
       - key: MAX_PAGES
         value: "3"
-      # The database lives on the mounted disk so it outlives a deploy. This is what makes the
-      # public counts stable: without it the database is rebuilt from a bounded partial ingest
-      # after every deploy and the headline numbers change between reads.
-      - key: OPPINTEL_DATA_DIR
-        value: /var/data
-      - key: OPPINTEL_DB
-        value: /var/data/oppintel.db
-    # Persistent disk (REQUIRED to keep public counts stable across deploys). Requires a paid
-    # instance type, which is why `plan` above is `starter` rather than `free`.
-    disk:
-      name: oppintel-data
-      mountPath: /var/data
-      sizeGB: 1
+      # When a disk is attached, point the app at it so the database outlives a deploy. Leave
+      # these unset without a disk: the app then writes to the checkout's own data/ directory,
+      # which is writable, and a path like /var/data does not exist on a Free instance.
+      # - key: OPPINTEL_DATA_DIR
+      #   value: /var/data
+      # - key: OPPINTEL_DB
+      #   value: /var/data/oppintel.db
+    # Persistent disk. Requires a paid instance type — uncomment this block and the two
+    # OPPINTEL_* variables above, and change `plan` to `starter`. Without it the database is
+    # rebuilt from scratch after every deploy.
+    # disk:
+    #   name: oppintel-data
+    #   mountPath: /var/data
+    #   sizeGB: 1

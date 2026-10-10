@@ -719,16 +719,24 @@ body.drawer-open .mobile-drawer {
 }
 
 .btn-primary {
-  /* gold-600 (#b45309), not gold-500: white on gold-500 is 3.19:1 (WCAG AA fail). */
-  background: var(--gold-600);
-  color: #ffffff !important;
-  border-color: var(--gold-600);
+  /* gold-500 (#d97706) with dark navy-950 text (#060b17): 6.17:1, WCAG AA for small text.
+     White on gold-500 was 3.19:1 (fail), and white on the old gold-600 override was 5.02:1 —
+     the dark-text-on-original-gold treatment is both the brand gold and AA. */
+  background: var(--gold-500);
+  color: var(--navy-950) !important;
+  border-color: var(--gold-500);
   box-shadow: 0 1px 2px rgba(180, 83, 9, 0.2);
 }
 .btn-primary:hover {
-  background: #92400e;
-  border-color: #92400e;
-  color: #ffffff !important;
+  /* gold-400: navy-950 on #f59e0b is 9.16:1, so the hover is a lighter gold, not burnt orange. */
+  background: var(--gold-400);
+  border-color: var(--gold-400);
+  color: var(--navy-950) !important;
+}
+.btn-primary:focus-visible {
+  /* The global gold ring is invisible on a gold button; a navy ring is 6.17:1 against gold. */
+  outline: 2px solid var(--navy-950);
+  outline-offset: 2px;
 }
 
 .btn-outline {

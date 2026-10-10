@@ -8,9 +8,9 @@ matter in production are where that file lives and how it is kept fresh.
 | Variable | Required | Default | Purpose |
 |---|---|---|---|
 | `SECRET_KEY` | **Yes in production** | random per process | Session signing. Without it, sessions do not survive a restart |
-| `OPPINTEL_DB` | No | `data/oppintel.db` | Database path. The CLI reads it, so a host can point the pipeline at a mounted disk |
-| `OPPINTEL_DATA_DIR` | No | `data/` | Where the database, logs and refresh state live. Set it to the mount path on a host with a disk — a path that does not exist (`/var/data` with no disk) fails the start |
-| `BASE_URL` | No on Render | empty | Public origin for canonical URLs, Open Graph and the sitemap. Falls back to `RENDER_EXTERNAL_URL` on Render |
+| `OPPINTEL_DB` | No | `data/oppintel.db` | Database path. The CLI reads it, so a host can point the pipeline at persistent storage |
+| `OPPINTEL_DATA_DIR` | No | `data/` | Where the database, logs and refresh state live. Set it to a persistent path on a host that has one — a path that is **not writable** fails the start |
+| `BASE_URL` | No | empty | Public origin for canonical URLs, Open Graph and the sitemap. Falls back to the host's own external URL, if it injects one |
 | `SESSION_COOKIE_SECURE` | No | on unless debug | Secure cookie flag |
 | `FLASK_DEBUG` | No | `false` | Debug mode. Never enable in production |
 | `CSRF_ENABLED` | No | on unless debug | CSRF, rate limiting and response headers |
@@ -28,9 +28,31 @@ it. See `.env.example`.
 For Firebase Google Sign-In configuration (`FIREBASE_CONFIG_JSON`, `FIREBASE_CONFIG_PATH`,
 `FIREBASE_PROJECT_ID`), see [security](security.md).
 
+## Deployment model and hosting requirements
+
+BuildScope is a standard Flask app served by gunicorn. SQLite is a file, so the two things that
+matter in production are where that file lives and how it is kept fresh. The app is hosting-neutral:
+nothing in the code depends on a particular platform.
+
+Hosting requirements:
+
+* a **long-running Python process** (gunicorn) behind a reverse proxy that terminates TLS;
+* a **writable directory on storage that survives restarts and deploys** for the SQLite database
+  and the `data/raw/*.jsonl` archive;
+* **HTTPS** with an origin the app can advertise (`BASE_URL`);
+* environment variables (`SECRET_KEY`, `OPPINTEL_DATA_DIR`/`OPPINTEL_DB`, `BASE_URL`, the refresh
+  settings — see the table above);
+* the ability to run a **long-lived refresh loop** (the app supervises it) or a **scheduled job**
+  that runs `ingest → assemble → build-search-index → monitor`;
+* **one instance only** — SQLite is a single writer, so two instances must not share the file;
+* at least **2 GB RAM** and a **recommended 5 GB persistent disk** (see the sizing below).
+
+Plain shared hosting (PHP-style, a static-file host, or any platform that cannot keep a process
+running and cannot give a writable persistent directory) is **usually unsuitable**.
+
 ## Persistent storage (required for stable public counts)
 
-The database is a single SQLite file. On a host with no persistent disk the container filesystem
+The database is a single SQLite file. On a host with no persistent storage the container filesystem
 is ephemeral, so the database is rebuilt from a bounded, partial ingest after every deploy. Two
 consequences follow:
 
@@ -40,17 +62,19 @@ consequences follow:
 * The refresh loop is bounded (`MAX_PAGES`), so a fresh instance re-collects only the newest
   pages; the assembled dataset never converges to the same numbers as a longer-running instance.
 
-The fix is a Render disk, which **requires a paid instance type**. `render.yaml` ships with this
-enabled: `plan: starter`, the `disk` block attached at `mountPath: /var/data`, and both
-`OPPINTEL_DATA_DIR=/var/data` and `OPPINTEL_DB=/var/data/oppintel.db` set. `ops/start.sh` honours
-both variables and fails with a named error if an explicitly configured path is not writable.
+The fix is persistent storage: point `OPPINTEL_DATA_DIR` and `OPPINTEL_DB` at a directory that
+survives a restart and a deploy. `ops/start.sh` honours both variables and fails with a named error
+only if an explicitly configured path is **not writable**. It never refuses to start merely because
+a host has no disk: with both variables unset it writes to the checkout's own `data/`, which always
+exists.
 
-A Blueprint that declares a disk on a Free instance does not apply at all, so the disk and the
-paid plan go together. To run without a disk, set `plan: free`, remove the `disk` block and
-remove both `OPPINTEL_*` variables — otherwise the Blueprint is rejected.
-
-**Do not point `OPPINTEL_DATA_DIR` at `/var/data` without a disk attached** — that path does not
-exist on a Free instance and the start is the one way to break the service.
+**Sizing (from `audit/scripts/h2_estimate.py`, the D6 measurements).** The audit database is
+28.9 MB for 1,261 projects / 4,190 permits (≈6.9 KB per permit). The full seed is 227,374 permits,
+so the database ceiling is **≈1.6 GB**; the raw `data/raw/*.jsonl` archive adds up to ~197 MB for a
+full seed and grows ~916 MB/month unmanaged (the retention policy is inert by default — see
+`config/sources.yaml`). **Recommendation: a 5 GB persistent disk and 2 GB RAM.** The disk holds the
+database plus a month of raw archive plus backups with headroom; the RAM covers an unbounded
+`ingest` pass (Fort Worth ArcGIS alone is 200k+ records).
 
 ## Deploy
 
@@ -61,7 +85,8 @@ exist on a Free instance and the start is the one way to break the service.
    ```
 
 2. **Configure the environment.** Set at minimum `SECRET_KEY`. Set `BASE_URL` to your public
-   origin, or leave it unset on Render, which uses `RENDER_EXTERNAL_URL`. Leave `FLASK_DEBUG` unset.
+   origin; a host that injects its own external URL is used when `BASE_URL` is unset. Leave
+   `FLASK_DEBUG` unset.
 
 3. **Initialise the database.**
    ```bash
@@ -102,23 +127,23 @@ exist on a Free instance and the start is the one way to break the service.
    `403`. The level is granted only by this command: no web route can set it, so no request can
    escalate its own privileges. Revoke with `revoke-admin`.
 
-**One-time full initial seed (Render shell).** The refresh loop is bounded (`MAX_PAGES`,
+**One-time full initial seed.** The refresh loop is bounded (`MAX_PAGES`,
 default 3), so a fresh instance re-collects only the newest pages and the assembled dataset
-stays small. To fill it once, after the first boot, open a Render shell on the running service
-and run a deeper backfill against the mounted database.
+stays small. To fill it once, after the first boot, open a shell on the running service
+and run a deeper backfill against the persistent database.
 
 **Pause the refresh loop first.** The seed and the refresh loop must not overlap. The refresh
 job holds a single-writer file lock (`src/oppintel/locks.py`) for its whole cycle, so a seed
 started mid-cycle waits rather than corrupting the file — but the clean way is to pause the
-loop: in the Render dashboard set `REFRESH_SECONDS` to a large value (e.g. `604800`) and save;
-the current cycle finishes, then the loop sleeps. Set it back to `21600` when the seed is done.
+loop: set `REFRESH_SECONDS` to a large value (e.g. `604800`) and save; the current cycle
+finishes, then the loop sleeps. Set it back to `21600` when the seed is done.
 
 Run the steps **in this order** — each consumes what the previous one produced:
 
 ```bash
 # 0. Confirm the shell sees the same database the web process serves.
 export PYTHONPATH=src
-export OPPINTEL_DB="${OPPINTEL_DB:-/var/data/oppintel.db}"
+export OPPINTEL_DB="${OPPINTEL_DB:-$OPPINTEL_DATA_DIR/oppintel.db}"
 ls -la "$OPPINTEL_DB"
 
 # 1. Ingest. Omit --max-pages to use each connector's own default cap (200 pages/source),
@@ -140,7 +165,7 @@ curl -s "$BASE_URL/api/statistics" | python -m json.tool | head -20
 ```
 
 Expected duration (measured on the audit sandbox, Python 3.13, wired network — expect it to vary
-on Render): an unbounded `ingest` (no `--max-pages`) reaches each connector's 200-page ceiling;
+by host): an unbounded `ingest` (no `--max-pages`) reaches each connector's 200-page ceiling;
 Fort Worth ArcGIS alone is 200k+ records and takes more than 13 minutes. Budget 15–30 minutes for
 the full seed. The pipeline commits every 250 permits, so an interrupted run leaves a consistent
 partial dataset and re-running is idempotent (raw records are keyed by content hash). Do not
@@ -166,71 +191,66 @@ never alters or drops an intelligence table.
 
 **Scheduled ingestion.** Run `ingest` then `assemble` then `build-search-index` on a daily
 schedule. A partial ingestion is safe: the pipeline commits every 250 permits, and re-running is
-idempotent because raw records are keyed by content hash. On Render the service runs its own
+idempotent because raw records are keyed by content hash. On a host that runs the app's own
 refresh loop, so there is no separate cron job to configure (see [operations](operations.md)).
 
-## Deploying to Render
+## Deploying
 
-`render.yaml` is a ready blueprint. In the Render dashboard choose **New → Blueprint**, point it
-at the repository, and it reads the file. The service runs the app *and* its own refresh loop, so
-there is no separate cron job, worker or scheduler to configure.
+The steps above (build -> initialise -> seed) work on any host that meets the hosting requirements.
+Two knobs are all a host needs to wire up:
 
 | Setting | Value |
 |---|---|
-| Runtime | Python |
 | Build | `pip install -r requirements.txt` |
 | Start | `bash ops/start.sh` |
 | Health check | `/healthz` |
-| Plan | `free` (default in the blueprint) |
+| Persistent directory | set `OPPINTEL_DATA_DIR` (+ `OPPINTEL_DB`) to it |
 
-Render generates `SECRET_KEY` once and keeps it, so logins survive a redeploy. `PYTHONPATH=src` is
-set for you. No other secrets are required: the data sources are public and unauthenticated.
+`ops/start.sh` runs the app *and* its own refresh loop in one process, so there is no separate
+cron job, worker or scheduler to configure. On a supervised host it runs in the foreground; set
+`FOREGROUND=1` (or let the platform set `$RENDER`) if the host expects the process to stay in the
+foreground on its own `$PORT`.
+
+`SECRET_KEY` must be generated once and kept, so logins survive a redeploy. `PYTHONPATH=src` makes
+the app and an operator shell agree. No other secrets are required: the data sources are public and
+unauthenticated.
 
 On first boot the service starts empty and the refresh loop fills it. `/healthz` returns `200` with
 `"status":"empty"` while the database is still filling, and `"status":"ok"` once projects are
 assembled. An empty database is deliberately not a failure, so the probe never produces a restart
-loop during the first fill.
+loop during the first fill. On a populated persistent path the existing database is reused as-is.
 
-### Keeping the dataset across deploys
+Keep **one instance only**: SQLite is a single writer, so two instances must not share the file.
+Scaling out needs the database moved to a networked store first.
 
-The default Free plan has **no persistent disk**, so the container filesystem — and the database in
-it — is replaced on every deploy. That is fine for a first look. To keep the assembled dataset:
+### Render blueprint (one hosting option)
 
-1. Change `plan` in `render.yaml` from `free` to `starter` (or higher).
-2. Uncomment the `OPPINTEL_DATA_DIR` and `OPPINTEL_DB` variables and set them to `/var/data`.
-3. Uncomment the `disk:` block at the bottom of `render.yaml`.
-
-Keep `numInstances: 1`: a Render disk attaches to a single instance, and two instances would run two
-refresh loops against one SQLite file. Scaling out needs the database moved to a networked store
-first, not more instances.
-
-Without a disk, leave `OPPINTEL_DATA_DIR` unset. The app then writes to the checkout's `data/`
-directory, which always exists. Pointing it at `/var/data` with no disk attached is the one way to
-break the start, because that path is never created.
+`render.yaml` is a ready blueprint for Render, which is one way to satisfy the requirements above;
+nothing in the code depends on it. In the Render dashboard choose **New -> Blueprint**, point it at
+the repository, and it reads the file. The blueprint ships `plan: free` with the disk block
+commented out so it always applies; to keep the dataset across deploys, enable a disk and set
+`OPPINTEL_DATA_DIR` to its mount path (or move to any host with persistent storage).
 
 ### Custom domain and canonical URLs
 
-`BASE_URL` overrides the public origin used in canonical links, Open Graph tags and the sitemap. On
-Render you usually do not set it: the app falls back to `RENDER_EXTERNAL_URL`, the service's own
-`onrender.com` URL. Set `BASE_URL` only to override that, e.g. for a custom domain. Leaving both
-unset is not a failure — pages then emit relative canonical paths — but a deployed service should
-end up with one or the other so the sitemap carries absolute URLs.
+`BASE_URL` overrides the public origin used in canonical links, Open Graph tags and the sitemap. If
+the host injects its own external URL, leaving `BASE_URL` unset uses that. Set `BASE_URL` only to
+override it, e.g. for a custom domain. Leaving both unset is not a failure - pages then emit
+relative canonical paths - but a deployed service should end up with one or the other so the
+sitemap carries absolute URLs.
 
 ### Verify after deploy
 
 ```bash
-curl -s https://<service>.onrender.com/healthz
-curl -s -o /dev/null -w '%{http_code}\n' https://<service>.onrender.com/
-curl -s -o /dev/null -w '%{http_code}\n' https://<service>.onrender.com/opportunities
+curl -s https://<host>/healthz
+curl -s -o /dev/null -w '%{http_code}\n' https://<host>/
+curl -s -o /dev/null -w '%{http_code}\n' https://<host>/opportunities
 ```
 
 ### Manual path (no blueprint)
 
-Create a **Web Service**, connect the repository, set the build command to
+Create a web service, connect the repository, set the build command to
 `pip install -r requirements.txt`, the start command to `bash ops/start.sh`, and the health check
-path to `/healthz`, and add the environment variables from the `envVars` block of `render.yaml`
-(`PYTHONPATH=src`, `SECRET_KEY` generated, `SESSION_COOKIE_SECURE=true`, `CSRF_ENABLED=true`).
-
 ## The React/Vite scaffold
 
 The repository contains a React/Vite scaffold (`package.json`, `vite.config.ts`, `src/*.tsx`,
