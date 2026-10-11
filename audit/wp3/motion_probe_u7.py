@@ -48,7 +48,7 @@ def main() -> int:
             h1 = page.eval_on_selector(
                 "h1", "el => ({vis: el.offsetParent !== null, txt: el.textContent.slice(0,40)})"
             )
-            page.wait_for_timeout(700)
+            page.wait_for_timeout(1500)
             reveal = page.evaluate(
                 """() => {
                     const els = [...document.querySelectorAll('[data-reveal], .card, .opportunity-card, .stat-card, .chart-figure')];
@@ -61,8 +61,22 @@ def main() -> int:
                 """() => [...document.querySelectorAll('[data-count]')].map(e => ({
                     target: e.getAttribute('data-count'), text: e.textContent.trim()}))"""
             )
+            # Scroll the whole page: every reveal target must end visible (bs-in), none stuck
+            # at opacity 0. Above-the-fold-only settling at load is correct behaviour 1.
+            height = page.evaluate("document.body.scrollHeight")
+            for y in range(0, height, 900):
+                page.evaluate(f"window.scrollTo(0,{y})")
+                page.wait_for_timeout(120)
+            page.wait_for_timeout(600)
+            settled = page.evaluate(
+                """() => {
+                    const els = [...document.querySelectorAll('[data-reveal], .card, .opportunity-card, .stat-card, .chart-figure')];
+                    return {settled_after_scroll: els.filter(e => e.classList.contains('bs-in')).length,
+                            still_invisible: els.filter(e => getComputedStyle(e).opacity === '0').length};
+                }"""
+            )
             out[name] = {"bs_js": has_js_class, "h1_visible": h1["vis"], "h1": h1["txt"],
-                         "reveal": reveal, "counts": counts}
+                         "reveal": reveal, "settled": settled, "counts": counts}
         out["console_errors_js_on"] = errors
 
         # ---- sticky header compacts after 24px ----

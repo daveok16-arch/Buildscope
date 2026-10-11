@@ -8,6 +8,10 @@
       "animated": 7,
       "settled": 4
     },
+    "settled": {
+      "settled_after_scroll": 7,
+      "still_invisible": 0
+    },
     "counts": [
       {
         "target": "133",
@@ -36,6 +40,10 @@
       "animated": 20,
       "settled": 2
     },
+    "settled": {
+      "settled_after_scroll": 20,
+      "still_invisible": 0
+    },
     "counts": []
   },
   "companies": {
@@ -46,6 +54,10 @@
       "total": 59,
       "animated": 59,
       "settled": 4
+    },
+    "settled": {
+      "settled_after_scroll": 59,
+      "still_invisible": 0
     },
     "counts": []
   },
@@ -58,6 +70,10 @@
       "animated": 1,
       "settled": 0
     },
+    "settled": {
+      "settled_after_scroll": 1,
+      "still_invisible": 0
+    },
     "counts": []
   },
   "detail": {
@@ -68,6 +84,10 @@
       "total": 0,
       "animated": 0,
       "settled": 0
+    },
+    "settled": {
+      "settled_after_scroll": 0,
+      "still_invisible": 0
     },
     "counts": []
   },
