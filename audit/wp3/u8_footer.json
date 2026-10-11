@@ -4,27 +4,27 @@
       {
         "cls": "footer-brand",
         "w": 358,
-        "top": -329
+        "top": -334
       },
       {
         "cls": "",
         "w": 167,
-        "top": -124
+        "top": -129
       },
       {
         "cls": "",
         "w": 167,
-        "top": -124
+        "top": -129
       },
       {
         "cls": "",
         "w": 358,
-        "top": 396
+        "top": 391
       }
     ],
     "grid_cols": "167px 167px",
     "brand_span": "1 / -1",
-    "legal_font": "12.48px"
+    "legal_font": "12.8px"
   },
   "markets_390": {
     "total": 3,
