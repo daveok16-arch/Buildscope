@@ -30,6 +30,16 @@ def _html(client, path):
     return resp.get_data(as_text=True)
 
 
+def _css(tmp_path):
+    html = _html(_client(tmp_path), "/opportunities")
+    css_href = None
+    for line in html.splitlines():
+        if "css/app.css" in line and "<link" in line:
+            css_href = line.split('href="', 1)[1].split('"', 1)[0]
+    assert css_href
+    return _client(tmp_path).get(css_href.split("?", 1)[0]).get_data(as_text=True)
+
+
 def test_directory_filter_selects_are_scoped_for_enhancement(tmp_path):
     html = _html(_client(tmp_path), "/opportunities")
     assert "data-bs-control" in html
@@ -72,13 +82,28 @@ def test_no_js_fallback_keeps_mobile_filters_reachable(tmp_path):
 
 def test_public_css_has_combobox_tokens(tmp_path):
     # The branded listbox styles must ship, or the enhanced controls would render unstyled.
-    html = _html(_client(tmp_path), "/opportunities")
-    css_href = None
-    for line in html.splitlines():
-        if "css/app.css" in line and "<link" in line:
-            css_href = line.split('href="', 1)[1].split('"', 1)[0]
-    assert css_href
-    css = _client(tmp_path).get(css_href.split("?", 1)[0]).get_data(as_text=True)
+    css = _css(tmp_path)
     assert ".bs-combobox" in css
     assert ".bs-listbox" in css
     assert "prefers-reduced-motion" in css
+
+
+def test_results_workspace_carries_a_js_gated_skeleton(tmp_path):
+    """Motion behaviour 7: a shimmer skeleton exists on the feed but is hidden without JS."""
+    html = _html(_client(tmp_path), "/opportunities")
+    assert "data-bs-results" in html
+    assert "bs-skeleton" in html
+    # The skeleton markup is present in the page; CSS keeps it display:none unless .bs-js sets it.
+    css = _css(tmp_path)
+    assert ".bs-js .feed-main-content.is-loading" in css
+    assert "bs-shimmer" in css
+    # Reduced motion gets a static placeholder, never the shimmer.
+    assert "prefers-reduced-motion" in css
+
+
+def test_pluralise_filter_agrees_the_noun(tmp_path):
+    """U6: number agreement lives in one helper, reachable from templates."""
+    from oppintel.app.display import pluralise
+
+    assert pluralise(1, "configured city", "configured cities") == "1 configured city"
+    assert pluralise(18, "configured city", "configured cities") == "18 configured cities"

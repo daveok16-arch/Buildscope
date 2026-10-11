@@ -3113,3 +3113,38 @@ body.drawer-open .mobile-drawer {
 .opportunity-card .card-title {
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
+
+
+/* Motion behaviour 7 - skeleton shimmer while a results fragment loads.
+   Filters submit as a normal GET, so the browser paints the next page; a shimmer skeleton is
+   shown on submit so the wait reads as a load, not a freeze. Motion-gated: it only exists under
+   .bs-js (JS on) and never renders without JS or with prefers-reduced-motion. It is a
+   non-animated equivalent - with reduced motion the skeleton is a static grey placeholder. */
+.bs-skeleton { display: none; }
+.bs-js .feed-main-content.is-loading > *:not(.bs-skeleton) { display: none; }
+.bs-js .feed-main-content.is-loading > .bs-skeleton { display: block; }
+.bs-skeleton-card {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 14px;
+}
+.bs-skeleton-line {
+  height: 12px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 10px;
+  background: linear-gradient(90deg, var(--slate-200) 25%, var(--slate-100) 37%, var(--slate-200) 63%);
+  background-size: 400% 100%;
+  animation: bs-shimmer 1.4s ease infinite;
+}
+.bs-skeleton-line.w-40 { width: 40%; }
+.bs-skeleton-line.w-70 { width: 70%; }
+.bs-skeleton-line.w-90 { width: 90%; }
+@keyframes bs-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bs-skeleton-line { animation: none; background: var(--slate-200); }
+}
