@@ -22,7 +22,7 @@
 
   /* 1. Staggered reveal of cards/lists on scroll. IntersectionObserver + Motion. */
   function reveal() {
-    var sel = '[data-reveal], .card, .opportunity-card, .lifecycle-card, .stat-card';
+    var sel = '[data-reveal], .card, .opportunity-card, .lifecycle-card, .stat-card, .chart-figure';
     var items = Array.prototype.slice.call(document.querySelectorAll(sel));
     if (!items.length) return;
     // Only elements below the fold participate; above-the-fold content must paint instantly.

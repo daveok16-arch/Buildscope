@@ -415,6 +415,17 @@ def create_app(config: AppConfig | None = None) -> Flask:
     def month_year_filter(value: Any) -> str:
         return OpportunityService.format_month(value)
 
+    @app.template_filter("collected")
+    def collected_filter(value: Any) -> str:
+        """Render when BuildScope collected a record: the full timestamp, not a month.
+
+        "Last verified October 2026" overstates a record's age and implies a verification act
+        that did not happen. The record was *collected* at a moment, so the label states the
+        full date (with a time when the source stores one). The value is a stored observation
+        timestamp; nothing is invented.
+        """
+        return OpportunityService.format_date_time(value)
+
     @app.template_filter("titlecase")
     def titlecase_filter(value: Any) -> str:
         """Normalise shouting source text to display case, preserving acronyms and codes.
@@ -426,16 +437,18 @@ def create_app(config: AppConfig | None = None) -> Flask:
         return titlecase(value)
 
     @app.template_filter("clean_title")
-    def clean_title_filter(value: Any) -> str:
+    def clean_title_filter(value: Any, project: Any = None) -> str:
         """Render a raw project name as a clean headline (display-only).
 
-        Strips a leading meeting-note marker, repairs a figure run into the preceding word, and
-        reduces an over-long prose description to its first sentence. Never touches a stored
-        value.
+        Strips a leading meeting-note marker, repeated-punctuation artifacts and a permit
+        cross-reference, repairs a figure run into the preceding word, and reduces an over-long
+        prose description to its first sentence. When the result still reads as a note it falls
+        back to the record's work description, permit type or address, which the optional
+        ``project`` mapping supplies. Never touches a stored value.
         """
         from .display import clean_title
 
-        return clean_title(value)
+        return clean_title(value, project)
 
     @app.template_filter("domain")
     def domain_filter(value: Any) -> str:
@@ -2125,16 +2138,29 @@ def _new_filings_seo(g: Any) -> Any:
     return seo
 
 
-def _date_presets() -> dict[str, str]:
-    """Native date-input presets for the permit-date range.
+def _date_presets() -> dict[str, Any]:
+    """Permit-date range presets for the filter.
+
     Computed server-side so the preset links work with no JavaScript, and so each preset resolves
-    to a real calendar date the database can compare rather than a relative token.
+    to a real calendar date the database can compare rather than a relative token. `choices` is
+    the ordered (label, iso) list the From/To comboboxes render; `choice_values` is its value set,
+    used to re-select a custom date that is not one of the presets.
     """
     today = date.today()
+    choices = [
+        ("Today", today.isoformat()),
+        ("Last 7 days", (today - timedelta(days=7)).isoformat()),
+        ("Last 30 days", (today - timedelta(days=30)).isoformat()),
+        ("Last 90 days", (today - timedelta(days=90)).isoformat()),
+        ("This year", date(today.year, 1, 1).isoformat()),
+        ("Last year", date(today.year - 1, 1, 1).isoformat()),
+    ]
     return {
         "last_7": (today - timedelta(days=7)).isoformat(),
         "last_30": (today - timedelta(days=30)).isoformat(),
         "this_year": date(today.year, 1, 1).isoformat(),
+        "choices": choices,
+        "choice_values": {iso for _, iso in choices},
     }
 
 

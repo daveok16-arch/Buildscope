@@ -29,10 +29,16 @@
         {% endif %}
       </p>
     </div>
-    <div style="display:flex; gap:8px">
+    <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center">
       {% for w in windows %}
-        <a class="btn btn-small {{ 'btn-primary' if w == active_window else 'btn-outline' }}"
-           href="{{ url_for('trends_view', window=w) }}">{{ 'All time' if w == 'all' else 'Last ' ~ w }}</a>
+        {% if w in report.distinct_windows or w == active_window %}
+          <a class="btn btn-small {{ 'btn-primary' if w == active_window else 'btn-outline' }}"
+             href="{{ url_for('trends_view', window=w) }}">{{ 'All time' if w == 'all' else 'Last ' ~ w }}</a>
+        {% else %}
+          <span class="btn btn-small btn-outline" aria-disabled="true"
+                title="This window holds the same figures as the one shown — no distinct data."
+                style="opacity:.5; cursor:not-allowed">{{ 'All time' if w == 'all' else 'Last ' ~ w }}</span>
+        {% endif %}
       {% endfor %}
     </div>
   </div>
@@ -64,36 +70,39 @@
   </div>
   {% endif %}
 
-  {# Metric cards #}
-  <div class="stat-strip" style="margin-top:24px; flex-wrap:wrap; gap:16px">
+  {# Metric cards: the number and its label lead; the basis is one line; the full definition
+     and the comparison sit inside a collapsed disclosure so no card shows a paragraph by
+     default. Cards share a row height and fall to two columns on narrow screens. #}
+  <div class="stat-strip stat-strip-trends" style="margin-top:24px">
     {% for m in report.metrics if active_window in m.windows %}
-    <div class="stat" style="flex:1 1 240px; min-width:0">
+    <div class="stat stat-trend">
       <span class="stat-value">{{ "{:,}".format(m.value) }}</span>
       <span class="stat-label">{{ m.label }}{% if m.cumulative %} <span class="muted small">(total held)</span>{% endif %}</span>
-      {% if m.secondary %}<p class="small" style="margin-top:6px"><strong>{{ m.secondary[0] }}:</strong> {{ "{:,}".format(m.secondary[1]) }}</p>{% endif %}
-      {% if m.basis %}<p class="small muted" style="margin-top:8px; line-height:1.45"><strong>Counts:</strong> {{ m.basis }}</p>{% endif %}
-      <p class="small muted" style="margin-top:8px; line-height:1.45">{{ m.definition }}</p>
-      {% if m.cumulative %}
-        <p class="small muted" style="margin-top:6px">Cumulative total over the whole dataset — not a period trend.</p>
-      {% elif m.comparison_available and m.previous is not none %}
-        <p class="small" style="margin-top:6px">
-          Previous period: {{ "{:,}".format(m.previous) }}
-          {% if m.direction == 'up' %}
-            · <span style="color:var(--gold-600,#a16207)">activity increased in observed records</span>
-          {% elif m.direction == 'down' %}
-            · activity decreased in observed records
-          {% else %}
-            · no change
-          {% endif %}
-        </p>
-      {% else %}
-        <p class="small muted" style="margin-top:6px">No comparison available.</p>
-      {% endif %}
-      {% if m.excluded_future %}
-        <p class="small muted" style="margin-top:4px">
-          {{ m.excluded_future }} record(s) excluded: dated after today.
-        </p>
-      {% endif %}
+      {% if m.secondary %}<span class="stat-secondary small">{{ m.secondary[0] }}: {{ "{:,}".format(m.secondary[1]) }}</span>{% endif %}
+      {% if m.basis %}<p class="stat-basis small muted">{{ m.basis }}</p>{% endif %}
+      <details class="stat-def">
+        <summary>Definition{% if not m.cumulative and m.comparison_available %} &amp; comparison{% endif %}</summary>
+        <p class="small muted">{{ m.definition }}</p>
+        {% if m.cumulative %}
+          <p class="small muted">Cumulative total over the whole dataset — not a period trend.</p>
+        {% elif m.comparison_available and m.previous is not none %}
+          <p class="small">
+            Previous period: {{ "{:,}".format(m.previous) }}
+            {% if m.direction == 'up' %}
+              · <span style="color:var(--gold-600,#a16207)">activity increased in observed records</span>
+            {% elif m.direction == 'down' %}
+              · activity decreased in observed records
+            {% else %}
+              · no change
+            {% endif %}
+          </p>
+        {% else %}
+          <p class="small muted">No comparison available.</p>
+        {% endif %}
+        {% if m.excluded_future %}
+          <p class="small muted">{{ m.excluded_future }} record(s) excluded: dated after today.</p>
+        {% endif %}
+      </details>
     </div>
     {% endfor %}
   </div>

@@ -58,12 +58,18 @@ MOBILE = {"width": 390, "height": 844}
 DESKTOP = {"width": 1440, "height": 900}
 
 #: The widths the responsive layout must survive. 360 is the narrowest common phone,
-#: 820 the tablet breakpoint where the filter sidebar is still collapsed.
-OVERFLOW_VIEWPORTS = [360, 390, 430, 820, 1440]
+#: 720 is the founder's device (a phone reporting ~720 CSS px at DPR 1) and 820 the
+#: tablet breakpoint where the filter sidebar is still collapsed.
+OVERFLOW_VIEWPORTS = [360, 390, 430, 600, 720, 768, 820, 1440]
 
-#: axe must be clean at both ends of the responsive range: the desktop header and
-#: the mobile drawer each only exist at one width, so a single viewport misses half.
-AXE_VIEWPORTS = {"mobile": MOBILE, "desktop": DESKTOP}
+#: axe must be clean at every end of the responsive range: the desktop header, the
+#: mobile drawer and the mid-width (720) sheet each only exist at one width, so a
+#: single viewport misses part of the surface.
+AXE_VIEWPORTS = {
+    "mobile": MOBILE,
+    "tablet": {"width": 720, "height": 1600},
+    "desktop": DESKTOP,
+}
 
 
 @pytest.fixture(scope="module")
@@ -475,19 +481,17 @@ def test_mobile_filter_sheet_opens_and_closes(live_server, browser, route, panel
 
 
 def test_filter_date_presets_and_native_inputs(live_server, browser):
-    """The permit-date filter offers native date inputs and one-click presets that
-    submit without JavaScript (they are ordinary links)."""
+    """The permit-date filter offers one-click preset links (no JS needed) and From/To
+    controls. U2 replaced the native date inputs with branded comboboxes over a real
+    <select> form field of record; the native select is kept in the DOM (visually hidden)
+    so the form still submits without JavaScript."""
     context = browser.new_context(viewport=MOBILE, has_touch=True)
     try:
         page = context.new_page()
         page.goto(live_server + "/opportunities", wait_until="networkidle")
         page.click("#mobile-filter-btn")
 
-        dates = page.eval_on_selector_all(
-            "input[type=date]", "els => els.map(e => e.id)"
-        )
-        assert set(dates) == {"date_from", "date_to"}, f"unexpected date inputs: {dates}"
-
+        # The preset links are ordinary anchors, so they work with JS disabled.
         presets = page.eval_on_selector_all(
             ".date-presets a", "els => els.map(e => e.textContent.trim())"
         )
@@ -495,6 +499,16 @@ def test_filter_date_presets_and_native_inputs(live_server, browser):
 
         href = page.get_attribute(".date-presets a", "href")
         assert "date_from=" in href and "/opportunities?" in href, href
+
+        # From/To are branded comboboxes; the native <select> stays as the form field.
+        controls = page.eval_on_selector_all(
+            "#date_from, #date_to", "els => els.map(e => e.tagName)"
+        )
+        assert controls == ["SELECT", "SELECT"], controls
+        triggers = page.eval_on_selector_all(
+            ".bs-combobox-trigger", "els => els.length"
+        )
+        assert triggers >= 2, f"expected branded date comboboxes, found {triggers} triggers"
     finally:
         context.close()
 
@@ -531,3 +545,109 @@ def test_no_csp_violations_in_console(live_server, browser, route, viewport_name
     finally:
         context.close()
 
+
+
+#: The founder's device is a phone reporting ~720 CSS px at DPR 1. Below 900 the combobox is a
+#: fixed bottom sheet (reparented to <body> on purpose); at/above 900 it must stay anchored in its
+#: wrapper. The U1 bug was that the desktop popup was reparented unconditionally, so an
+#: absolutely-positioned popup flowed to the end of the document — below the footer.
+DESKTOP_WIDTHS = [900, 1440]
+SHEET_WIDTHS = [390, 720]
+
+
+@pytest.mark.parametrize("width", DESKTOP_WIDTHS)
+def test_city_combobox_popup_stays_anchored_on_desktop(live_server, browser, width):
+    context = browser.new_context(
+        viewport={"width": width, "height": 1600}, device_scale_factor=1
+    )
+    try:
+        page = context.new_page()
+        page.goto(live_server + "/opportunities", wait_until="networkidle")
+        page.evaluate(
+            "() => document.querySelector('#city').closest('.bs-combobox')"
+            ".querySelector('.bs-combobox-trigger').click()"
+        )
+        page.wait_for_timeout(200)
+        state = page.evaluate(
+            """() => {
+              const w = document.querySelector('#city').closest('.bs-combobox');
+              const p = w.querySelector('.bs-combobox-pop');
+              const pr = p.getBoundingClientRect();
+              const wr = w.getBoundingClientRect();
+              return {
+                hidden: p.hidden,
+                position: getComputedStyle(p).position,
+                parentIsWrap: p.parentElement === w,
+                popTop: Math.round(pr.top),
+                wrapTop: Math.round(wr.top),
+                inViewport: pr.top < window.innerHeight,
+              };
+            }"""
+        )
+        assert not state["hidden"], f"{width}: popup did not open"
+        assert state["parentIsWrap"], f"{width}: popup was reparented to <body> (U1)"
+        assert state["position"] == "absolute", f"{width}: popup is not anchored"
+        # Anchored under its trigger, not appended at the end of the document.
+        assert abs(state["popTop"] - state["wrapTop"]) < 60, f"{width}: popup not anchored"
+        assert state["inViewport"], f"{width}: popup opened outside the viewport"
+    finally:
+        context.close()
+
+
+@pytest.mark.parametrize("width", SHEET_WIDTHS)
+def test_city_combobox_popup_is_a_pinned_sheet_below_900(live_server, browser, width):
+    context = browser.new_context(
+        viewport={"width": width, "height": 1600}, device_scale_factor=1
+    )
+    try:
+        page = context.new_page()
+        page.goto(live_server + "/opportunities", wait_until="networkidle")
+        page.click("#mobile-filter-btn")
+        page.evaluate(
+            "() => document.querySelector('#city').closest('.bs-combobox')"
+            ".querySelector('.bs-combobox-trigger').click()"
+        )
+        page.wait_for_timeout(200)
+        state = page.evaluate(
+            """() => {
+              const p = document.querySelector('body > .bs-combobox-pop');
+              if (!p) return {present: false};
+              const pr = p.getBoundingClientRect();
+              return {
+                present: true,
+                hidden: p.hidden,
+                position: getComputedStyle(p).position,
+                bottomGap: Math.round(window.innerHeight - pr.bottom),
+              };
+            }"""
+        )
+        assert state["present"], f"{width}: sheet popup not reparented to <body>"
+        assert not state["hidden"], f"{width}: sheet popup did not open"
+        assert state["position"] == "fixed", f"{width}: sheet popup is not fixed"
+        # Pinned to the bottom of the viewport, not below the footer.
+        assert abs(state["bottomGap"]) <= 2, f"{width}: sheet not pinned to the viewport bottom"
+    finally:
+        context.close()
+
+
+@pytest.mark.parametrize("width", SHEET_WIDTHS)
+def test_combobox_open_does_not_overflow_the_viewport(live_server, browser, width):
+    """The sheet and its comboboxes must not widen the document."""
+    context = browser.new_context(
+        viewport={"width": width, "height": 1600}, device_scale_factor=1
+    )
+    try:
+        page = context.new_page()
+        page.goto(live_server + "/opportunities", wait_until="networkidle")
+        page.click("#mobile-filter-btn")
+        page.evaluate(
+            "() => document.querySelector('#city').closest('.bs-combobox')"
+            ".querySelector('.bs-combobox-trigger').click()"
+        )
+        page.wait_for_timeout(200)
+        overflow = page.evaluate(
+            "() => document.documentElement.scrollWidth - window.innerWidth"
+        )
+        assert overflow <= 0, f"{width}: horizontal overflow {overflow}px with the popup open"
+    finally:
+        context.close()

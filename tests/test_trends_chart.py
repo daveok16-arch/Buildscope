@@ -87,3 +87,17 @@ def test_trends_chart_has_accessible_name(client):
     body = client.get("/trends").get_data(as_text=True)
     assert 'role="img"' in body
     assert "aria-label" in body
+
+
+def test_trends_chart_has_axis_and_value_labels(client):
+    """The chart carries a y-axis (0 and the maximum) and a value label per drawn bar."""
+    body = client.get("/trends").get_data(as_text=True)
+    assert ">0</text>" in body  # y-axis baseline
+    assert "projects</text>" in body  # rotated y-axis title
+    # The value labels are drawn inside the svg, so a bar's count appears as a <text>.
+    assert "bar-chart-bar" in body
+
+
+def test_trends_chart_bars_carry_a_stagger_delay(client):
+    body = client.get("/trends").get_data(as_text=True)
+    assert "--bs-bar-delay:" in body

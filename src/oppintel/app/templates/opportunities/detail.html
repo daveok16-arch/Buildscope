@@ -25,13 +25,13 @@
     {% endif %}
   </div>
 
-  <h1>{{ (project.project_name | clean_title) or project.address or 'Commercial construction project' }}</h1>
+  <h1>{{ (project.project_name | clean_title(project)) or project.address or 'Commercial construction project' }}</h1>
   <p class="muted" style="font-size:0.95rem; margin-bottom:0">
     <svg class="card-location-icon" viewBox="0 0 24 24" style="vertical-align:middle; margin-right:4px">
       <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
     </svg>
     {{ project.address | or_na }}{% if project.city %}, {{ project.city }}{% endif %}{% if project.state %}, {{ project.state }}{% endif %}
-    · Last verified {{ project.last_verified | month_year }}
+    · Collected {{ project.last_verified | collected }}
   </p>
 
   {# Top Actions: Save, Watch, and Pipeline #}
@@ -102,7 +102,7 @@
       <dl class="facts">
         <div>
           <dt>Project name</dt>
-          <dd>{{ project.project_name | clean_title | or_na }}</dd>
+          <dd>{{ project.project_name | clean_title(project) | or_na }}</dd>
         </div>
         <div>
           <dt>Address</dt>
@@ -147,7 +147,7 @@
             {% if project.permits and project.permits[0].work_description %}
               {{ project.permits[0].work_description }}
             {% else %}
-              {{ project.project_name | clean_title | or_na }}
+              {{ project.project_name | clean_title(project) | or_na }}
             {% endif %}
           </dd>
         </div>
@@ -475,7 +475,7 @@
         {% endfor %}
       </ul>
       <p class="small muted" style="margin-top:14px">
-        Last verified {{ project.last_verified | month_year }}.
+        Collected {{ project.last_verified | collected }}.
       </p>
     </div>
 

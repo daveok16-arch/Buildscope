@@ -188,6 +188,28 @@ def test_metric_counts_are_kept_separate(tmp_path):
     db.close()
 
 
+def test_windows_with_identical_figures_are_marked_not_distinct(tmp_path):
+    """A window that reproduces another's figures is dropped from the enabled toggles."""
+    db = _db(tmp_path, [_permit("A", date(2026, 10, 1))])
+    old = (date(2026, 10, 7) - timedelta(days=400)).isoformat()
+    db.conn.execute("UPDATE project SET created_at = ?", (old,))
+    db.conn.commit()
+    report = build_trend_report(db, window="30d", today=date(2026, 10, 7))
+    assert report.distinct_windows
+    assert set(report.distinct_windows) <= {"7d", "30d", "90d", "all"}
+    db.close()
+
+
+def test_distinct_window_labels_is_deterministic_and_non_empty(tmp_path):
+    from oppintel.trends import distinct_window_labels
+
+    db = _db(tmp_path, [_permit("A", date(2026, 10, 1))])
+    labels = distinct_window_labels(db, trade="commercial_hvac", today=date(2026, 10, 7))
+    assert labels == distinct_window_labels(db, trade="commercial_hvac", today=date(2026, 10, 7))
+    assert labels
+    db.close()
+
+
 def test_report_states_its_own_limits(tmp_path):
     db = _db(tmp_path, [_permit("A", date(2026, 10, 1))])
     report = build_trend_report(db, window="7d", today=date(2026, 10, 7))

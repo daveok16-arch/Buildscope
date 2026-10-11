@@ -128,13 +128,13 @@
               {% if c.cities %}
               <div class="meta-item">
                 <dt class="meta-label">Active Footprint</dt>
-                <dd class="meta-val">{{ c.cities | join(', ') }}</dd>
+                <dd class="meta-val" data-clamp title="{{ c.cities | join(', ') }}">{{ c.cities | join(', ') }}</dd>
               </div>
               {% endif %}
               {% if c.project_types %}
               <div class="meta-item">
                 <dt class="meta-label">Specializations</dt>
-                <dd class="meta-val">{{ c.project_types | join(', ') }}</dd>
+                <dd class="meta-val" data-clamp title="{{ c.project_types | join(', ') }}">{{ c.project_types | join(', ') }}</dd>
               </div>
               {% endif %}
             </dl>
