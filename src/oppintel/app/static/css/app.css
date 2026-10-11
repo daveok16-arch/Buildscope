@@ -1238,6 +1238,16 @@ body.drawer-open .mobile-drawer {
   margin-top: 24px;
 }
 
+/* Markets: three cards in a two-column band leave the last one alone on its row. Centre that
+   lone card instead of letting it sit orphaned against the left edge. */
+@media (min-width: 641px) and (max-width: 1023px) {
+  .markets-grid > .card:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+    max-width: calc(50% - 10px);
+    justify-self: center;
+  }
+}
+
 /* --- Company directory card -------------------------------------------------
    The company card previously reused `.card-meta` (a single-line flex row) to
    hold a label/value list, so every value past the first was squeezed and the
@@ -2691,6 +2701,11 @@ body.drawer-open .mobile-drawer {
   .footer-grid {
     grid-template-columns: 1fr 1fr;
   }
+  /* The brand block is prose, not a link column: at two columns it spans the full width so it
+     is never squeezed beside a link list, and the link columns form a tidy 2x2 below it. */
+  .footer-brand {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 899px) {
@@ -2787,8 +2802,25 @@ body.drawer-open .mobile-drawer {
     grid-template-columns: 1fr;
   }
   .footer-grid {
-    grid-template-columns: 1fr;
-    gap: 28px;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  /* Brand prose spans the full width; the link columns flow two-up (Product | Coverage). */
+  .footer-brand {
+    grid-column: 1 / -1;
+  }
+  /* The final link column (Workspace) spans the row and lays its few links two-up, so the
+     grid never leaves a half-empty row. */
+  .footer-grid > div:not(.footer-brand):last-child {
+    grid-column: 1 / -1;
+  }
+  .footer-grid > div:not(.footer-brand):last-child ul {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 20px;
+  }
+  .footer-legal {
+    font-size: 0.78rem;
   }
   .feed-toolbar {
     flex-direction: column;
