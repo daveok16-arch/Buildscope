@@ -134,7 +134,9 @@ def test_jurisdiction_count_is_identical_on_every_surface(app_db, client):
     # The home meta description and the home stat strip both carry the same figure.
     assert f"{jurisdictions} " in home  # e.g. "15 Dallas–Fort Worth cities with at least one…"
     assert health["cities_with_public_projects"] == jurisdictions
-    assert f"{jurisdictions} cities with at least one public project" in markets
+    # The noun agrees with the number ("1 city", "15 cities"): same figure, correct grammar.
+    expected = f"{jurisdictions} {'city' if jurisdictions == 1 else 'cities'} with at least one public project"
+    assert expected in markets
     # The configured count is configuration intent, never smaller than the observed count.
     assert api["configured_jurisdictions"] >= jurisdictions
 

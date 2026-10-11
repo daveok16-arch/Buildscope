@@ -88,7 +88,7 @@
   <div class="notice notice-plain">
     <p class="panel-eyebrow">Coverage note</p>
     <p>
-      This market covers {{ mkt.cities | length }} configured cities. Coverage is not complete
+      This market covers {{ mkt.cities | length | pluralise('configured city', 'configured cities') }}. Coverage is not complete
       for every jurisdiction, and some source record types are capped by a pagination safety
       limit, so some totals are lower bounds rather than complete counts.
     </p>

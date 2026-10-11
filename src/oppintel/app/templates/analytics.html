@@ -65,7 +65,7 @@
                 <span class="small muted">({{ c_mech }} with mechanical)</span>
               {% endif %}
             </span>
-            <span class="font-semibold">{{ c_cnt }} projects</span>
+            <span class="font-semibold">{{ c_cnt | pluralise('project') }}</span>
           </div>
           <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
             <div style="background:var(--navy-700); height:100%; width:{{ (c_cnt / (stats.projects_public or 1) * 100) | round }}%"></div>

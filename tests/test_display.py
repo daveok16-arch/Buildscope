@@ -13,6 +13,7 @@ from oppintel.app.display import (
     clean_title,
     has_value,
     join_missing,
+    pluralise,
     present_fields,
     titlecase,
 )
@@ -266,3 +267,25 @@ def test_clean_title_falls_back_to_the_description_then_address():
 def test_clean_title_does_not_invent_a_fallback():
     assert clean_title("QTEAM INHOUSE MEETING TBD", None) == ""
     assert clean_title(None, {"address": "100 MAIN ST"}) == "New commercial construction at 100 MAIN ST"
+
+
+# --- pluralise: number agreement lives in one place -----------------------------
+
+def test_pluralise_agrees_the_noun():
+    assert pluralise(1, "configured city", "configured cities") == "1 configured city"
+    assert pluralise(18, "configured city", "configured cities") == "18 configured cities"
+    assert pluralise(0, "project") == "0 projects"
+    assert pluralise(1, "project") == "1 project"
+    assert pluralise(133, "project") == "133 projects"
+
+
+def test_pluralise_handles_template_string_counts():
+    # A template context can hand the count over as a string; agreement must still work.
+    assert pluralise("1", "city", "cities") == "1 city"
+    assert pluralise("15", "city", "cities") == "15 cities"
+
+
+def test_pluralise_never_invents_a_number_for_a_missing_count():
+    # An absent count must not render as "0 ..." or "None ..."; it degrades to the bare noun.
+    assert pluralise(None, "city", "cities") == "city"
+    assert pluralise("", "city", "cities") == "city"

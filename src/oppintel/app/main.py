@@ -469,6 +469,13 @@ def create_app(config: AppConfig | None = None) -> Flask:
 
         return join_missing(value or [])
 
+    @app.template_filter("pluralise")
+    def pluralise_filter(count: Any, singular: str, plural: str | None = None) -> str:
+        """A counted noun with the verb agreed to it, e.g. "1 configured city"."""
+        from .display import pluralise
+
+        return pluralise(count, singular, plural)
+
     # --- error handling -------------------------------------------------------
 
     @app.errorhandler(404)

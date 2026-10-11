@@ -448,6 +448,21 @@ def join_missing(labels: Iterable[str]) -> str:
     return f"{', '.join(items[:-1])} and {items[-1]}"
 
 
+def pluralise(count: Any, singular: str, plural: str | None = None) -> str:
+    """A counted noun with the verb agreed to it: "1 city", "3 cities".
+
+    One place owns number agreement so a template cannot print "1 cities" or a stray
+    "city(s)". ``plural`` defaults to ``singular + "s"``; pass it for irregular nouns
+    ("country" -> "countries"). ``count`` may be a string from a template context.
+    """
+    try:
+        n = int(count)
+    except (TypeError, ValueError):
+        return singular
+    word = singular if n == 1 else (plural if plural is not None else singular + "s")
+    return f"{n} {word}"
+
+
 def split_facts(
     fields: Iterable[tuple[str, Any, Any]]
 ) -> tuple[list[tuple[str, Any, str]], list[str]]:
