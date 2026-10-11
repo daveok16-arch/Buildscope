@@ -22,7 +22,7 @@
 
   /* 1. Staggered reveal of cards/lists on scroll. IntersectionObserver + Motion. */
   function reveal() {
-    var sel = '[data-reveal], .card, .opportunity-card, .lifecycle-card, .stat-card';
+    var sel = '[data-reveal], .card, .opportunity-card, .lifecycle-card, .stat-card, .chart-figure';
     var items = Array.prototype.slice.call(document.querySelectorAll(sel));
     if (!items.length) return;
     // Only elements below the fold participate; above-the-fold content must paint instantly.
@@ -154,12 +154,31 @@
     });
   }
 
+  /* 7. Skeleton shimmer on results load. Filters submit as a normal GET; show a shimmer
+     skeleton the moment a results form submits, so the wait reads as a load, not a freeze.
+     Motion-gated and progressive: with JS off, or reduced motion, the skeleton never shows. */
+  function skeleton() {
+    var results = document.querySelector('[data-bs-results]');
+    if (!results) return;
+    document.querySelectorAll('form').forEach(function (form) {
+      if (!form.querySelector('[data-bs-results], [data-bs-control]')) return;
+      form.addEventListener('submit', function () {
+        results.classList.add('is-loading');
+      });
+    });
+    // A sort change navigates via location.search (not a submit); catch it on the segmented control.
+    document.querySelectorAll('[data-sort-nav]').forEach(function (seg) {
+      seg.addEventListener('change', function () { results.classList.add('is-loading'); });
+    });
+  }
+
   function init() {
     root.classList.add('bs-js');
     reveal();
     countUp();
     stickyHeader();
     segmented();
+    skeleton();
     disclosures();
     viewTransitions();
   }

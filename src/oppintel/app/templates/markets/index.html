@@ -29,7 +29,7 @@
       {% include "partials/collection_window.html" %}
     </div>
 
-    <div class="card-grid">
+    <div class="card-grid markets-grid">
       {% for card in cards %}
       <article class="card">
         <div class="card-meta-line">
@@ -42,9 +42,9 @@
           {% endif %}
           <span class="meta-dot">·</span>
           {% if card.stats %}
-            <span>{{ card.stats.active_jurisdictions }} cities with at least one public project</span>
+            <span>{{ card.stats.active_jurisdictions | pluralise('city', 'cities') }} with at least one public project</span>
           {% else %}
-            <span>{{ card.market.cities | length }} configured cities</span>
+            <span>{{ card.market.cities | length | pluralise('configured city', 'configured cities') }}</span>
           {% endif %}
         </div>
         <h3 style="margin-top:8px">

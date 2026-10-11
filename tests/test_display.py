@@ -13,6 +13,7 @@ from oppintel.app.display import (
     clean_title,
     has_value,
     join_missing,
+    pluralise,
     present_fields,
     titlecase,
 )
@@ -199,3 +200,92 @@ def test_clean_title_never_invents_a_value():
 def test_clean_title_keeps_a_short_honest_name_whole():
     # A compact title is not a prose description; it must not be truncated.
     assert clean_title("MURPHY MARKETPLACE - WEST ADDITION") == "Murphy Marketplace - West Addition"
+
+
+# --- clean_title: internal-marker generalisation (WP3 U3) -----------------------
+
+@pytest.mark.parametrize(
+    "raw,expected",
+    [
+        # The exact strings the founder saw live.
+        ("X TEAM /// EV Chargers", "EV Chargers"),
+        ("X TEAM /// INSTALLING PALLET RACK", "Installing Pallet Rack"),
+        ("X TEAM /// Refer to PB26-12967 /// Dumpster Enclosure", "Dumpster Enclosure"),
+        ("QTEAM INHOUSE first time finish out of a jewelry store",
+         "first time finish out of a jewelry store"),
+        ("QTEAM MEETING 10/27/2026 (9AM) - New Construction of a Full Service Restaurant",
+         "New Construction of a Full Service Restaurant"),
+        ("X-Team ,,, Interior Build Out of a Retail Grocery Store", "Interior Build Out of a Retail Grocery Store"),
+        ("QTEAM INHOUSE Scope of work: First-Generation full tenant fit-out for a law firm",
+         "Scope of work: First-Generation full tenant fit-out for a law firm"),
+    ],
+)
+def test_clean_title_strips_internal_markers_and_punctuation(raw, expected):
+    assert clean_title(raw) == expected
+
+
+def test_clean_title_drops_a_permit_cross_reference_clause():
+    raw = (
+        "X TEAM /// Dumpster Enclosure /// Refer to PB26-12945/// Addition of the parking lot, "
+        "relocation of the dumpster"
+    )
+    assert clean_title(raw) == (
+        "Dumpster Enclosure / Addition of the parking lot, relocation of the dumpster"
+    )
+
+
+def test_clean_title_keeps_scope_text_after_a_reference():
+    # Only the reference phrase is dropped; the scope that follows it in the same clause is kept.
+    raw = ("X TEAM /// Aquatic Bldg 1/// Refer to PB26-13456 THE PROJECT CONSISTS OF A NEW "
+           "COMMUNITY CENTER.")
+    out = clean_title(raw)
+    assert "Aquatic Bldg 1" in out
+    assert "Refer to PB26-13456" not in out
+    assert "COMMUNITY CENTER" in out
+
+
+def test_clean_title_does_not_split_a_dimension():
+    # "12x24x24" is a dimension, not a word run into a figure; the run-together repair must skip it.
+    assert clean_title("Big D Party Rentals will construct a 12x24x24 stage") == (
+        "Big D Party Rentals will construct a 12x24x24 stage"
+    )
+
+
+def test_clean_title_falls_back_to_the_description_then_address():
+    note = "QTEAM INHOUSE - MEETING TBD"
+    project = {"work_description": "Ground-up construction of a 12,000 SF retail building.",
+               "permit_type": "Commercial Mechanical Permit", "address": "100 MAIN ST"}
+    assert clean_title(note, project).startswith("Ground-up construction")
+    # No description: the permit type is next.
+    assert clean_title(note, {"permit_type": "Commercial Mechanical Permit"}) == (
+        "Commercial Mechanical Permit"
+    )
+    # No description or permit type: the address, clearly labelled as a fallback.
+    assert clean_title(note, {"address": "100 MAIN ST"}) == "New commercial construction at 100 MAIN ST"
+
+
+def test_clean_title_does_not_invent_a_fallback():
+    assert clean_title("QTEAM INHOUSE MEETING TBD", None) == ""
+    assert clean_title(None, {"address": "100 MAIN ST"}) == "New commercial construction at 100 MAIN ST"
+
+
+# --- pluralise: number agreement lives in one place -----------------------------
+
+def test_pluralise_agrees_the_noun():
+    assert pluralise(1, "configured city", "configured cities") == "1 configured city"
+    assert pluralise(18, "configured city", "configured cities") == "18 configured cities"
+    assert pluralise(0, "project") == "0 projects"
+    assert pluralise(1, "project") == "1 project"
+    assert pluralise(133, "project") == "133 projects"
+
+
+def test_pluralise_handles_template_string_counts():
+    # A template context can hand the count over as a string; agreement must still work.
+    assert pluralise("1", "city", "cities") == "1 city"
+    assert pluralise("15", "city", "cities") == "15 cities"
+
+
+def test_pluralise_never_invents_a_number_for_a_missing_count():
+    # An absent count must not render as "0 ..." or "None ..."; it degrades to the bare noun.
+    assert pluralise(None, "city", "cities") == "city"
+    assert pluralise("", "city", "cities") == "city"

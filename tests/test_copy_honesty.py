@@ -49,6 +49,39 @@ def test_no_template_contains_a_banned_overclaim(phrase, why):
     assert offenders == [], f"'{phrase}' found in {offenders}: {why}"
 
 
+def test_no_template_says_last_verified():
+    """A record is collected, not verified.
+
+    "Last verified <Month>" implies a verification act and hides the record's real age behind a
+    month. The observation timestamp is what BuildScope actually holds, so the label reads
+    "Collected <full date>". A reintroduced "verified" label on a record date is a defect.
+    """
+    offenders = [
+        name for name, text in _template_texts()
+        if "last verified" in text or "verified {{ project.last_verified" in text
+    ]
+    assert offenders == [], f"'Last verified' reintroduced in {offenders}"
+
+
+def test_record_foot_states_the_collection_date(client, app_db):
+    from oppintel.db import Database
+    from oppintel.slugs import slug_for_project
+
+    db = Database(app_db.config["APP_CONFIG"].database_path)
+    try:
+        row = db.conn.execute(
+            "SELECT id FROM project WHERE address LIKE ? LIMIT 1", ("10 ROSS AVE%",)
+        ).fetchone()
+        assert row, "no fixture project at 10 ROSS AVE"
+        slug = slug_for_project(db, row["id"])
+    finally:
+        db.close()
+
+    body = client.get(f"/opportunities/{slug}").get_data(as_text=True)
+    assert "Collected" in body
+    assert "Last verified" not in body
+
+
 def test_changes_page_states_the_honest_recording_rule(client):
     """The change feed says what it actually records, not what a reader might assume."""
     body = client.get("/changes").get_data(as_text=True)

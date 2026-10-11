@@ -24,9 +24,15 @@ from typing import Any
 
 #: Fields whose value is compared between passes. Chosen because each is a field the product
 #: displays and draws a conclusion from, so a change to it is meaningful to a contractor.
+#:
+#: `classification_score` is deliberately absent. It is derived from the record and from the
+#: observation date (its recency points fall away once a permit is more than 180 days old), so
+#: it drifts on its own as the calendar advances even when the source data is unchanged. Tracking
+#: it manufactured an "evidence updated" event for every project crossing that boundary on each
+#: pass — a timestamp artefact, not a source change. The classification label, which does move
+#: when the evidence behind it changes, is still tracked.
 TRACKED_FIELDS: tuple[tuple[str, str], ...] = (
     ("classification", "classification"),
-    ("classification_score", "classification score"),
     ("procurement_status", "procurement status"),
     ("project_status", "project status"),
     ("mechanical_evidence_tier", "mechanical evidence"),

@@ -123,7 +123,7 @@ body {
   margin: 0;
   padding: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Plus Jakarta Sans", "Inter", "Helvetica Neue", Arial, sans-serif;
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.6;
   color: var(--ink);
   background: var(--bg-soft);
@@ -264,7 +264,7 @@ a:hover {
 }
 .data-table thead th,
 .table thead th {
-  font-size: 0.75rem;
+  font-size: 0.82rem;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   color: var(--slate-600);
@@ -349,7 +349,7 @@ p:last-child {
 }
 
 .small {
-  font-size: 0.84rem;
+  font-size: 0.875rem;
 }
 
 .font-semibold {
@@ -454,7 +454,7 @@ p:last-child {
 }
 
 .brand-text small {
-  font-size: 0.65rem;
+  font-size: 0.82rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--slate-400);
@@ -534,7 +534,7 @@ p:last-child {
   display: inline-block;
   background: var(--gold-500);
   color: #ffffff;
-  font-size: 0.7rem;
+  font-size: 0.82rem;
   font-weight: 750;
   padding: 1px 6px;
   border-radius: 10px;
@@ -713,7 +713,7 @@ body.drawer-open .mobile-drawer {
   padding: 16px 20px;
   background: rgba(0, 0, 0, 0.25);
   border-top: 1px solid var(--line-dark);
-  font-size: 0.76rem;
+  font-size: 0.82rem;
   color: var(--slate-300);
 }
 /* .muted is slate-500 (4.2:1 on this near-black panel); slate-300 is 13:1. */
@@ -893,7 +893,7 @@ body.drawer-open .mobile-drawer {
 .hero-tagline-kicker {
   display: inline-flex;
   align-items: center;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   font-weight: 750;
@@ -1093,12 +1093,39 @@ body.drawer-open .mobile-drawer {
 }
 
 .stat-label {
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 650;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   color: var(--slate-500);
   margin-top: 4px;
+}
+
+/* Trends cards: number + label lead, one-line basis, definition in a disclosure. Cards share a
+   row height and fall to a 2x2 grid on narrow screens so the figure stays readable at 720px. */
+.stat-strip-trends {
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+  gap: 16px;
+}
+.stat-trend { gap: 2px; }
+.stat-trend .stat-secondary { color: var(--ink-muted); margin-top: 2px; }
+.stat-trend .stat-basis { margin: 8px 0 0; line-height: 1.4; }
+.stat-def { margin-top: 8px; }
+.stat-def > summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 650;
+  color: var(--navy-700);
+  padding: 4px 0;
+}
+.stat-def > summary:hover { color: var(--gold-600); }
+.stat-def > p { margin: 6px 0 0; line-height: 1.45; }
+@media (max-width: 899px) {
+  .stat-strip-trends { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stat-trend .stat-value { font-size: 1.5rem; }
+}
+@media (max-width: 520px) {
+  .stat-strip-trends { grid-template-columns: 1fr; }
 }
 
 /* ==========================================================================
@@ -1116,7 +1143,7 @@ body.drawer-open .mobile-drawer {
 .section-kicker {
   display: inline-flex;
   align-items: center;
-  font-size: 0.75rem;
+  font-size: 0.82rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   font-weight: 750;
@@ -1179,7 +1206,7 @@ body.drawer-open .mobile-drawer {
 }
 
 .chain-step-num {
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1211,6 +1238,16 @@ body.drawer-open .mobile-drawer {
   margin-top: 24px;
 }
 
+/* Markets: three cards in a two-column band leave the last one alone on its row. Centre that
+   lone card instead of letting it sit orphaned against the left edge. */
+@media (min-width: 641px) and (max-width: 1023px) {
+  .markets-grid > .card:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+    max-width: calc(50% - 10px);
+    justify-self: center;
+  }
+}
+
 /* --- Company directory card -------------------------------------------------
    The company card previously reused `.card-meta` (a single-line flex row) to
    hold a label/value list, so every value past the first was squeezed and the
@@ -1234,7 +1271,7 @@ body.drawer-open .mobile-drawer {
 }
 
 .company-facts .meta-label {
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -1327,7 +1364,7 @@ body.drawer-open .mobile-drawer {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.76rem;
+  font-size: 0.82rem;
   color: var(--slate-500);
   margin-bottom: 8px;
   flex-wrap: wrap;
@@ -1358,7 +1395,7 @@ body.drawer-open .mobile-drawer {
   gap: 6px;
   padding: 2px 9px 2px 7px;
   border-radius: 999px;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-weight: 750;
   letter-spacing: 0.02em;
   border: 1px solid transparent;
@@ -1412,6 +1449,20 @@ body.drawer-open .mobile-drawer {
   width: 100%;
   height: auto;
   display: block;
+}
+/* Draw-in: bars grow from the baseline when JS is present (the .bs-js class), staggered by the
+   per-bar --bs-bar-delay. Without JS the bars render at full height, so the chart is never empty.
+   prefers-reduced-motion removes the transform and the transition entirely. */
+.bs-js .bar-chart-bar {
+  transform: scaleY(0);
+  transform-origin: center bottom;
+  transition: transform var(--dur-480, 480ms) var(--ease-out, cubic-bezier(.22,1,.36,1));
+  transition-delay: var(--bs-bar-delay, 0ms);
+}
+.bs-js .chart-figure.bs-in .bar-chart-bar,
+.bs-js .bar-chart-bar.bs-in { transform: scaleY(1); }
+@media (prefers-reduced-motion: reduce) {
+  .bs-js .bar-chart-bar { transform: none; transition: none; }
 }
 .chart-data {
   margin-top: 8px;
@@ -1484,7 +1535,7 @@ body.drawer-open .mobile-drawer {
 }
 
 .facts dt {
-  font-size: 0.70rem;
+  font-size: 0.82rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 700;
@@ -1518,7 +1569,7 @@ body.drawer-open .mobile-drawer {
 }
 
 .why-head {
-  font-size: 0.70rem;
+  font-size: 0.82rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-weight: 750;
@@ -1557,7 +1608,7 @@ body.drawer-open .mobile-drawer {
   border-top: 1px solid var(--slate-150);
   padding-top: 12px;
   margin-top: auto;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   color: var(--slate-500);
   gap: 10px;
 }
@@ -1590,7 +1641,7 @@ body.drawer-open .mobile-drawer {
 .badge {
   display: inline-flex;
   align-items: center;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-weight: 700;
   padding: 2px 7px;
   border-radius: var(--radius-xs);
@@ -1738,7 +1789,7 @@ body.drawer-open .mobile-drawer {
   margin: 0;
 }
 .date-range-field legend {
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--slate-700);
   letter-spacing: 0.02em;
@@ -1762,7 +1813,7 @@ body.drawer-open .mobile-drawer {
   gap: 4px;
 }
 .date-input label {
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-weight: 600;
   color: var(--slate-600);
 }
@@ -1774,7 +1825,7 @@ body.drawer-open .mobile-drawer {
 }
 
 .field label {
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--slate-700);
   letter-spacing: 0.02em;
@@ -1867,7 +1918,7 @@ body.drawer-open .mobile-drawer {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -1905,7 +1956,7 @@ body.drawer-open .mobile-drawer {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -1949,7 +2000,7 @@ body.drawer-open .mobile-drawer {
 
 .auth-stat-label {
   display: block;
-  font-size: 0.68rem;
+  font-size: 0.82rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: #94a3b8;
@@ -1964,7 +2015,7 @@ body.drawer-open .mobile-drawer {
 }
 
 .auth-signals-title {
-  font-size: 0.74rem;
+  font-size: 0.82rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: #94a3b8;
@@ -1997,7 +2048,7 @@ body.drawer-open .mobile-drawer {
 }
 
 .auth-signal-city {
-  font-size: 0.74rem;
+  font-size: 0.82rem;
   color: #94a3b8;
   white-space: nowrap;
 }
@@ -2006,7 +2057,7 @@ body.drawer-open .mobile-drawer {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
 }
 
 .auth-signal-tier {
@@ -2040,7 +2091,7 @@ body.drawer-open .mobile-drawer {
   border-radius: 50%;
   background: rgba(217, 119, 6, 0.2);
   color: var(--gold-400);
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-weight: 700;
   flex-shrink: 0;
   margin-top: 2px;
@@ -2062,7 +2113,7 @@ body.drawer-open .mobile-drawer {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.76rem;
+  font-size: 0.82rem;
   color: #94a3b8;
   padding-top: 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -2129,7 +2180,7 @@ body.drawer-open .mobile-drawer {
   text-align: center;
   margin: 22px 0;
   color: var(--slate-600);
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -2251,7 +2302,7 @@ body.drawer-open .mobile-drawer {
   color: #ffffff;
 }
 
-@media (max-width: 860px) {
+@media (max-width: 899px) {
   .auth-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: 36px;
@@ -2367,7 +2418,7 @@ body.drawer-open .mobile-drawer {
 }
 
 .timeline-date {
-  font-size: 0.76rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--slate-500);
   text-transform: uppercase;
@@ -2384,7 +2435,7 @@ body.drawer-open .mobile-drawer {
 }
 
 .src-url {
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 600;
   color: var(--accent-light);
 }
@@ -2587,7 +2638,7 @@ body.drawer-open .mobile-drawer {
    heading outline h1 -> h2 without a skipped h3. */
 .footer-heading {
   color: #ffffff;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -2617,7 +2668,7 @@ body.drawer-open .mobile-drawer {
 .footer-legal {
   border-top: 1px solid var(--line-dark);
   padding-top: 24px;
-  font-size: 0.76rem;
+  font-size: 0.82rem;
   line-height: 1.6;
   color: var(--slate-400);
 }
@@ -2650,9 +2701,14 @@ body.drawer-open .mobile-drawer {
   .footer-grid {
     grid-template-columns: 1fr 1fr;
   }
+  /* The brand block is prose, not a link column: at two columns it spans the full width so it
+     is never squeezed beside a link list, and the link columns form a tidy 2x2 below it. */
+  .footer-brand {
+    grid-column: 1 / -1;
+  }
 }
 
-@media (max-width: 860px) {
+@media (max-width: 899px) {
   .mobile-filter-bar {
     display: block !important;
   }
@@ -2746,8 +2802,25 @@ body.drawer-open .mobile-drawer {
     grid-template-columns: 1fr;
   }
   .footer-grid {
-    grid-template-columns: 1fr;
-    gap: 28px;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  /* Brand prose spans the full width; the link columns flow two-up (Product | Coverage). */
+  .footer-brand {
+    grid-column: 1 / -1;
+  }
+  /* The final link column (Workspace) spans the row and lays its few links two-up, so the
+     grid never leaves a half-empty row. */
+  .footer-grid > div:not(.footer-brand):last-child {
+    grid-column: 1 / -1;
+  }
+  .footer-grid > div:not(.footer-brand):last-child ul {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 20px;
+  }
+  .footer-legal {
+    font-size: 0.8rem;
   }
   .feed-toolbar {
     flex-direction: column;
@@ -2833,8 +2906,15 @@ body.drawer-open .mobile-drawer {
   z-index: 60; background: var(--white); border: 1px solid var(--slate-200);
   border-radius: var(--radius-md); box-shadow: 0 18px 48px rgba(2, 6, 23, .22);
   padding: 6px; margin-top: 6px; max-height: 340px; overflow: auto;
+  /* Anchored popover: absolute inside the position:relative .bs-combobox wrapper.
+     Without a position it defaulted to static, so when controls.js reparented it to
+     <body> it flowed at the end of the document — below the footer (U1 bug). */
+  position: absolute; top: 100%; left: 0; right: 0; width: auto;
 }
 .bs-combobox-pop[hidden] { display: none; }
+/* Backdrop for the mobile bottom-sheet form of the popup. */
+.bs-combobox-backdrop { position: fixed; inset: 0; z-index: 1290; background: rgba(15, 23, 42, .5); }
+.bs-combobox-backdrop[hidden] { display: none; }
 .bs-combobox-searchwrap { position: sticky; top: 0; background: var(--white); padding: 6px 6px 10px; }
 .bs-combobox-search { width: 100%; padding: 10px 12px; min-height: 44px; font: inherit; border: 1px solid var(--slate-300); border-radius: var(--radius-sm); }
 .bs-listbox { list-style: none; margin: 0; padding: 0; }
@@ -2847,9 +2927,12 @@ body.drawer-open .mobile-drawer {
 .bs-option-count { flex: 0 0 auto; color: var(--slate-500); font-variant-numeric: tabular-nums; font-size: .85em; }
 .bs-combobox-footer { display: flex; gap: 8px; justify-content: flex-end; padding: 8px 6px 4px; border-top: 1px solid var(--slate-200); margin-top: 6px; }
 
-/* Mobile: the popup becomes a branded bottom sheet (light surface, not the black system list) */
-@media (max-width: 720px) {
-  .bs-combobox-pop { position: fixed; left: 0; right: 0; bottom: 0; margin: 0; max-height: 80vh;
+/* Mobile/tablet (<900px): the popup becomes a branded bottom sheet (light surface, not the black
+   system list). 899 matches the layout breakpoint below which the whole site uses mobile
+   patterns (filter sheet, drawer nav), so the picker behaves as a sheet at 720px too. */
+@media (max-width: 899px) {
+  .bs-combobox-pop { position: fixed; left: 0; right: 0; bottom: 0; top: auto; width: auto;
+    margin: 0; max-height: 80vh; z-index: 1300;
     border-radius: var(--sheet-radius) var(--sheet-radius) 0 0; padding: 10px 10px calc(10px + env(safe-area-inset-bottom)); }
   body.sheet-open .bs-combobox-pop { animation: bs-sheet-up var(--dur-320) var(--ease-out); }
   .bs-combobox-pop::before { content: ""; display: block; width: 40px; height: 4px; border-radius: 999px; background: var(--slate-300); margin: 2px auto 8px; }
@@ -2941,4 +3024,159 @@ body.drawer-open .mobile-drawer {
   text-decoration: underline;
   text-underline-offset: 2px;
   white-space: nowrap;
+}
+
+
+/* ==========================================================================
+   U2 — Segmented control (replaces visible native <select>s: Sort, etc.)
+   A real radio group styled as a segmented pill; submits as a normal form
+   field, so it works with JS off and needs no island.
+   ========================================================================== */
+.seg-control {
+  display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 3px;
+  background: var(--slate-100); border: 1px solid var(--slate-200);
+  border-radius: var(--radius-sm);
+}
+.seg-control .seg-opt { position: relative; display: inline-flex; }
+.seg-control .seg-opt input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.seg-control .seg-opt span {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 38px; padding: 8px 12px; border-radius: var(--radius-xs);
+  font-size: 0.82rem; font-weight: 600; color: var(--slate-600);
+  white-space: nowrap; cursor: pointer; transition: background var(--dur-120), color var(--dur-120);
+}
+.seg-control .seg-opt input:checked + span { background: var(--white); color: var(--navy-900); box-shadow: var(--shadow-xs); }
+.seg-control .seg-opt input:focus-visible + span { outline: 2px solid var(--gold-500); outline-offset: 2px; }
+.seg-compact .seg-opt span { min-height: 32px; padding: 6px 10px; font-size: 0.78rem; }
+.feed-sort-label { font-size: 0.82rem; font-weight: 650; color: var(--slate-600); }
+@media (max-width: 899px), (hover: none) and (pointer: coarse) {
+  .seg-control .seg-opt span { min-height: 44px; }
+}
+.date-input input[type="date"] { min-height: 44px; width: 100%; }
+.select-inline, .select-small { min-height: 44px; }
+
+
+/* ==========================================================================
+   U6 — Mobile touch targets. WCAG 2.5.5 / platform guidance: an interactive
+   control must be at least 44x44 CSS px. Inline links inside a sentence are
+   exempt (WCAG 2.5.5 inline exception), so the target here is block/standalone
+   links and controls: breadcrumbs, footer nav, filter chips, pagination, the
+   date-preset buttons, and the mobile menu/drawer controls.
+   ========================================================================== */
+@media (max-width: 899px), (hover: none) and (pointer: coarse) {
+  /* Standalone nav/footer links get a real hit area without changing the type. */
+  .site-footer a,
+  .crumb a,
+  .breadcrumbs a,
+  .pagination a,
+  .pagination button,
+  .pagination .page-link,
+  .mobile-drawer a,
+  .mobile-drawer button,
+  .mobile-menu-btn,
+  .applied-filter-bar a,
+  .applied-filter-bar button,
+  .chip,
+  .filter-chip,
+  .src-open {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+  /* Footer list items already stack; give the link the full row height. */
+  .site-footer li { margin-bottom: 0; }
+  .site-footer a { padding-top: 10px; padding-bottom: 10px; }
+  /* Small action buttons used for presets/quick links. */
+  .btn-small, .btn.btn-small { min-height: 44px; }
+  /* Any date input or native select left in the flow. */
+  input[type="date"], input[type="time"], select:not(.bs-select-native) { min-height: 44px; }
+  /* Result-card action links ("Open", "Save") are standalone controls. */
+  .card-actions a, .card-actions button, .card-foot a, .card-foot button { min-height: 44px; }
+}
+
+
+/* U6 — standalone title/rank links get a 44px hit area on touch (they are not inline prose). */
+@media (max-width: 899px), (hover: none) and (pointer: coarse) {
+  .company-card .card-title a,
+  .opportunity-card .card-title a,
+  .rank-list a { display: inline-flex; align-items: center; min-height: 44px; }
+  .auth-card a.auth-link-primary, .auth-card a.muted.small { display: inline-flex; align-items: center; min-height: 44px; }
+}
+
+/* U8 — company card long list fields (Active Footprint, Specializations) are clamped to a
+   readable three lines; the full value stays available as a native tooltip. Nothing is
+   truncated in the data, only in the summary card. */
+.company-facts .meta-val[data-clamp] {
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+
+/* U6 — remaining standalone links: report card titles, market table city links, and the
+   auth helper links are controls, not inline prose, so they meet the 44px target too. */
+@media (max-width: 899px), (hover: none) and (pointer: coarse) {
+  .card h3 a,
+  .table-wrap td a,
+  .auth-panel a.auth-link-primary,
+  a.muted.small { display: inline-flex; align-items: center; min-height: 44px; }
+  /* A market table row is a list of cities; give the whole cell a comfortable row. */
+  .table-wrap td { padding-top: 8px; padding-bottom: 8px; }
+}
+
+
+/* U6 — "Explore further" list links are standalone destinations, not inline prose. */
+@media (max-width: 899px), (hover: none) and (pointer: coarse) {
+  .related-list a, .auth-card-footer a { display: inline-flex; align-items: center; min-height: 44px; }
+}
+
+
+/* U0 — auth stat strip: `1fr` is `minmax(auto,1fr)`, so a long label or a big
+   tabular number can push a track past the viewport (observed at 360px:
+   .auth-stat-item right=368 > 360). minmax(0,1fr) lets the tracks shrink, and
+   at very narrow widths the three stats stack instead of squeezing. */
+.auth-stats-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 430px) {
+  .auth-stats-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .auth-stat-value { font-size: 1.2rem; }
+}
+
+
+/* U3 — card titles clamp to three lines so a long work description cannot push the facts off the
+   card. The full title is in the tooltip (title= on .card-title) and on the dossier. */
+.opportunity-card .card-title {
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+
+/* Motion behaviour 7 - skeleton shimmer while a results fragment loads.
+   Filters submit as a normal GET, so the browser paints the next page; a shimmer skeleton is
+   shown on submit so the wait reads as a load, not a freeze. Motion-gated: it only exists under
+   .bs-js (JS on) and never renders without JS or with prefers-reduced-motion. It is a
+   non-animated equivalent - with reduced motion the skeleton is a static grey placeholder. */
+.bs-skeleton { display: none; }
+.bs-js .feed-main-content.is-loading > *:not(.bs-skeleton) { display: none; }
+.bs-js .feed-main-content.is-loading > .bs-skeleton { display: block; }
+.bs-skeleton-card {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 14px;
+}
+.bs-skeleton-line {
+  height: 12px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 10px;
+  background: linear-gradient(90deg, var(--slate-200) 25%, var(--slate-100) 37%, var(--slate-200) 63%);
+  background-size: 400% 100%;
+  animation: bs-shimmer 1.4s ease infinite;
+}
+.bs-skeleton-line.w-40 { width: 40%; }
+.bs-skeleton-line.w-70 { width: 70%; }
+.bs-skeleton-line.w-90 { width: 90%; }
+@keyframes bs-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bs-skeleton-line { animation: none; background: var(--slate-200); }
 }

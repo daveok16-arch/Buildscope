@@ -1,0 +1,116 @@
+{
+  "footer_390": {
+    "cols": [
+      {
+        "cls": "footer-brand",
+        "w": 358,
+        "top": -334
+      },
+      {
+        "cls": "",
+        "w": 167,
+        "top": -129
+      },
+      {
+        "cls": "",
+        "w": 167,
+        "top": -129
+      },
+      {
+        "cls": "",
+        "w": 358,
+        "top": 391
+      }
+    ],
+    "grid_cols": "167px 167px",
+    "brand_span": "1 / -1",
+    "legal_font": "12.8px"
+  },
+  "markets_390": {
+    "total": 3,
+    "columns": 1,
+    "rows": [
+      1,
+      1,
+      1
+    ],
+    "last_left_gap": 0,
+    "last_right_gap": 0,
+    "orphans": 0
+  },
+  "footer_720": {
+    "cols": [
+      {
+        "cls": "footer-brand",
+        "w": 670,
+        "top": 167
+      },
+      {
+        "cls": "",
+        "w": 320,
+        "top": 376
+      },
+      {
+        "cls": "",
+        "w": 320,
+        "top": 376
+      },
+      {
+        "cls": "",
+        "w": 320,
+        "top": 882
+      }
+    ],
+    "grid_cols": "320.406px 320.422px",
+    "brand_span": "1 / -1",
+    "legal_font": "13.12px"
+  },
+  "markets_720": {
+    "total": 3,
+    "columns": 2,
+    "rows": [
+      2,
+      1
+    ],
+    "last_left_gap": 172,
+    "last_right_gap": 172,
+    "orphans": 0
+  },
+  "footer_1440": {
+    "cols": [
+      {
+        "cls": "footer-brand",
+        "w": 421,
+        "top": 270
+      },
+      {
+        "cls": "",
+        "w": 210,
+        "top": 270
+      },
+      {
+        "cls": "",
+        "w": 210,
+        "top": 270
+      },
+      {
+        "cls": "",
+        "w": 210,
+        "top": 270
+      }
+    ],
+    "grid_cols": "420.797px 210.391px 210.406px 210.391px",
+    "brand_span": "auto",
+    "legal_font": "13.12px"
+  },
+  "markets_1440": {
+    "total": 3,
+    "columns": 3,
+    "rows": [
+      3
+    ],
+    "last_left_gap": 803,
+    "last_right_gap": 0,
+    "orphans": 0
+  }
+}

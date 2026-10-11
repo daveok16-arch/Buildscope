@@ -21,7 +21,7 @@ rules are deliberately conservative:
 from __future__ import annotations
 
 import re
-from typing import Any, Iterable, Sequence
+from typing import Any, Iterable, Mapping, Sequence
 from urllib.parse import urlsplit
 
 #: Tokens that are acronyms or brand-cased words and must stay upper-cased. Trade terms first
@@ -60,6 +60,20 @@ def _collapse_whitespace(text: str) -> str:
     # Municipal exports often produce "100 CRESCENT CT , 550" — remove the space before the comma.
     # A period too: "DWELLING UNITS . INCLUDING" is the same artifact, not a decimal.
     text = re.sub(r"\s+([,;:.])", r"\1", text)
+    return text
+
+
+def _collapse_repeated_punctuation(text: str) -> str:
+    """Reduce runs of the same punctuation mark to a single mark and tidy the spacing.
+
+    "X TEAM ,,, " is a source artifact, not prose. A run of slashes becomes a spaced slash so it
+    reads as a clause separator ("PB26-12945/// Addition" -> "PB26-12945 / Addition"), which lets
+    the reference-clause strip below see the boundary.
+    """
+    text = re.sub(r"\s*/{2,}\s*", " / ", text)
+    text = _REPEATED_PUNCT_RE.sub(r"\1", text)
+    # A mark left standing between two spaces ("a , b") is a stray separator, not punctuation.
+    text = re.sub(r"\s+([,;:/|])\s+", r" \1 ", text)
     return text
 
 
@@ -154,21 +168,53 @@ def titlecase(value: Any) -> str:
     return _titlecase_shouting(text)
 
 
-#: Leading meeting/administration markers that a source prepends to a work description and that
-#: are not part of the project's identity. Matched case-insensitively at the start of the string.
-_TITLE_PREFIXES: tuple[re.Pattern[str], ...] = (
-    re.compile(r"^\s*q\s*team\s*meeting\s*(?:tbd|tba)?\s*[-–—:]\s*", re.IGNORECASE),
-    re.compile(r"^\s*qteam\s*meeting\s*(?:tbd|tba)?\s*[-–—:]\s*", re.IGNORECASE),
-    re.compile(r"^\s*q\s*team\s*(?:inhouse|in-house)\s*[-–—:]\s*", re.IGNORECASE),
-    re.compile(r"^\s*qteam\s*(?:inhouse|in-house)\s*[-–—:]\s*", re.IGNORECASE),
-    re.compile(r"^\s*(?:pre[-\s]?application|pre[-\s]?app)\s*meeting\s*[-–—:]\s*", re.IGNORECASE),
-    re.compile(r"^\s*meeting\s*(?:tbd|tba)?\s*[-–—:]\s*", re.IGNORECASE),
+#: A leading internal marker that a source prepends to a work description: "QTEAM", "X TEAM",
+#: "Q-Team". Matched at the start only. The separator after it is handled separately, because the
+#: same marker is published as "QTEAM MEETING TBD -", "X TEAM ///" and "X-Team ,,,".
+_MARKER_TOKEN_RE = re.compile(r"^\s*(?:q\s*-?\s*team|x\s*-?\s*team)\b", re.IGNORECASE)
+
+#: Administration words that follow a marker and are not part of the identity.
+_MARKER_NOTE_RE = re.compile(r"^(?:meeting|inhouse|in-house|tbd|tba)\b[\s,;:/\-–—]*", re.IGNORECASE)
+
+#: A date (with an optional time parenthetical) that follows "MEETING", as in "MEETING 10/27/2026
+#: (9AM) -". Consumed so the marker strip reaches the real title.
+_MARKER_DATE_RE = re.compile(r"^\d{1,4}[/\-.]\d{1,2}(?:[/\-.]\d{2,4})?\s*(?:\([^)]*\))?[\s,;:/\-–—]*")
+
+#: Non-team administration markers, each requiring a separator so the word is not removed from a
+#: real name that merely begins with it.
+_NON_TEAM_PREFIXES: tuple[re.Pattern[str], ...] = (
+    re.compile(r"^\s*(?:pre[-\s]?application|pre[-\s]?app)\s*meeting\s*[\-–—:/,]{1,}\s*",
+               re.IGNORECASE),
+    re.compile(r"^\s*meeting\s*(?:tbd|tba)?\s*[\-–—:/,]{1,}\s*", re.IGNORECASE),
 )
+
+#: Runs of three or more identical punctuation marks ("X TEAM ,,, "), a source artifact rather
+#: than prose. Collapsed to a single mark (or removed when it stands alone between spaces).
+_REPEATED_PUNCT_RE = re.compile(r"([,;:/\\|.\-–—])\1{2,}")
+
+#: Words that, present in a cleaned title, mark it as an internal note rather than an identity.
+_NOTE_WORDS: frozenset[str] = frozenset({"meeting", "tbd", "tba", "inhouse", "in-house"})
+
+#: A compact permit number ("PB26-12945", "PO26-02663"): a short letter prefix plus a digit run.
+_PERMIT_REF_RE = re.compile(r"^[A-Za-z]{1,4}\d{2,4}[-/]\d{2,6}$")
+
+#: A leading cross-reference phrase inside a clause: "Refer to PB26-12945", "see PO26-02663", or a
+#: bare permit number at the start of a clause. Only the reference phrase is removed, so scope text
+#: that follows it ("Refer to PB26-13456 THE PROJECT CONSISTS OF ...") is kept.
+_LEADING_REF_RE = re.compile(
+    r"^(?:(?:refer(?:\s+to)?|see|per|cf|re)\s+)?"
+    r"[A-Za-z]{1,4}\d{2,4}[-/]\d{2,6}\b[\s.,;:/\-–—]*",
+    re.IGNORECASE,
+)
+
+#: How many marker/administration/date rounds the prefix strip will run before giving up.
+_MARKER_SCAN_STEPS = 4
 
 #: A lowercase letter immediately followed by a digit ("is16,297"). The two tokens ran together
 #: when the source concatenated them. Restricted to a lower-case letter so an identifier such as
-#: "PB25-09094" (upper-case letter + digit) and a capacity ("240V") are never split.
-_LETTER_DIGIT_RE = re.compile(r"([a-z])(\d)")
+#: "PB25-09094" (upper-case letter + digit) and a capacity ("240V") are never split, and `x` is
+#: excluded so a dimension ("12x24x24", "2x4") is not broken.
+_LETTER_DIGIT_RE = re.compile(r"([a-wyz])(\d)")
 
 #: A verbose work description longer than this is reduced to its first sentence. Below it, the
 #: whole (short) text is kept, so a compact title is never truncated.
@@ -225,13 +271,60 @@ def _strip_title_prefix(text: str) -> str:
     """Drop a leading meeting/administration marker that is not part of the project identity.
 
     "QTEAM MEETING TBD - Ground-up ..." -> "Ground-up ...". Only a marker at the very start is
-    removed; the same words inside a description are left alone.
+    removed; the same words inside a description are left alone. A marker may be followed by
+    administration words ("MEETING", "INHOUSE"), a meeting date ("MEETING 10/27/2026 (9AM)"), and
+    a run of separators ("-", "///", ",,,"), in any combination, so the strip loops until none of
+    those is left. The separator is optional: a bare "X TEAM EV Chargers" loses just the marker.
     """
-    for pattern in _TITLE_PREFIXES:
-        stripped = pattern.sub("", text, count=1)
-        if stripped != text:
-            return stripped.lstrip()
-    return text
+    stripped = text.lstrip()
+    for _ in range(_MARKER_SCAN_STEPS):
+        marker = _MARKER_TOKEN_RE.match(stripped)
+        if marker:
+            stripped = stripped[marker.end():].lstrip()
+        stripped = _MARKER_NOTE_RE.sub("", stripped, count=1).lstrip()
+        stripped = _MARKER_DATE_RE.sub("", stripped, count=1).lstrip()
+        stripped = re.sub(r"^[\-–—:/,;]{1,}\s*", "", stripped)
+        if not (_MARKER_TOKEN_RE.match(stripped) or _MARKER_NOTE_RE.match(stripped)):
+            break
+    for pattern in _NON_TEAM_PREFIXES:
+        stripped = pattern.sub("", stripped, count=1)
+    return stripped
+
+
+def _looks_like_a_note(text: str) -> bool:
+    """Whether a cleaned title still reads as an internal note rather than a project identity.
+
+    True when it is empty, names a note word ("meeting", "TBD", "inhouse"), or is too short to
+    carry an identity. The caller then falls back to the work description or the address rather
+    than publishing the note. Deliberately conservative: real prose and permit-number-shaped names
+    are never classified as notes.
+    """
+    tokens = [t.strip(".,;:-/()") for t in text.split()]
+    if not tokens:
+        return True
+    if any(token.lower() in _NOTE_WORDS for token in tokens):
+        return True
+    letters = sum(1 for ch in text if ch.isalpha())
+    if letters < 4:
+        return True
+    return False
+
+
+def _strip_reference_clauses(text: str) -> str:
+    """Drop a leading permit cross-reference ("Refer to PB26-12945") from a title or clause.
+
+    A work description sometimes opens with a cross-reference to a related permit rather than the
+    scope, at the start or in the middle ("Dumpster Enclosure / Refer to PB26-12945 / ..."). Only
+    the reference phrase is removed; scope text that follows it in the same clause ("Refer to
+    PB26-13456 THE PROJECT CONSISTS OF ...") is kept.
+    """
+    parts = re.split(r"\s+/\s+", text)
+    kept = []
+    for part in parts:
+        stripped = _LEADING_REF_RE.sub("", part, count=1).lstrip(" .,;:-/").strip()
+        if stripped:
+            kept.append(stripped)
+    return " / ".join(kept) if len(kept) > 1 else (kept[0] if kept else "")
 
 
 def _repair_run_together_figure(text: str) -> str:
@@ -244,26 +337,60 @@ def _repair_run_together_figure(text: str) -> str:
     return _LETTER_DIGIT_RE.sub(r"\1 \2", text)
 
 
-def clean_title(value: Any) -> str:
+def _fallback_title(project: Mapping[str, Any] | None) -> str:
+    """A headline for a record whose stored name is an internal note rather than an identity.
+
+    Prefers a usable work description, then the permit type, then the address. Never invents a
+    value: every branch reads a field the record actually carries, and an empty result is returned
+    so the caller can fall back further.
+    """
+    if not project:
+        return ""
+    description = str(project.get("work_description") or "").strip()
+    if description:
+        cleaned = _repair_run_together_figure(_collapse_whitespace(description))
+        if not _looks_like_a_note(cleaned):
+            return cleaned
+    permit_type = str(project.get("permit_type") or "").strip()
+    if permit_type:
+        return _repair_run_together_figure(_collapse_whitespace(permit_type))
+    return ""
+
+
+def clean_title(value: Any, project: Mapping[str, Any] | None = None) -> str:
     """Produce a clean headline from a raw project name for the display layer only.
 
     Applies, in order: whitespace collapse and title-casing (:func:`titlecase`), removal of a
-    leading meeting-note marker, repair of a figure run into the preceding word, and reduction of
-    an over-long prose description to its first sentence. The stored value is never changed; this
-    runs at render time.
+    leading meeting-note marker and of repeated-punctuation artifacts, repair of a figure run into
+    the preceding word, removal of a leading permit cross-reference clause, and reduction of an
+    over-long prose description to its first sentence. If the result still reads as a note, the
+    fallback is the work description, the permit type or the address (from ``project``), then
+    "New commercial construction at <address>". The stored value is never changed; this runs at
+    render time.
 
     Returns an empty string for a missing value so a template can fall back to the address.
     """
     text = titlecase(value)
-    if not text:
-        return ""
-    text = _strip_title_prefix(text)
-    text = _repair_run_together_figure(text)
-    text = _summarise_verbose_title(text)
-    # A separator left dangling at the end ("... Avenue -") reads as an unfinished headline.
-    text = re.sub(r"\s*[-–—:;,]\s*$", "", text).strip()
-    # Restore the spaced figure after a summary so "16,297 SF" stays legible if it was rejoined.
-    return text
+    if text:
+        text = _collapse_repeated_punctuation(text)
+        text = _strip_title_prefix(text)
+        text = _strip_reference_clauses(text)
+        text = _repair_run_together_figure(text)
+        text = _summarise_verbose_title(text)
+        # A separator left dangling at the end ("... Avenue -") reads as an unfinished headline.
+        text = re.sub(r"\s*[-–—:;,/]\s*$", "", text).strip()
+
+    if text and not _looks_like_a_note(text):
+        return text
+
+    fallback = _fallback_title(project)
+    if fallback:
+        return fallback
+    if project:
+        address = str(project.get("address") or "").strip()
+        if address:
+            return f"New commercial construction at {address}"
+    return ""
 
 
 def domain_of(value: Any) -> str:
@@ -319,6 +446,21 @@ def join_missing(labels: Iterable[str]) -> str:
     if len(items) == 1:
         return items[0]
     return f"{', '.join(items[:-1])} and {items[-1]}"
+
+
+def pluralise(count: Any, singular: str, plural: str | None = None) -> str:
+    """A counted noun with the verb agreed to it: "1 city", "3 cities".
+
+    One place owns number agreement so a template cannot print "1 cities" or a stray
+    "city(s)". ``plural`` defaults to ``singular + "s"``; pass it for irregular nouns
+    ("country" -> "countries"). ``count`` may be a string from a template context.
+    """
+    try:
+        n = int(count)
+    except (TypeError, ValueError):
+        return singular
+    word = singular if n == 1 else (plural if plural is not None else singular + "s")
+    return f"{n} {word}"
 
 
 def split_facts(

@@ -258,6 +258,26 @@ def test_mechanical_evidence_gain_is_classified_as_added():
     assert changes[0].is_notifiable
 
 
+def test_derived_classification_score_is_not_a_tracked_change():
+    """A derived, time-dependent field must not manufacture a change event.
+
+    The classification score depends on the observation date (its recency points expire after
+    180 days), so it drifts with the calendar even when the source data is unchanged. Tracking
+    it produced an "evidence updated" event for every project crossing that boundary on each
+    pass. The score is intentionally absent from TRACKED_FIELDS; the classification label is not.
+    """
+    from oppintel.changes import TRACKED_FIELDS
+
+    tracked = {name for name, _ in TRACKED_FIELDS}
+    assert "classification_score" not in tracked
+    assert "classification" in tracked
+
+    previous = {"classification": "MEDIUM", "classification_score": 72}
+    current = {"classification": "MEDIUM", "classification_score": 55}
+    changes = diff_project({"id": 1, **current}, previous)
+    assert changes == [], "a score-only drift with the same label must not be an event"
+
+
 def test_state_hash_is_stable_across_key_order():
     assert state_hash({"a": 1, "b": 2}) == state_hash({"b": 2, "a": 1})
 

@@ -55,7 +55,7 @@ def test_source_link_shows_a_domain_and_an_open_affordance(client, app_db):
 
 def test_last_verified_is_displayed(client, app_db):
     body = _body(client, _slug_for(app_db, address="10 ROSS AVE"))
-    assert "Last verified" in body
+    assert "Collected" in body
 
 
 # --- WP3 M4: the dossier states facts, not a generated interpretation --------------

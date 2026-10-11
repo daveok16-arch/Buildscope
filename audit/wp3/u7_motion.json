@@ -1,0 +1,136 @@
+{
+  "home": {
+    "bs_js": true,
+    "h1_visible": true,
+    "h1": "See the work before the work begins.",
+    "reveal": {
+      "total": 7,
+      "animated": 7,
+      "settled": 4
+    },
+    "settled": {
+      "settled_after_scroll": 7,
+      "still_invisible": 0
+    },
+    "counts": [
+      {
+        "target": "133",
+        "text": "133"
+      },
+      {
+        "target": "8",
+        "text": "8"
+      },
+      {
+        "target": "236",
+        "text": "236"
+      },
+      {
+        "target": "15",
+        "text": "15"
+      }
+    ]
+  },
+  "opportunities": {
+    "bs_js": true,
+    "h1_visible": true,
+    "h1": "Opportunity Feed",
+    "reveal": {
+      "total": 20,
+      "animated": 20,
+      "settled": 2
+    },
+    "settled": {
+      "settled_after_scroll": 20,
+      "still_invisible": 0
+    },
+    "counts": []
+  },
+  "companies": {
+    "bs_js": true,
+    "h1_visible": true,
+    "h1": "Companies & Project Stakeholders",
+    "reveal": {
+      "total": 59,
+      "animated": 59,
+      "settled": 4
+    },
+    "settled": {
+      "settled_after_scroll": 59,
+      "still_invisible": 0
+    },
+    "counts": []
+  },
+  "trends": {
+    "bs_js": true,
+    "h1_visible": true,
+    "h1": "Trend Radar",
+    "reveal": {
+      "total": 1,
+      "animated": 1,
+      "settled": 0
+    },
+    "settled": {
+      "settled_after_scroll": 1,
+      "still_invisible": 0
+    },
+    "counts": []
+  },
+  "detail": {
+    "bs_js": true,
+    "h1_visible": true,
+    "h1": "2 Story Restaurant in Uptown on McKinney",
+    "reveal": {
+      "total": 0,
+      "animated": 0,
+      "settled": 0
+    },
+    "settled": {
+      "settled_after_scroll": 0,
+      "still_invisible": 0
+    },
+    "counts": []
+  },
+  "console_errors_js_on": [],
+  "sticky_header": {
+    "compact_at_top": false,
+    "compact_after_scroll": true
+  },
+  "skeleton_on_submit": true,
+  "reduced_motion": {
+    "settled_immediately": true,
+    "bar_transform": "none"
+  },
+  "no_js": {
+    "home": {
+      "has_js_class": false,
+      "h1": true,
+      "cards": 3,
+      "native_selects_visible": 0
+    },
+    "opportunities": {
+      "has_js_class": false,
+      "h1": true,
+      "cards": 20,
+      "native_selects_visible": 6
+    },
+    "companies": {
+      "has_js_class": false,
+      "h1": true,
+      "cards": 59,
+      "native_selects_visible": 2
+    },
+    "trends": {
+      "has_js_class": false,
+      "h1": true,
+      "cards": 0,
+      "native_selects_visible": 0
+    },
+    "detail": {
+      "has_js_class": false,
+      "h1": true,
+      "cards": 0,
+      "native_selects_visible": 0
+    }
+  }
+}

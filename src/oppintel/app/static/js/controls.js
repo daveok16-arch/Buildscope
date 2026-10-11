@@ -103,24 +103,46 @@
       activeIndex = -1;
     }
     var popHome = wrap;   // where the popup belongs in the DOM when closed
+    var backdrop = null;  // created on first mobile open, so the sheet is dismissable
+    var MOBILE = '(max-width: 899px)';
+    function isMobile() { return window.matchMedia(MOBILE).matches; }
+    function ensureBackdrop() {
+      if (backdrop) return backdrop;
+      backdrop = el('div', 'bs-combobox-backdrop', { hidden: '', 'aria-hidden': 'true' });
+      backdrop.addEventListener('click', function () { close(true); });
+      return backdrop;
+    }
     function open() {
-      // Reparent to <body>: a transformed/filtered ancestor (the mobile filter sheet) would
-      // otherwise become the containing block and break the fixed bottom-sheet positioning.
-      document.body.appendChild(pop);
       pop.hidden = false;
       trigger.setAttribute('aria-expanded', 'true');
       wrap.classList.add('is-open');
       if (search) search.value = '';
       renderList();
-      if (search) { search.focus(); }
-      else {
-        var selIdx = visible.findIndex(function (o) { return o.selected; });
-        setActive(selIdx >= 0 ? selIdx : 0);
+      var mobile = isMobile();
+      if (mobile) {
+        // Bottom sheet: reparent to <body> so a transformed/filtered ancestor (the mobile
+        // filter sheet) cannot become the containing block and break fixed positioning, and
+        // add a backdrop + focus trap.
+        document.body.appendChild(pop);
+        var bd = ensureBackdrop();
+        document.body.appendChild(bd);
+        bd.hidden = false;
+        if (window.BSDialog) {
+          window.BSDialog.open({ trigger: trigger, panel: pop, backdrop: bd, bodyClass: 'sheet-open', dialogRole: true });
+          pop._bsDialogManaged = true;
+        }
+      } else {
+        // Desktop/tablet: the popover stays inside its position:relative wrapper and is
+        // anchored under the trigger. It must NOT be reparented to <body>, or it would flow
+        // at the end of the document (below the footer) — the U1 bug.
+        if (pop.parentNode !== popHome) popHome.appendChild(pop);
+        if (search) { search.focus(); }
+        else {
+          var selIdx = visible.findIndex(function (o) { return o.selected; });
+          setActive(selIdx >= 0 ? selIdx : 0);
+        }
       }
-      if (window.matchMedia('(max-width: 720px)').matches && window.BSDialog) {
-        window.BSDialog.open({ trigger: trigger, panel: pop, backdrop: null, bodyClass: 'sheet-open', dialogRole: true });
-        pop._bsDialogManaged = true;
-      }
+      if (mobile && search) search.focus();
       document.addEventListener('keydown', onKey, true);
       document.addEventListener('click', onDocClick, true);
     }
@@ -133,6 +155,7 @@
       document.removeEventListener('click', onDocClick, true);
       if (pop._bsDialogManaged && window.BSDialog && window.BSDialog.isOpen()) window.BSDialog.close();
       pop._bsDialogManaged = false;
+      if (backdrop) backdrop.hidden = true;
       if (pop.parentNode !== popHome) popHome.appendChild(pop);
       if (refocus) trigger.focus();
     }

@@ -52,7 +52,7 @@
       <h2>Top Municipalities by Project Volume</h2>
       <p class="small muted">Click any city to view its filtered opportunity directory.</p>
       
-      <div style="margin-top:16px; display:flex; flex-direction:column; gap:12px">
+      <div class="rank-list" style="margin-top:16px; display:flex; flex-direction:column; gap:12px">
         {% for c in cities %}
         {% set c_name = c.name or c.city %}
         {% set c_cnt = c.count or c.n or 0 %}
@@ -65,7 +65,7 @@
                 <span class="small muted">({{ c_mech }} with mechanical)</span>
               {% endif %}
             </span>
-            <span class="font-semibold">{{ c_cnt }} projects</span>
+            <span class="font-semibold">{{ c_cnt | pluralise('project') }}</span>
           </div>
           <div style="background:var(--slate-200); border-radius:var(--radius-xs); height:8px; overflow:hidden">
             <div style="background:var(--navy-700); height:100%; width:{{ (c_cnt / (stats.projects_public or 1) * 100) | round }}%"></div>
@@ -81,7 +81,7 @@
       <h2>Commercial Project Types</h2>
       <p class="small muted">Commercial construction projects categorized by primary occupancy use.</p>
 
-      <div style="margin-top:16px; display:flex; flex-direction:column; gap:12px">
+      <div class="rank-list" style="margin-top:16px; display:flex; flex-direction:column; gap:12px">
         {% for t in types %}
         {% set t_name = t.name or t.project_type %}
         {% set t_cnt = t.count or t.n or 0 %}

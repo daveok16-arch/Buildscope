@@ -190,6 +190,10 @@ class TrendReport:
     #: Trailing monthly counts of usable permits, for the page's activity chart. Derived from
     #: the same rows and the same exclusions as every other metric here.
     activity_series: list[dict] = field(default_factory=list)
+    #: The window labels whose metrics actually differ from another label's. A label absent here
+    #: carries the same figures as one already shown, so its toggle is disabled rather than
+    #: offering a click that changes nothing.
+    distinct_windows: tuple[str, ...] = ()
     notes: list[str] = field(default_factory=list)
 
     @property
@@ -616,6 +620,12 @@ def build_trend_report(
 
     malformed = _malformed_date_count(db, trade)
 
+    # Which window toggles actually change the figures. A label whose headline numbers match
+    # another's is disabled on the page, so a click never shows the same data twice.
+    distinct_windows = distinct_window_labels(
+        db, trade=trade, today=reference_day, labels=_ALL_WINDOWS
+    )
+
     notes: list[str] = [
         "Counts describe the records BuildScope holds and when it observed them, not the full "
         "permit volume of any city.",
@@ -651,6 +661,7 @@ def build_trend_report(
         generated_at=datetime.now(timezone.utc).isoformat(),
         ingestion_window=_ingestion_window(db, trade=trade, today=reference_day),
         activity_series=monthly_project_series(db, trade=trade, today=reference_day),
+        distinct_windows=distinct_windows,
         notes=[n for n in notes if n],
     )
 
@@ -659,6 +670,69 @@ def format_period(period: Period) -> str:
     """A human label for a period, used in the page and in tests."""
     last_day = period.end - timedelta(days=1)
     return f"{period.start.isoformat()} to {last_day.isoformat()}"
+
+
+def _window_signature(db: Database, *, trade: str, today: date, window: str) -> tuple:
+    """A window's headline figures, as one comparable tuple.
+
+    Uses the same predicates as the occurrence metrics (permit date, linked permits, detected
+    changes, first observation). Two windows with equal tuples present identical data, so
+    offering both as choices changes nothing the reader can see.
+    """
+    period = resolve_window(window, today=today)
+    proj_sql, proj_params = _project_metric_sql(
+        "COUNT(DISTINCT p.id)", period=period, trade=trade, today=today
+    )
+    projects = _count(db, proj_sql, proj_params)
+    permits = _count(
+        db,
+        "SELECT COUNT(*) FROM permit pm JOIN project_permit pp ON pp.permit_id = pm.id "
+        "JOIN project p ON p.id = pp.project_id "
+        "WHERE p.trade = ? AND pm.permit_date IS NOT NULL "
+        "AND pm.permit_date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' "
+        "AND pm.permit_date >= ? AND pm.permit_date < ? AND pm.permit_date <= ?",
+        (trade, period.start.isoformat(), period.end.isoformat(), today.isoformat()),
+    )
+    changed = _count(
+        db,
+        "SELECT COUNT(DISTINCT pc.project_id) FROM project_change pc "
+        "JOIN project p ON p.id = pc.project_id "
+        "WHERE p.trade = ? AND pc.change_kind <> 'new_project' "
+        "AND pc.detected_at >= ? AND pc.detected_at < ?",
+        (trade, period.start.isoformat(), period.end.isoformat()),
+    )
+    observed = _count(
+        db,
+        "SELECT COUNT(DISTINCT p.id) FROM project p "
+        "WHERE p.trade = ? AND p.created_at >= ? AND p.created_at < ?",
+        (trade, period.start.isoformat(), period.end.isoformat()),
+    )
+    return (projects, permits, changed, observed)
+
+
+def distinct_window_labels(
+    db: Database, *, trade: str, today: date, labels: tuple[str, ...] = _ALL_WINDOWS
+) -> tuple[str, ...]:
+    """The subset of ``labels`` whose headline figures differ from every other kept label.
+
+    A window that reproduces another's figures is dropped, so the page can disable its toggle
+    and say why rather than offering a click that shows the same numbers. Order is preserved
+    (the labels come from ``WINDOWS``), so the first label of an identical pair is kept.
+    """
+    seen: set[tuple] = set()
+    kept: list[str] = []
+    for label in labels:
+        try:
+            signature = _window_signature(db, trade=trade, today=today, window=label)
+        except Exception:
+            # A window that cannot be measured must not silently disappear from the choices.
+            kept.append(label)
+            continue
+        if signature in seen:
+            continue
+        seen.add(signature)
+        kept.append(label)
+    return tuple(kept)
 
 
 #: Number of trailing months shown in the activity chart. A fixed span keeps the chart honest:
