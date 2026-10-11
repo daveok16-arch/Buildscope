@@ -404,6 +404,18 @@ running and cannot give a writable persistent directory) is **usually unsuitable
   it from history; rotate it in the Firebase console and, if the history must be scrubbed, filter
   the repository separately.
 
+## Release trigger (Render preview)
+
+* The preview service (`buildscope-preview`, `srv-db3u3jij9qps73ffa4vg`, free, branch `main`) is
+  declared `autoDeploy: true` in `render.yaml`, but a `git push` to `main` did **not** trigger a
+  redeploy (verified 2026-10-11: pushed `65f54f3`, live stayed on `b8a69c3` for >23 min; GitHub has
+  no repository webhook — `GET /repos/.../hooks` → `[]`). Trigger the deploy from the Render
+  dashboard (**Manual Deploy → Deploy latest commit**) or add a Deploy Hook / `RENDER_API_KEY` so CI
+  can `POST /v1/services/<id>/deploys`. Verify with the release marker, not the git log:
+  `curl -s $URL/healthz | jq -r .release` must equal the short sha you pushed.
+* The marker is `RENDER_GIT_COMMIT[:7]` (`config.py`), surfaced in `/healthz`, `/api/statistics` and
+  `<meta name="buildscope-release">`. A local run has no `RENDER_GIT_COMMIT`, so no marker.
+
 
 ## WP3 display layer + motion system (M1+)
 

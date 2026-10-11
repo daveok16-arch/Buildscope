@@ -1,0 +1,4292 @@
+{
+  "per_route": {
+    "390/": {
+      "sw": 390,
+      "vw": 390,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 390,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 391,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 411,
+          "rr": 671
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 411,
+          "rr": 437
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 412,
+          "rr": 436
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 414,
+          "rr": 434
+        }
+      ],
+      "tap_small": 1,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 34,
+          "h": 44
+        }
+      ],
+      "font_under_12": 22,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "div",
+          "cls": "chain-step-num",
+          "px": 11.52
+        },
+        {
+          "tag": "div",
+          "cls": "chain-step-num",
+          "px": 11.52
+        },
+        {
+          "tag": "div",
+          "cls": "chain-step-num",
+          "px": 11.52
+        },
+        {
+          "tag": "div",
+          "cls": "chain-step-num",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 0
+    },
+    "390/opportunities": {
+      "sw": 390,
+      "vw": 390,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 390,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 391,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 411,
+          "rr": 671
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 411,
+          "rr": 437
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 412,
+          "rr": 436
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 414,
+          "rr": 434
+        }
+      ],
+      "tap_small": 1,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 34,
+          "h": 44
+        }
+      ],
+      "font_under_12": 78,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 1
+    },
+    "390/opportunities/new": {
+      "sw": 390,
+      "vw": 390,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 390,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 391,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 411,
+          "rr": 671
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 411,
+          "rr": 437
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 412,
+          "rr": 436
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 414,
+          "rr": 434
+        }
+      ],
+      "tap_small": 1,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 34,
+          "h": 44
+        }
+      ],
+      "font_under_12": 73,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 1
+    },
+    "390/companies": {
+      "sw": 390,
+      "vw": 390,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 390,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 391,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 411,
+          "rr": 671
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 411,
+          "rr": 437
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 412,
+          "rr": 436
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 414,
+          "rr": 434
+        }
+      ],
+      "tap_small": 1,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 34,
+          "h": 44
+        }
+      ],
+      "font_under_12": 304,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "span",
+          "cls": "badge badge-plain",
+          "px": 11.52
+        },
+        {
+          "tag": "dt",
+          "cls": "meta-label",
+          "px": 11.52
+        },
+        {
+          "tag": "dt",
+          "cls": "meta-label",
+          "px": 11.52
+        },
+        {
+          "tag": "dt",
+          "cls": "meta-label",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 0
+    },
+    "390/markets": {
+      "sw": 390,
+      "vw": 390,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 390,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 391,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 411,
+          "rr": 671
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 411,
+          "rr": 437
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 412,
+          "rr": 436
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 414,
+          "rr": 434
+        }
+      ],
+      "tap_small": 1,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 34,
+          "h": 44
+        }
+      ],
+      "font_under_12": 3,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        }
+      ],
+      "visible_selects": 0
+    },
+    "390/markets/dfw": {
+      "sw": 390,
+      "vw": 390,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 390,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 391,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 411,
+          "rr": 671
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 411,
+          "rr": 437
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 412,
+          "rr": 436
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 414,
+          "rr": 434
+        }
+      ],
+      "tap_small": 1,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 34,
+          "h": 44
+        }
+      ],
+      "font_under_12": 24,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 0
+    },
+    "390/changes": {
+      "sw": 390,
+      "vw": 390,
+      "overflow": 244,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 390,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 391,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 411,
+          "rr": 671
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 411,
+          "rr": 437
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 412,
+          "rr": 436
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 414,
+          "rr": 434
+        }
+      ],
+      "tap_small": 1,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 34,
+          "h": 44
+        }
+      ],
+      "font_under_12": 1,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        }
+      ],
+      "visible_selects": 0
+    },
+    "390/trends": {
+      "sw": 390,
+      "vw": 390,
+      "overflow": 47,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 390,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 391,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 411,
+          "rr": 671
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 411,
+          "rr": 437
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 412,
+          "rr": 436
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 414,
+          "rr": 434
+        }
+      ],
+      "tap_small": 1,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 34,
+          "h": 44
+        }
+      ],
+      "font_under_12": 8,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "text",
+          "cls": "[object SVGAnimatedString]",
+          "px": 11
+        },
+        {
+          "tag": "text",
+          "cls": "[object SVGAnimatedString]",
+          "px": 11
+        },
+        {
+          "tag": "text",
+          "cls": "[object SVGAnimatedString]",
+          "px": 11
+        },
+        {
+          "tag": "text",
+          "cls": "[object SVGAnimatedString]",
+          "px": 11
+        }
+      ],
+      "visible_selects": 0
+    },
+    "390/analytics": {
+      "sw": 390,
+      "vw": 390,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 390,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 391,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 411,
+          "rr": 671
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 411,
+          "rr": 437
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 412,
+          "rr": 436
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 414,
+          "rr": 434
+        }
+      ],
+      "tap_small": 1,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 34,
+          "h": 44
+        }
+      ],
+      "font_under_12": 4,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "span",
+          "cls": "badge badge-high",
+          "px": 11.52
+        },
+        {
+          "tag": "span",
+          "cls": "badge badge-med",
+          "px": 11.52
+        },
+        {
+          "tag": "span",
+          "cls": "badge badge-plain",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 0
+    },
+    "390/reports": {
+      "sw": 390,
+      "vw": 390,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 390,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 391,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 411,
+          "rr": 671
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 411,
+          "rr": 437
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 412,
+          "rr": 436
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 414,
+          "rr": 434
+        }
+      ],
+      "tap_small": 1,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 34,
+          "h": 44
+        }
+      ],
+      "font_under_12": 3,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "span",
+          "cls": "badge badge-evidence",
+          "px": 11.52
+        },
+        {
+          "tag": "span",
+          "cls": "badge badge-evidence",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 0
+    },
+    "390/how-it-works": {
+      "sw": 390,
+      "vw": 390,
+      "overflow": 47,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 390,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 391,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 411,
+          "rr": 671
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 411,
+          "rr": 437
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 412,
+          "rr": 436
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 414,
+          "rr": 434
+        }
+      ],
+      "tap_small": 1,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 34,
+          "h": 44
+        }
+      ],
+      "font_under_12": 9,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "div",
+          "cls": "chain-step-num",
+          "px": 11.52
+        },
+        {
+          "tag": "div",
+          "cls": "chain-step-num",
+          "px": 11.52
+        },
+        {
+          "tag": "div",
+          "cls": "chain-step-num",
+          "px": 11.52
+        },
+        {
+          "tag": "div",
+          "cls": "chain-step-num",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 0
+    },
+    "390/guides": {
+      "sw": 390,
+      "vw": 390,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 390,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 391,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 411,
+          "rr": 671
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 411,
+          "rr": 437
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 412,
+          "rr": 436
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 414,
+          "rr": 434
+        }
+      ],
+      "tap_small": 1,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 34,
+          "h": 44
+        }
+      ],
+      "font_under_12": 1,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        }
+      ],
+      "visible_selects": 0
+    },
+    "390/trades": {
+      "sw": 390,
+      "vw": 390,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 390,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 391,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 411,
+          "rr": 671
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 411,
+          "rr": 437
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 412,
+          "rr": 436
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 414,
+          "rr": 434
+        }
+      ],
+      "tap_small": 1,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 34,
+          "h": 44
+        }
+      ],
+      "font_under_12": 4,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "span",
+          "cls": "badge badge-high",
+          "px": 11.52
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        }
+      ],
+      "visible_selects": 0
+    },
+    "390/trades/commercial-hvac": {
+      "sw": 390,
+      "vw": 390,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 390,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 391,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 411,
+          "rr": 671
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 411,
+          "rr": 437
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 412,
+          "rr": 436
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 414,
+          "rr": 434
+        }
+      ],
+      "tap_small": 1,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 34,
+          "h": 44
+        }
+      ],
+      "font_under_12": 24,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 0
+    },
+    "390/commercial-construction-leads": {
+      "sw": 390,
+      "vw": 390,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 390,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 391,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 411,
+          "rr": 671
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 411,
+          "rr": 437
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 412,
+          "rr": 436
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 414,
+          "rr": 434
+        }
+      ],
+      "tap_small": 1,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 34,
+          "h": 44
+        }
+      ],
+      "font_under_12": 15,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 0
+    },
+    "390/signin": {
+      "sw": 390,
+      "vw": 390,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 390,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 391,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 411,
+          "rr": 671
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 411,
+          "rr": 437
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 412,
+          "rr": 436
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 414,
+          "rr": 434
+        }
+      ],
+      "tap_small": 1,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 34,
+          "h": 44
+        }
+      ],
+      "font_under_12": 19,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "div",
+          "cls": "auth-brand-kicker",
+          "px": 11.52
+        },
+        {
+          "tag": "span",
+          "cls": "",
+          "px": 11.52
+        },
+        {
+          "tag": "span",
+          "cls": "auth-stat-label",
+          "px": 10.88
+        },
+        {
+          "tag": "span",
+          "cls": "auth-stat-label",
+          "px": 10.88
+        }
+      ],
+      "visible_selects": 0
+    },
+    "390/signup": {
+      "sw": 390,
+      "vw": 390,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 390,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 391,
+          "rr": 725
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 411,
+          "rr": 671
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 411,
+          "rr": 437
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 412,
+          "rr": 436
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 414,
+          "rr": 434
+        }
+      ],
+      "tap_small": 1,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 34,
+          "h": 44
+        }
+      ],
+      "font_under_12": 9,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "div",
+          "cls": "auth-brand-kicker",
+          "px": 11.52
+        },
+        {
+          "tag": "span",
+          "cls": "",
+          "px": 11.52
+        },
+        {
+          "tag": "span",
+          "cls": "auth-stat-label",
+          "px": 10.88
+        },
+        {
+          "tag": "span",
+          "cls": "auth-stat-label",
+          "px": 10.88
+        }
+      ],
+      "visible_selects": 0
+    },
+    "720/": {
+      "sw": 720,
+      "vw": 720,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 720,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 721,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 741,
+          "rr": 1011
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 741,
+          "rr": 767
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 742,
+          "rr": 766
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 744,
+          "rr": 764
+        }
+      ],
+      "tap_small": 9,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 29,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-outline",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-primary",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-outline",
+          "w": 270,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-outline",
+          "w": 95,
+          "h": 30
+        }
+      ],
+      "font_under_12": 22,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "div",
+          "cls": "chain-step-num",
+          "px": 11.52
+        },
+        {
+          "tag": "div",
+          "cls": "chain-step-num",
+          "px": 11.52
+        },
+        {
+          "tag": "div",
+          "cls": "chain-step-num",
+          "px": 11.52
+        },
+        {
+          "tag": "div",
+          "cls": "chain-step-num",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 0
+    },
+    "720/opportunities": {
+      "sw": 720,
+      "vw": 720,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 720,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 721,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 741,
+          "rr": 1011
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 741,
+          "rr": 767
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 742,
+          "rr": 766
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 744,
+          "rr": 764
+        }
+      ],
+      "tap_small": 26,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 29,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-outline",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-primary",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "button",
+          "cls": "btn btn-outline filter-toggle",
+          "w": 670,
+          "h": 38
+        },
+        {
+          "tag": "select",
+          "cls": "feed-sort-select",
+          "w": 165,
+          "h": 31
+        }
+      ],
+      "font_under_12": 78,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 1
+    },
+    "720/opportunities/new": {
+      "sw": 720,
+      "vw": 720,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 720,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 721,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 741,
+          "rr": 1011
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 741,
+          "rr": 767
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 742,
+          "rr": 766
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 744,
+          "rr": 764
+        }
+      ],
+      "tap_small": 26,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 29,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-outline",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-primary",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "button",
+          "cls": "btn btn-outline filter-toggle",
+          "w": 670,
+          "h": 38
+        },
+        {
+          "tag": "select",
+          "cls": "feed-sort-select",
+          "w": 165,
+          "h": 31
+        }
+      ],
+      "font_under_12": 73,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 1
+    },
+    "720/companies": {
+      "sw": 720,
+      "vw": 720,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 720,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 721,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 741,
+          "rr": 1011
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 741,
+          "rr": 767
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 742,
+          "rr": 766
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 744,
+          "rr": 764
+        }
+      ],
+      "tap_small": 64,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 29,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-outline",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-primary",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "button",
+          "cls": "btn btn-outline filter-toggle",
+          "w": 670,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-outline",
+          "w": 127,
+          "h": 30
+        }
+      ],
+      "font_under_12": 304,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "span",
+          "cls": "badge badge-plain",
+          "px": 11.52
+        },
+        {
+          "tag": "dt",
+          "cls": "meta-label",
+          "px": 11.52
+        },
+        {
+          "tag": "dt",
+          "cls": "meta-label",
+          "px": 11.52
+        },
+        {
+          "tag": "dt",
+          "cls": "meta-label",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 0
+    },
+    "720/markets": {
+      "sw": 720,
+      "vw": 720,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 720,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 721,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 741,
+          "rr": 1011
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 741,
+          "rr": 767
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 742,
+          "rr": 766
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 744,
+          "rr": 764
+        }
+      ],
+      "tap_small": 4,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 29,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-outline",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-primary",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-outline btn-small",
+          "w": 240,
+          "h": 30
+        }
+      ],
+      "font_under_12": 3,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        }
+      ],
+      "visible_selects": 0
+    },
+    "720/markets/dfw": {
+      "sw": 720,
+      "vw": 720,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 720,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 721,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 741,
+          "rr": 1011
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 741,
+          "rr": 767
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 742,
+          "rr": 766
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 744,
+          "rr": 764
+        }
+      ],
+      "tap_small": 12,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 29,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-outline",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-primary",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-primary",
+          "w": 254,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-outline",
+          "w": 396,
+          "h": 38
+        }
+      ],
+      "font_under_12": 24,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 0
+    },
+    "720/changes": {
+      "sw": 720,
+      "vw": 720,
+      "overflow": 165,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 720,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 721,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 741,
+          "rr": 1011
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 741,
+          "rr": 767
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 742,
+          "rr": 766
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 744,
+          "rr": 764
+        }
+      ],
+      "tap_small": 29,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 29,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-outline",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-primary",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-outline",
+          "w": 193,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-outline",
+          "w": 193,
+          "h": 30
+        }
+      ],
+      "font_under_12": 1,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        }
+      ],
+      "visible_selects": 0
+    },
+    "720/trends": {
+      "sw": 720,
+      "vw": 720,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 720,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 721,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 741,
+          "rr": 1011
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 741,
+          "rr": 767
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 742,
+          "rr": 766
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 744,
+          "rr": 764
+        }
+      ],
+      "tap_small": 10,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 29,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-outline",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-primary",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-outline",
+          "w": 79,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-primary",
+          "w": 88,
+          "h": 30
+        }
+      ],
+      "font_under_12": 8,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "text",
+          "cls": "[object SVGAnimatedString]",
+          "px": 11
+        },
+        {
+          "tag": "text",
+          "cls": "[object SVGAnimatedString]",
+          "px": 11
+        },
+        {
+          "tag": "text",
+          "cls": "[object SVGAnimatedString]",
+          "px": 11
+        },
+        {
+          "tag": "text",
+          "cls": "[object SVGAnimatedString]",
+          "px": 11
+        }
+      ],
+      "visible_selects": 0
+    },
+    "720/analytics": {
+      "sw": 720,
+      "vw": 720,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 720,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 721,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 741,
+          "rr": 1011
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 741,
+          "rr": 767
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 742,
+          "rr": 766
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 744,
+          "rr": 764
+        }
+      ],
+      "tap_small": 4,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 29,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-outline",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-primary",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-outline",
+          "w": 180,
+          "h": 30
+        }
+      ],
+      "font_under_12": 4,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "span",
+          "cls": "badge badge-high",
+          "px": 11.52
+        },
+        {
+          "tag": "span",
+          "cls": "badge badge-med",
+          "px": 11.52
+        },
+        {
+          "tag": "span",
+          "cls": "badge badge-plain",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 0
+    },
+    "720/reports": {
+      "sw": 720,
+      "vw": 720,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 720,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 721,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 741,
+          "rr": 1011
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 741,
+          "rr": 767
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 742,
+          "rr": 766
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 744,
+          "rr": 764
+        }
+      ],
+      "tap_small": 3,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 29,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-outline",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-primary",
+          "w": 299,
+          "h": 38
+        }
+      ],
+      "font_under_12": 3,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "span",
+          "cls": "badge badge-evidence",
+          "px": 11.52
+        },
+        {
+          "tag": "span",
+          "cls": "badge badge-evidence",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 0
+    },
+    "720/how-it-works": {
+      "sw": 720,
+      "vw": 720,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 720,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 721,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 741,
+          "rr": 1011
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 741,
+          "rr": 767
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 742,
+          "rr": 766
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 744,
+          "rr": 764
+        }
+      ],
+      "tap_small": 3,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 29,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-outline",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-primary",
+          "w": 299,
+          "h": 38
+        }
+      ],
+      "font_under_12": 9,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "div",
+          "cls": "chain-step-num",
+          "px": 11.52
+        },
+        {
+          "tag": "div",
+          "cls": "chain-step-num",
+          "px": 11.52
+        },
+        {
+          "tag": "div",
+          "cls": "chain-step-num",
+          "px": 11.52
+        },
+        {
+          "tag": "div",
+          "cls": "chain-step-num",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 0
+    },
+    "720/guides": {
+      "sw": 720,
+      "vw": 720,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 720,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 721,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 741,
+          "rr": 1011
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 741,
+          "rr": 767
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 742,
+          "rr": 766
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 744,
+          "rr": 764
+        }
+      ],
+      "tap_small": 3,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 29,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-outline",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-primary",
+          "w": 299,
+          "h": 38
+        }
+      ],
+      "font_under_12": 1,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        }
+      ],
+      "visible_selects": 0
+    },
+    "720/trades": {
+      "sw": 720,
+      "vw": 720,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 720,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 721,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 741,
+          "rr": 1011
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 741,
+          "rr": 767
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 742,
+          "rr": 766
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 744,
+          "rr": 764
+        }
+      ],
+      "tap_small": 4,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 29,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-outline",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-primary",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-outline btn-small",
+          "w": 179,
+          "h": 30
+        }
+      ],
+      "font_under_12": 4,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "span",
+          "cls": "badge badge-high",
+          "px": 11.52
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        }
+      ],
+      "visible_selects": 0
+    },
+    "720/trades/commercial-hvac": {
+      "sw": 720,
+      "vw": 720,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 720,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 721,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 741,
+          "rr": 1011
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 741,
+          "rr": 767
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 742,
+          "rr": 766
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 744,
+          "rr": 764
+        }
+      ],
+      "tap_small": 10,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 29,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-outline",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-primary",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-primary",
+          "w": 213,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-outline",
+          "w": 95,
+          "h": 30
+        }
+      ],
+      "font_under_12": 24,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 0
+    },
+    "720/commercial-construction-leads": {
+      "sw": 720,
+      "vw": 720,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 720,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 721,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 741,
+          "rr": 1011
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 741,
+          "rr": 767
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 742,
+          "rr": 766
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 744,
+          "rr": 764
+        }
+      ],
+      "tap_small": 7,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 29,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-outline",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-primary",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-outline",
+          "w": 95,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-outline",
+          "w": 95,
+          "h": 30
+        }
+      ],
+      "font_under_12": 15,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 0
+    },
+    "720/signin": {
+      "sw": 720,
+      "vw": 720,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 720,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 721,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 741,
+          "rr": 1011
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 741,
+          "rr": 767
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 742,
+          "rr": 766
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 744,
+          "rr": 764
+        }
+      ],
+      "tap_small": 7,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 29,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-outline",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-primary",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "button",
+          "cls": "btn-google-auth",
+          "w": 604,
+          "h": 42
+        },
+        {
+          "tag": "input",
+          "cls": "form-input",
+          "w": 604,
+          "h": 38
+        }
+      ],
+      "font_under_12": 19,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "div",
+          "cls": "auth-brand-kicker",
+          "px": 11.52
+        },
+        {
+          "tag": "span",
+          "cls": "",
+          "px": 11.52
+        },
+        {
+          "tag": "span",
+          "cls": "auth-stat-label",
+          "px": 10.88
+        },
+        {
+          "tag": "span",
+          "cls": "auth-stat-label",
+          "px": 10.88
+        }
+      ],
+      "visible_selects": 0
+    },
+    "720/signup": {
+      "sw": 720,
+      "vw": 720,
+      "overflow": 36,
+      "offenders": [
+        {
+          "tag": "div",
+          "cls": "mobile-drawer",
+          "l": 720,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "drawer-header",
+          "l": 721,
+          "rr": 1060
+        },
+        {
+          "tag": "div",
+          "cls": "brand",
+          "l": 741,
+          "rr": 1011
+        },
+        {
+          "tag": "span",
+          "cls": "brand-mark",
+          "l": 741,
+          "rr": 767
+        },
+        {
+          "tag": "svg",
+          "cls": "[object SVGAnimatedString]",
+          "l": 742,
+          "rr": 766
+        },
+        {
+          "tag": "path",
+          "cls": "[object SVGAnimatedString]",
+          "l": 744,
+          "rr": 764
+        }
+      ],
+      "tap_small": 9,
+      "tap_examples": [
+        {
+          "tag": "button",
+          "cls": "drawer-close-btn",
+          "w": 29,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-outline",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-primary",
+          "w": 299,
+          "h": 38
+        },
+        {
+          "tag": "button",
+          "cls": "btn-google-auth",
+          "w": 604,
+          "h": 42
+        },
+        {
+          "tag": "input",
+          "cls": "form-input",
+          "w": 604,
+          "h": 38
+        }
+      ],
+      "font_under_12": 9,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "div",
+          "cls": "auth-brand-kicker",
+          "px": 11.52
+        },
+        {
+          "tag": "span",
+          "cls": "",
+          "px": 11.52
+        },
+        {
+          "tag": "span",
+          "cls": "auth-stat-label",
+          "px": 10.88
+        },
+        {
+          "tag": "span",
+          "cls": "auth-stat-label",
+          "px": 10.88
+        }
+      ],
+      "visible_selects": 0
+    },
+    "1440/": {
+      "sw": 1440,
+      "vw": 1440,
+      "overflow": 0,
+      "offenders": [],
+      "tap_small": 8,
+      "tap_examples": [
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-ghost",
+          "w": 76,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-primary",
+          "w": 105,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-outline",
+          "w": 270,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-outline",
+          "w": 95,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-outline",
+          "w": 95,
+          "h": 30
+        }
+      ],
+      "font_under_12": 22,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "div",
+          "cls": "chain-step-num",
+          "px": 11.52
+        },
+        {
+          "tag": "div",
+          "cls": "chain-step-num",
+          "px": 11.52
+        },
+        {
+          "tag": "div",
+          "cls": "chain-step-num",
+          "px": 11.52
+        },
+        {
+          "tag": "div",
+          "cls": "chain-step-num",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 0
+    },
+    "1440/opportunities": {
+      "sw": 1440,
+      "vw": 1440,
+      "overflow": 0,
+      "offenders": [],
+      "tap_small": 39,
+      "tap_examples": [
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-ghost",
+          "w": 76,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-primary",
+          "w": 105,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-ghost",
+          "w": 67,
+          "h": 30
+        },
+        {
+          "tag": "input",
+          "cls": "",
+          "w": 238,
+          "h": 34
+        },
+        {
+          "tag": "select",
+          "cls": "bs-select-native",
+          "w": 238,
+          "h": 18
+        }
+      ],
+      "font_under_12": 78,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 6
+    },
+    "1440/opportunities/new": {
+      "sw": 1440,
+      "vw": 1440,
+      "overflow": 0,
+      "offenders": [],
+      "tap_small": 39,
+      "tap_examples": [
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-ghost",
+          "w": 76,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-primary",
+          "w": 105,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-ghost",
+          "w": 67,
+          "h": 30
+        },
+        {
+          "tag": "input",
+          "cls": "",
+          "w": 238,
+          "h": 34
+        },
+        {
+          "tag": "select",
+          "cls": "bs-select-native",
+          "w": 238,
+          "h": 18
+        }
+      ],
+      "font_under_12": 73,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 6
+    },
+    "1440/companies": {
+      "sw": 1440,
+      "vw": 1440,
+      "overflow": 0,
+      "offenders": [],
+      "tap_small": 67,
+      "tap_examples": [
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-ghost",
+          "w": 76,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-primary",
+          "w": 105,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-ghost",
+          "w": 67,
+          "h": 30
+        },
+        {
+          "tag": "input",
+          "cls": "",
+          "w": 238,
+          "h": 34
+        },
+        {
+          "tag": "select",
+          "cls": "bs-select-native",
+          "w": 238,
+          "h": 18
+        }
+      ],
+      "font_under_12": 304,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "span",
+          "cls": "badge badge-plain",
+          "px": 11.52
+        },
+        {
+          "tag": "dt",
+          "cls": "meta-label",
+          "px": 11.52
+        },
+        {
+          "tag": "dt",
+          "cls": "meta-label",
+          "px": 11.52
+        },
+        {
+          "tag": "dt",
+          "cls": "meta-label",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 2
+    },
+    "1440/markets": {
+      "sw": 1440,
+      "vw": 1440,
+      "overflow": 0,
+      "offenders": [],
+      "tap_small": 3,
+      "tap_examples": [
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-ghost",
+          "w": 76,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-primary",
+          "w": 105,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-outline btn-small",
+          "w": 240,
+          "h": 30
+        }
+      ],
+      "font_under_12": 3,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        }
+      ],
+      "visible_selects": 0
+    },
+    "1440/markets/dfw": {
+      "sw": 1440,
+      "vw": 1440,
+      "overflow": 0,
+      "offenders": [],
+      "tap_small": 11,
+      "tap_examples": [
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-ghost",
+          "w": 76,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-primary",
+          "w": 105,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-primary",
+          "w": 254,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-outline",
+          "w": 396,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-outline",
+          "w": 95,
+          "h": 30
+        }
+      ],
+      "font_under_12": 24,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 0
+    },
+    "1440/changes": {
+      "sw": 1440,
+      "vw": 1440,
+      "overflow": 63,
+      "offenders": [
+        {
+          "tag": "table",
+          "cls": "data-table change-table",
+          "l": 437,
+          "rr": 1458
+        },
+        {
+          "tag": "thead",
+          "cls": "",
+          "l": 437,
+          "rr": 1458
+        },
+        {
+          "tag": "tr",
+          "cls": "",
+          "l": 437,
+          "rr": 1458
+        },
+        {
+          "tag": "th",
+          "cls": "",
+          "l": 1266,
+          "rr": 1458
+        },
+        {
+          "tag": "tbody",
+          "cls": "",
+          "l": 437,
+          "rr": 1458
+        },
+        {
+          "tag": "tr",
+          "cls": "",
+          "l": 437,
+          "rr": 1458
+        }
+      ],
+      "tap_small": 32,
+      "tap_examples": [
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-ghost",
+          "w": 76,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-primary",
+          "w": 105,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-outline",
+          "w": 238,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-outline",
+          "w": 238,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-primary",
+          "w": 238,
+          "h": 30
+        }
+      ],
+      "font_under_12": 1,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        }
+      ],
+      "visible_selects": 0
+    },
+    "1440/trends": {
+      "sw": 1440,
+      "vw": 1440,
+      "overflow": 0,
+      "offenders": [],
+      "tap_small": 9,
+      "tap_examples": [
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-ghost",
+          "w": 76,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-primary",
+          "w": 105,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-outline",
+          "w": 79,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-primary",
+          "w": 88,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-outline",
+          "w": 88,
+          "h": 30
+        }
+      ],
+      "font_under_12": 8,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "text",
+          "cls": "[object SVGAnimatedString]",
+          "px": 11
+        },
+        {
+          "tag": "text",
+          "cls": "[object SVGAnimatedString]",
+          "px": 11
+        },
+        {
+          "tag": "text",
+          "cls": "[object SVGAnimatedString]",
+          "px": 11
+        },
+        {
+          "tag": "text",
+          "cls": "[object SVGAnimatedString]",
+          "px": 11
+        }
+      ],
+      "visible_selects": 0
+    },
+    "1440/analytics": {
+      "sw": 1440,
+      "vw": 1440,
+      "overflow": 0,
+      "offenders": [],
+      "tap_small": 3,
+      "tap_examples": [
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-ghost",
+          "w": 76,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-primary",
+          "w": 105,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-outline",
+          "w": 180,
+          "h": 30
+        }
+      ],
+      "font_under_12": 4,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "span",
+          "cls": "badge badge-high",
+          "px": 11.52
+        },
+        {
+          "tag": "span",
+          "cls": "badge badge-med",
+          "px": 11.52
+        },
+        {
+          "tag": "span",
+          "cls": "badge badge-plain",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 0
+    },
+    "1440/reports": {
+      "sw": 1440,
+      "vw": 1440,
+      "overflow": 0,
+      "offenders": [],
+      "tap_small": 2,
+      "tap_examples": [
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-ghost",
+          "w": 76,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-primary",
+          "w": 105,
+          "h": 30
+        }
+      ],
+      "font_under_12": 3,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "span",
+          "cls": "badge badge-evidence",
+          "px": 11.52
+        },
+        {
+          "tag": "span",
+          "cls": "badge badge-evidence",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 0
+    },
+    "1440/how-it-works": {
+      "sw": 1440,
+      "vw": 1440,
+      "overflow": 0,
+      "offenders": [],
+      "tap_small": 2,
+      "tap_examples": [
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-ghost",
+          "w": 76,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-primary",
+          "w": 105,
+          "h": 30
+        }
+      ],
+      "font_under_12": 9,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "div",
+          "cls": "chain-step-num",
+          "px": 11.52
+        },
+        {
+          "tag": "div",
+          "cls": "chain-step-num",
+          "px": 11.52
+        },
+        {
+          "tag": "div",
+          "cls": "chain-step-num",
+          "px": 11.52
+        },
+        {
+          "tag": "div",
+          "cls": "chain-step-num",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 0
+    },
+    "1440/guides": {
+      "sw": 1440,
+      "vw": 1440,
+      "overflow": 0,
+      "offenders": [],
+      "tap_small": 2,
+      "tap_examples": [
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-ghost",
+          "w": 76,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-primary",
+          "w": 105,
+          "h": 30
+        }
+      ],
+      "font_under_12": 1,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        }
+      ],
+      "visible_selects": 0
+    },
+    "1440/trades": {
+      "sw": 1440,
+      "vw": 1440,
+      "overflow": 0,
+      "offenders": [],
+      "tap_small": 3,
+      "tap_examples": [
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-ghost",
+          "w": 76,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-primary",
+          "w": 105,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-outline btn-small",
+          "w": 179,
+          "h": 30
+        }
+      ],
+      "font_under_12": 4,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "span",
+          "cls": "badge badge-high",
+          "px": 11.52
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        }
+      ],
+      "visible_selects": 0
+    },
+    "1440/trades/commercial-hvac": {
+      "sw": 1440,
+      "vw": 1440,
+      "overflow": 0,
+      "offenders": [],
+      "tap_small": 9,
+      "tap_examples": [
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-ghost",
+          "w": 76,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-primary",
+          "w": 105,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-primary",
+          "w": 213,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-outline",
+          "w": 95,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-outline",
+          "w": 95,
+          "h": 30
+        }
+      ],
+      "font_under_12": 24,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 0
+    },
+    "1440/commercial-construction-leads": {
+      "sw": 1440,
+      "vw": 1440,
+      "overflow": 0,
+      "offenders": [],
+      "tap_small": 6,
+      "tap_examples": [
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-ghost",
+          "w": 76,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-primary",
+          "w": 105,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-outline",
+          "w": 95,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-outline",
+          "w": 95,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-outline",
+          "w": 95,
+          "h": 30
+        }
+      ],
+      "font_under_12": 15,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "dt",
+          "cls": "",
+          "px": 11.2
+        },
+        {
+          "tag": "span",
+          "cls": "evidence-badge evidence-tier-n",
+          "px": 11.52
+        }
+      ],
+      "visible_selects": 0
+    },
+    "1440/signin": {
+      "sw": 1440,
+      "vw": 1440,
+      "overflow": 0,
+      "offenders": [],
+      "tap_small": 6,
+      "tap_examples": [
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-ghost",
+          "w": 76,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-primary",
+          "w": 105,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "cls": "btn-google-auth",
+          "w": 390,
+          "h": 42
+        },
+        {
+          "tag": "input",
+          "cls": "form-input",
+          "w": 390,
+          "h": 38
+        },
+        {
+          "tag": "input",
+          "cls": "form-input",
+          "w": 390,
+          "h": 38
+        }
+      ],
+      "font_under_12": 19,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "div",
+          "cls": "auth-brand-kicker",
+          "px": 11.52
+        },
+        {
+          "tag": "span",
+          "cls": "",
+          "px": 11.52
+        },
+        {
+          "tag": "span",
+          "cls": "auth-stat-label",
+          "px": 10.88
+        },
+        {
+          "tag": "span",
+          "cls": "auth-stat-label",
+          "px": 10.88
+        }
+      ],
+      "visible_selects": 0
+    },
+    "1440/signup": {
+      "sw": 1440,
+      "vw": 1440,
+      "overflow": 0,
+      "offenders": [],
+      "tap_small": 8,
+      "tap_examples": [
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-ghost",
+          "w": 76,
+          "h": 30
+        },
+        {
+          "tag": "a",
+          "cls": "btn btn-small btn-primary",
+          "w": 105,
+          "h": 30
+        },
+        {
+          "tag": "button",
+          "cls": "btn-google-auth",
+          "w": 390,
+          "h": 42
+        },
+        {
+          "tag": "input",
+          "cls": "form-input",
+          "w": 390,
+          "h": 38
+        },
+        {
+          "tag": "input",
+          "cls": "form-input",
+          "w": 390,
+          "h": 38
+        }
+      ],
+      "font_under_12": 9,
+      "font_examples": [
+        {
+          "tag": "small",
+          "cls": "",
+          "px": 10.4
+        },
+        {
+          "tag": "div",
+          "cls": "auth-brand-kicker",
+          "px": 11.52
+        },
+        {
+          "tag": "span",
+          "cls": "",
+          "px": 11.52
+        },
+        {
+          "tag": "span",
+          "cls": "auth-stat-label",
+          "px": 10.88
+        },
+        {
+          "tag": "span",
+          "cls": "auth-stat-label",
+          "px": 10.88
+        }
+      ],
+      "visible_selects": 0
+    }
+  },
+  "axe": {
+    "390/": {
+      "total": 0,
+      "violations": []
+    },
+    "390/opportunities": {
+      "total": 0,
+      "violations": []
+    },
+    "390/opportunities/new": {
+      "total": 0,
+      "violations": []
+    },
+    "390/companies": {
+      "total": 0,
+      "violations": []
+    },
+    "390/markets": {
+      "total": 0,
+      "violations": []
+    },
+    "390/markets/dfw": {
+      "total": 0,
+      "violations": []
+    },
+    "390/changes": {
+      "total": 0,
+      "violations": []
+    },
+    "390/trends": {
+      "total": 0,
+      "violations": []
+    },
+    "390/analytics": {
+      "total": 0,
+      "violations": []
+    },
+    "390/reports": {
+      "total": 0,
+      "violations": []
+    },
+    "390/how-it-works": {
+      "total": 0,
+      "violations": []
+    },
+    "390/guides": {
+      "total": 0,
+      "violations": []
+    },
+    "390/trades": {
+      "total": 0,
+      "violations": []
+    },
+    "390/trades/commercial-hvac": {
+      "total": 0,
+      "violations": []
+    },
+    "390/commercial-construction-leads": {
+      "total": 0,
+      "violations": []
+    },
+    "390/signin": {
+      "total": 0,
+      "violations": []
+    },
+    "390/signup": {
+      "total": 0,
+      "violations": []
+    },
+    "720/": {
+      "total": 0,
+      "violations": []
+    },
+    "720/opportunities": {
+      "total": 0,
+      "violations": []
+    },
+    "720/opportunities/new": {
+      "total": 0,
+      "violations": []
+    },
+    "720/companies": {
+      "total": 0,
+      "violations": []
+    },
+    "720/markets": {
+      "total": 0,
+      "violations": []
+    },
+    "720/markets/dfw": {
+      "total": 0,
+      "violations": []
+    },
+    "720/changes": {
+      "total": 0,
+      "violations": []
+    },
+    "720/trends": {
+      "total": 0,
+      "violations": []
+    },
+    "720/analytics": {
+      "total": 0,
+      "violations": []
+    },
+    "720/reports": {
+      "total": 0,
+      "violations": []
+    },
+    "720/how-it-works": {
+      "total": 0,
+      "violations": []
+    },
+    "720/guides": {
+      "total": 0,
+      "violations": []
+    },
+    "720/trades": {
+      "total": 0,
+      "violations": []
+    },
+    "720/trades/commercial-hvac": {
+      "total": 0,
+      "violations": []
+    },
+    "720/commercial-construction-leads": {
+      "total": 0,
+      "violations": []
+    },
+    "720/signin": {
+      "total": 0,
+      "violations": []
+    },
+    "720/signup": {
+      "total": 0,
+      "violations": []
+    },
+    "1440/": {
+      "total": 0,
+      "violations": []
+    },
+    "1440/opportunities": {
+      "total": 0,
+      "violations": []
+    },
+    "1440/opportunities/new": {
+      "total": 0,
+      "violations": []
+    },
+    "1440/companies": {
+      "total": 0,
+      "violations": []
+    },
+    "1440/markets": {
+      "total": 0,
+      "violations": []
+    },
+    "1440/markets/dfw": {
+      "total": 0,
+      "violations": []
+    },
+    "1440/changes": {
+      "total": 0,
+      "violations": []
+    },
+    "1440/trends": {
+      "total": 0,
+      "violations": []
+    },
+    "1440/analytics": {
+      "total": 0,
+      "violations": []
+    },
+    "1440/reports": {
+      "total": 0,
+      "violations": []
+    },
+    "1440/how-it-works": {
+      "total": 0,
+      "violations": []
+    },
+    "1440/guides": {
+      "total": 0,
+      "violations": []
+    },
+    "1440/trades": {
+      "total": 0,
+      "violations": []
+    },
+    "1440/trades/commercial-hvac": {
+      "total": 0,
+      "violations": []
+    },
+    "1440/commercial-construction-leads": {
+      "total": 0,
+      "violations": []
+    },
+    "1440/signin": {
+      "total": 0,
+      "violations": []
+    },
+    "1440/signup": {
+      "total": 0,
+      "violations": []
+    }
+  },
+  "city_picker": {
+    "390": {
+      "open": true,
+      "top": 169,
+      "bottom": 844,
+      "height": 675,
+      "vh": 844,
+      "in_viewport": true,
+      "below_footer": false,
+      "position": "fixed",
+      "parent": "BODY"
+    },
+    "720": {
+      "open": true,
+      "top": 429,
+      "bottom": 1280,
+      "height": 851,
+      "vh": 1280,
+      "in_viewport": true,
+      "below_footer": false,
+      "position": "fixed",
+      "parent": "BODY"
+    }
+  },
+  "console": {
+    "390/": [],
+    "390/opportunities": [],
+    "390/opportunities/new": [],
+    "390/companies": [],
+    "390/markets": [],
+    "390/markets/dfw": [],
+    "390/changes": [],
+    "390/trends": [],
+    "390/analytics": [],
+    "390/reports": [],
+    "390/how-it-works": [],
+    "390/guides": [],
+    "390/trades": [],
+    "390/trades/commercial-hvac": [],
+    "390/commercial-construction-leads": [],
+    "390/signin": [],
+    "390/signup": [],
+    "720/": [],
+    "720/opportunities": [],
+    "720/opportunities/new": [],
+    "720/companies": [],
+    "720/markets": [],
+    "720/markets/dfw": [],
+    "720/changes": [],
+    "720/trends": [],
+    "720/analytics": [],
+    "720/reports": [],
+    "720/how-it-works": [],
+    "720/guides": [],
+    "720/trades": [],
+    "720/trades/commercial-hvac": [],
+    "720/commercial-construction-leads": [],
+    "720/signin": [],
+    "720/signup": [],
+    "1440/": [],
+    "1440/opportunities": [],
+    "1440/opportunities/new": [],
+    "1440/companies": [],
+    "1440/markets": [],
+    "1440/markets/dfw": [],
+    "1440/changes": [],
+    "1440/trends": [],
+    "1440/analytics": [],
+    "1440/reports": [],
+    "1440/how-it-works": [],
+    "1440/guides": [],
+    "1440/trades": [],
+    "1440/trades/commercial-hvac": [],
+    "1440/commercial-construction-leads": [],
+    "1440/signin": [],
+    "1440/signup": []
+  },
+  "screenshots": [
+    "V_citypicker_open_390.png",
+    "V_citypicker_open_720.png"
+  ]
+}
