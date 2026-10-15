@@ -31,6 +31,10 @@ contractors. It is currently active for the Dallas–Fort Worth market.
   procurement status.
 - **Reports and market insight** — published customer briefs, plus market, city and project-type
   breakdowns drawn from stored records.
+- **AI analyst (operator)** — a model writes a narrative about a project's stored evidence, and
+  the narrative is re-checked against that evidence before it is shown. A figure, date or name the
+  record does not support is flagged; a narrative that fails the check is shown as unverified with
+  its evidence-only summary instead. The model never supplies a fact.
 
 Every capability above is implemented and covered by the test suite. Planned work is labelled as
 such in the documentation, not presented as live.

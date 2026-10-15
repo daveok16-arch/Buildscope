@@ -20,6 +20,8 @@ matter in production are where that file lives and how it is kept fresh.
 | `MAX_PAGES` | No | `3` | Pages fetched per source on a recurring refresh |
 | `WEB_WORKERS`, `WEB_THREADS` | No | `2`, `4` | WSGI worker and thread counts. SQLite serialises writers, so a fractional CPU wants one worker |
 | `HOST`, `PORT` | No | `127.0.0.1`, `5000` | Development server bind address. A hosting platform sets `PORT` |
+| `GEMINI_API_KEY` | No | empty | Key for the operator AI analyst (`/ai-analyst`, `/api/project/<id>/analyst`, `analyst-project`). Unset means the analyst reports `UNAVAILABLE` and the deterministic evidence summary is used; nothing else is affected. `Gemini_API_Token` is also read, for sandboxes that inject the key under that name |
+| `GEMINI_MODEL` | No | `gemini-2.5-flash` | Model id the analyst calls |
 
 `CSRF_ENABLED` follows the same convention as the secure-cookie flag: it defaults on, and off only
 when `FLASK_DEBUG` is set, so a real deployment is protected unless someone deliberately disables

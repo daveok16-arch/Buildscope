@@ -310,6 +310,34 @@ def trends() -> Any:
     )
 
 
+@bp.route("/project/<int:project_id>/analyst")
+def project_analyst(project_id: int) -> Any:
+    """The grounded AI analyst brief for one project, as JSON.
+
+    Restricted to operators. The brief is grounded in the stored evidence and re-checked against
+    it: ``verified`` is true only when the model's prose survived every check, and a failed check
+    replaces the narrative with a deterministic, evidence-only summary. ``unsupported_fields``
+    names what the record does not say, so a consumer never has to infer absence from a null.
+    """
+    # The API answers with JSON status codes rather than the HTML redirect a page would use, so a
+    # client is never sent to a sign-in form it cannot render.
+    user = getattr(g, "user", None)
+    if user is None:
+        return jsonify({"error": "authentication required"}), 401
+    if not user.is_admin:
+        return jsonify({"error": "forbidden"}), 403
+
+    from ..ai_analyst import AnalystError, build_brief
+
+    if g.service.get_project(project_id) is None:
+        return jsonify({"error": "not found"}), 404
+    try:
+        brief = build_brief(g.db, project_id)
+    except AnalystError as exc:
+        return jsonify({"error": str(exc)}), 502
+    return jsonify(brief.to_dict())
+
+
 @bp.route("/saved")
 def list_saved() -> Any:
     """The signed-in user's saved opportunities.

@@ -62,6 +62,7 @@ application layer.
 | `trends.py` | Market trend metrics, each with its own stated definition |
 | `search_index.py` | FTS5 index, query quoting, and match explanations |
 | `linkedin.py` | Evidence-backed draft generation for the operator surface |
+| `ai_analyst.py` | Grounded AI analyst: fact retrieval, dossier, Gemini structured call, verification |
 | `app/` | Flask application: routes, templates, static assets, SEO, accounts, API |
 | `app/workflow.py` | The account's own record: watching, pipeline, notes, tags, activity |
 | `app/alerts.py` | Turns recorded changes into per-user alerts. An alert cannot exist without an event |
@@ -92,6 +93,7 @@ application layer.
 | `/saved`, `/preferences` | Saved opportunities and personalization |
 | `/signin`, `/signup` | Free account |
 | `/content/linkedin` | Operator-only draft generation (**ADMIN**) |
+| `/ai-analyst` | Operator-only grounded AI analysis of one project (**ADMIN**) |
 | `/sitemap.xml`, `/robots.txt` | Crawler control |
 | `/api/*` | Read-mostly JSON API |
 | `/admin/data` | Internal operations view. **Operator accounts only** |

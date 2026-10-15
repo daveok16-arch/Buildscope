@@ -417,6 +417,45 @@ running and cannot give a writable persistent directory) is **usually unsuitable
   `<meta name="buildscope-release">`. A local run has no `RENDER_GIT_COMMIT`, so no marker.
 
 
+## AI analyst
+
+* `src/oppintel/ai_analyst.py`. An LLM writes prose about the evidence; it is never the source of
+  a fact. The flow inverts the usual one: `collect_facts` emits a fact only for a field a stored
+  evidence row supports (`reporting.field_verdict`), an unsupported field becomes an explicit
+  unknown, `assemble_dossier` serialises the facts into a numbered dossier, and Gemini is
+  constrained to a JSON schema (`BRIEF_SCHEMA`) at temperature 0.
+* **Verification before publication.** `validate_brief` re-derives support from the fact list and
+  flags any fact-shaped token in the model's free text that is not among the supported values: a
+  number not in the dossier (scale shorthand such as `2.5M` of a stored `2,500,000` is accepted;
+  any other figure is not), a date not stored, a restated `Not verified` marker, a URL, bid
+  language the notice forbids, or a field verdict the model re-graded. A violation sets
+  `status=UNVERIFIED`, floors confidence, and **discards every piece of model prose** — narrative,
+  `why_it_matters`, field assessments, questions and limitations are all replaced with
+  evidence-derived text, so an offending sentence cannot survive in the page or the JSON.
+* **The bid-language check is clause-scoped and negation-aware.** The caveat is itself a negation
+  ("does not by itself confirm that the package is currently available for bid"), so a model
+  restating it is honest, not claiming. `_negated` excuses a forbidden phrase only when *every*
+  occurrence sits in a clause containing a negation; a claim in its own clause still flags. The
+  negation list holds whole words only, so a bare "No." does not excuse the next sentence.
+* **Errors are sentences, not payloads.** `_http_error_message` reduces a Gemini HTTP failure to
+  the status and the error's first sentence, because the raw body is a JSON document with a
+  documentation URL that would otherwise be pasted into a limitation (and leak a URL into a brief).
+* **Graceful absence.** No `GEMINI_API_KEY` (or any transport/decoding error) yields
+  `status=UNAVAILABLE` with the evidence intact; a page never fails and never pretends an
+  analysis happened. The page distinguishes "no model configured" from "the model could not be
+  reached". The key is read from `GEMINI_API_KEY` or `Gemini_API_Token`; never committed.
+* **Free-tier quota.** `gemini-2.5-flash` on a free key returns `429` under sustained use, which
+  surfaces as `UNAVAILABLE` — the design already covers it, so a quota wall degrades to the
+  evidence-only summary rather than an error page.
+* **No SDK.** `GeminiClient` is a standard-library `generateContent` POST, so the analyst adds no
+  dependency (the repo ships four). The transport is an `AnalystClient` Protocol, so the evidence
+  pipeline and the verification pass are tested with no network; `GeminiClient` is tested against
+  a real local HTTP stub, and the live path was verified against `gemini-2.5-flash`.
+* Surfaces: `/ai-analyst` (HTML, ADMIN), `/api/project/<id>/analyst` (JSON, ADMIN: 401/403/404),
+  `flask ... analyst-project ID [--json] [--no-model]` (CLI). `/ai-analyst` joins `/admin` in the
+  robots disallow list and is `noindex`. Tests: `tests/test_ai_analyst.py`,
+  `tests/test_ai_analyst_app.py`. Audit: `audit/AI_ANALYST_AUDIT.md`.
+
 ## WP3 display layer + motion system (M1+)
 
 * The site stays **server-rendered Flask + Jinja**. Interactive pieces are small vanilla

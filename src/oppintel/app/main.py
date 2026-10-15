@@ -1197,6 +1197,52 @@ def create_app(config: AppConfig | None = None) -> Flask:
             page_title="LinkedIn Content Intelligence — Operator",
         )
 
+    @app.route("/ai-analyst")
+    @_require_admin
+    def ai_analyst() -> Any:
+        """Operator view: a grounded, evidence-checked narrative about one project.
+
+        Internal on purpose. The narrative is written by a model but is grounded in the stored
+        evidence and re-checked against it before it is shown; a brief that fails the check is
+        shown as unverified, with its deterministic evidence summary instead. The page always
+        renders the evidence and the verification result, so an operator can see exactly what the
+        model was given and whether what it said survived the check.
+        """
+        from ..ai_analyst import (
+            DEFAULT_MODEL,
+            STATUS_AVAILABLE,
+            STATUS_UNAVAILABLE,
+            api_key_from_env,
+            build_brief,
+            model_from_env,
+        )
+
+        project_id = _safe_int(request.args.get("project_id"), 0) or None
+        if project_id is None:
+            latest = g.service.recent_discoverable_ids(limit=1)
+            project_id = latest[0] if latest else None
+
+        brief = None
+        brief_error = None
+        if project_id is not None:
+            try:
+                brief = build_brief(g.db, project_id)
+            except Exception as exc:  # a bad id must not 500 the operator page
+                brief_error = str(exc)
+
+        return render_template(
+            "ai_analyst.html",
+            brief=brief,
+            brief_error=brief_error,
+            project_id=project_id,
+            model_configured=bool(api_key_from_env()),
+            model_name=model_from_env() or DEFAULT_MODEL,
+            status_available=STATUS_AVAILABLE,
+            status_unavailable=STATUS_UNAVAILABLE,
+            page_title="AI Analyst — Operator",
+            seo=_private_seo(g, "AI Analyst", "Internal grounded project analysis."),
+        )
+
     @app.route("/trends")
     def trends_view() -> str:
         """Trend Radar: defensible change in the records BuildScope actually holds.
@@ -2503,6 +2549,63 @@ def _register_cli(app: Flask, cfg: AppConfig) -> None:
         print("-" * 60)
         for row in report["funnel"]:
             print(f"  {row['label']:<44} {row['count']}")
+
+    @app.cli.command("analyst-project")
+    @click.argument("project_id", type=int)
+    @click.option("--json", "as_json", is_flag=True, help="Emit the machine-readable brief.")
+    @click.option("--no-model", is_flag=True, help="Skip the model and print the evidence only.")
+    def analyst_project_command(project_id: int, as_json: bool, no_model: bool) -> None:
+        """Run the grounded AI analyst over one project.
+
+        Prints the evidence-grounded brief and its verification result. With no Gemini key, or
+        with --no-model, it prints the deterministic evidence summary instead, so the command is
+        useful offline and never fails merely because a model is unconfigured.
+        """
+        import json as _json
+
+        from ..ai_analyst import GeminiClient, build_brief
+
+        db = Database(cfg.database_path)
+        db.init_schema()
+        db.init_app_schema()
+        try:
+            client = GeminiClient(api_key="") if no_model else None
+            brief = build_brief(db, project_id, client=client)
+        except Exception as exc:
+            print(f"Analysis failed: {exc}")
+            raise SystemExit(1)
+        finally:
+            db.close()
+
+        if as_json:
+            print(_json.dumps(brief.to_dict(), indent=2, default=str))
+            return
+
+        print(f"AI analyst — project {project_id}")
+        print("=" * 60)
+        print(f"Status:      {brief.status}  (verified: {brief.is_verified})")
+        print(f"Model:       {brief.model or 'none configured'}")
+        print(f"Confidence:  {brief.confidence or '—'}")
+        print()
+        print("Narrative")
+        print("-" * 60)
+        print(brief.narrative)
+        if brief.why_it_matters:
+            print()
+            print("Why it matters")
+            print("-" * 60)
+            print(brief.why_it_matters)
+        if brief.verification_issues:
+            print()
+            print("Verification issues (the narrative was not published as verified)")
+            print("-" * 60)
+            for issue in brief.verification_issues:
+                print(f"  - {issue}")
+        if brief.unsupported_fields:
+            print()
+            print("Not stated in the record: " + ", ".join(brief.unsupported_fields))
+        print()
+        print(f"> {brief.caveat}")
 
     @app.cli.command("report-quality")
     def quality_command() -> None:

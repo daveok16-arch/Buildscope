@@ -711,6 +711,7 @@ class SeoBuilder:
             "/notes",
             "/tags",
             "/admin",
+            "/ai-analyst",
             "/api",
             "/healthz",
         ):

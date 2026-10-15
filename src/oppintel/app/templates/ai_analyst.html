@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block hero %}
+<section class="hero hero-compact">
+  <div class="wrap">
+    <p class="crumb"><a href="{{ url_for('home') }}">Home</a> · Operator · AI Analyst</p>
+    <div class="hero-tagline-kicker">Grounded in the evidence</div>
+    <h1>AI Analyst</h1>
+    <p class="lede">
+      A narrative written by a model over the evidence BuildScope already holds, then re-checked
+      against that evidence. The model is never the source of a fact: a figure, a date or a name
+      that is not in the record is flagged, and a brief that fails the check is shown as
+      unverified with its evidence-only summary instead. A permit is evidence that work was filed,
+      not that a package is available for bid.
+    </p>
+  </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="wrap" style="padding-top:24px; padding-bottom:56px">
+
+  {% if brief_error %}
+    <div class="notice" style="border-left:4px solid #b91c1c">
+      <strong>Could not analyse that project.</strong> {{ brief_error }}
+    </div>
+  {% endif %}
+
+  {% if not model_configured %}
+    <div class="notice" style="border-left:4px solid #b45309">
+      <strong>No model is configured.</strong>
+      Set <code>GEMINI_API_KEY</code> to enable the narrative. The evidence below is produced
+      without a model and is unaffected.
+    </div>
+  {% elif brief and brief.status == status_unavailable %}
+    <div class="notice" style="border-left:4px solid #b45309">
+      <strong>The model could not be reached.</strong>
+      The evidence below is unaffected. The reason is listed under Limitations.
+    </div>
+  {% endif %}
+
+  {% if brief %}
+    <div style="display:flex; gap:28px; flex-wrap:wrap; align-items:flex-start; margin-top:8px">
+
+      <div style="flex:2 1 420px; min-width:320px">
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+          <h2 style="margin:0">Project {{ brief.project_id }}</h2>
+          {% if brief.slug %}
+            <a class="btn btn-small btn-outline"
+               href="{{ url_for('opportunity_detail', slug=brief.slug) }}">Open record</a>
+          {% endif %}
+        </div>
+        <p class="small muted" style="margin-top:6px">
+          Status <strong>{{ brief.status }}</strong>
+          {% if brief.is_verified %}· verified against the record{% else %}· not published as verified{% endif %}
+          · model {{ brief.model or 'none configured' }}
+          · confidence {{ brief.confidence or '—' }}
+          · prompt v{{ brief.prompt_version }}
+        </p>
+
+        <h3>Summary</h3>
+        <p>{{ brief.narrative }}</p>
+
+        {% if brief.why_it_matters and brief.is_verified %}
+          <h3>Why it matters</h3>
+          <p>{{ brief.why_it_matters }}</p>
+        {% endif %}
+
+        {% if brief.verification_issues %}
+          <h3>Verification issues</h3>
+          <p class="small muted">
+            The model's narrative did not pass every grounding check, so the summary above is the
+            evidence-only fallback. These are the checks that failed.
+          </p>
+          <ul class="small">
+            {% for issue in brief.verification_issues %}<li>{{ issue }}</li>{% endfor %}
+          </ul>
+        {% endif %}
+
+        {% if brief.questions_to_resolve %}
+          <h3>Questions to resolve</h3>
+          <ul class="small">
+            {% for q in brief.questions_to_resolve %}<li>{{ q }}</li>{% endfor %}
+          </ul>
+        {% endif %}
+
+        {% if brief.limitations %}
+          <h3>Limitations</h3>
+          <ul class="small">
+            {% for l in brief.limitations %}<li>{{ l }}</li>{% endfor %}
+          </ul>
+        {% endif %}
+
+        <p class="small muted" style="margin-top:18px">&gt; {{ brief.caveat }}</p>
+      </div>
+
+      <div style="flex:1 1 320px; min-width:280px">
+        <h3 style="margin-top:0">Field assessments</h3>
+        {% if brief.field_assessments %}
+          <table class="small" style="width:100%">
+            <thead><tr><th align="left">Field</th><th align="left">Verdict</th></tr></thead>
+            <tbody>
+              {% for a in brief.field_assessments %}
+                <tr>
+                  <td><code>{{ a.field }}</code></td>
+                  <td>{{ a.verdict }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% elif brief.verification_issues %}
+          <p class="small muted">
+            Withheld: the model's field verdicts did not pass verification, so they are not shown.
+          </p>
+        {% else %}
+          <p class="small muted">No field assessments were returned.</p>
+        {% endif %}
+
+        <h3>Not stated in the record</h3>
+        {% if brief.unsupported_fields %}
+          <ul class="small">
+            {% for name in brief.unsupported_fields %}<li>{{ name }}</li>{% endfor %}
+          </ul>
+        {% else %}
+          <p class="small muted">Every presented field has a source.</p>
+        {% endif %}
+      </div>
+    </div>
+  {% elif not brief_error %}
+    <p class="muted">No project is available to analyse. Ingest data first.</p>
+  {% endif %}
+</div>
+{% endblock %}
