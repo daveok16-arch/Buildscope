@@ -17,18 +17,26 @@ import pytest
 
 from conftest_app import build_database
 from oppintel.ai_analyst import (
+    BRIEF_SCHEMA,
     CONFIDENCE_LEVELS,
+    PROVIDER_GEMINI,
+    PROVIDER_XAI,
     STATUS_AVAILABLE,
     STATUS_UNAVAILABLE,
     STATUS_UNVERIFIED,
     AnalystUnavailable,
     GeminiClient,
+    GrokClient,
     api_key_from_env,
     assemble_dossier,
     build_brief,
     collect_facts,
+    default_client,
     deterministic_narrative,
+    gemini_schema_to_json_schema,
+    resolve_provider,
     validate_brief,
+    xai_key_from_env,
 )
 from oppintel.report_generator import PERMIT_EVIDENCE_NOTICE
 from oppintel.reporting import CONFIRMED, NOT_VERIFIED as VERDICT_NOT_VERIFIED
@@ -393,10 +401,17 @@ def test_brief_json_carries_the_caveat_and_unsupported_fields(analyst_db):
 class _StubHandler(BaseHTTPRequestHandler):
     payload: dict = {}
     status: int = 200
+    last_body: dict = {}
+    last_headers: dict = {}
 
     def do_POST(self):  # noqa: N802 - the handler API is fixed
         length = int(self.headers.get("Content-Length", 0))
-        self.rfile.read(length)
+        raw = self.rfile.read(length)
+        try:
+            type(self).last_body = json.loads(raw.decode("utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError):  # pragma: no cover - defensive
+            type(self).last_body = {}
+        type(self).last_headers = dict(self.headers)
         body = json.dumps(self.payload).encode("utf-8")
         self.send_response(self.status)
         self.send_header("Content-Type", "application/json")
@@ -412,6 +427,8 @@ class _StubHandler(BaseHTTPRequestHandler):
 def stub_server():
     server = HTTPServer(("127.0.0.1", 0), _StubHandler)
     server.RequestHandlerClass.status = 200
+    server.RequestHandlerClass.last_body = {}
+    server.RequestHandlerClass.last_headers = {}
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     yield server
@@ -483,3 +500,208 @@ def test_api_key_reads_either_documented_name(monkeypatch):
     assert api_key_from_env() == "sandbox-key"
     monkeypatch.setenv("GEMINI_API_KEY", "documented-key")
     assert api_key_from_env() == "documented-key"
+
+
+# --- the xAI / Grok provider -----------------------------------------------------
+
+def _clear_provider_env(monkeypatch):
+    for name in (
+        "GEMINI_API_KEY", "Gemini_API_Token", "XAI_API_KEY", "Grok_API_Token",
+        "AI_ANALYST_PROVIDER", "GEMINI_MODEL", "XAI_MODEL",
+    ):
+        monkeypatch.delenv(name, raising=False)
+
+
+def test_xai_key_reads_either_documented_name(monkeypatch):
+    _clear_provider_env(monkeypatch)
+    assert xai_key_from_env() == ""
+    monkeypatch.setenv("Grok_API_Token", "sandbox-xai")
+    assert xai_key_from_env() == "sandbox-xai"
+    monkeypatch.setenv("XAI_API_KEY", "documented-xai")
+    assert xai_key_from_env() == "documented-xai"
+
+
+def test_provider_is_empty_with_no_keys(monkeypatch):
+    _clear_provider_env(monkeypatch)
+    assert resolve_provider() == ""
+    assert default_client().available is False, "no key means an unavailable sentinel"
+
+
+def test_provider_prefers_gemini_then_xai(monkeypatch):
+    _clear_provider_env(monkeypatch)
+    monkeypatch.setenv("XAI_API_KEY", "xai-key")
+    assert resolve_provider() == PROVIDER_XAI
+    monkeypatch.setenv("GEMINI_API_KEY", "gemini-key")
+    assert resolve_provider() == PROVIDER_GEMINI, "Gemini wins by default when both are present"
+
+
+def test_an_explicit_provider_choice_wins(monkeypatch):
+    _clear_provider_env(monkeypatch)
+    monkeypatch.setenv("GEMINI_API_KEY", "gemini-key")
+    monkeypatch.setenv("XAI_API_KEY", "xai-key")
+    monkeypatch.setenv("AI_ANALYST_PROVIDER", "xai")
+    assert resolve_provider() == PROVIDER_XAI
+    monkeypatch.setenv("AI_ANALYST_PROVIDER", "gemini")
+    assert resolve_provider() == PROVIDER_GEMINI
+
+
+def test_a_named_but_unconfigured_provider_falls_back_to_a_present_key(monkeypatch):
+    """An explicit choice must not force UNAVAILABLE while a usable key sits in the environment."""
+    _clear_provider_env(monkeypatch)
+    monkeypatch.setenv("XAI_API_KEY", "xai-key")
+    monkeypatch.setenv("AI_ANALYST_PROVIDER", "gemini")
+    assert resolve_provider() == PROVIDER_XAI
+
+
+def test_default_client_selects_the_matching_transport(monkeypatch):
+    _clear_provider_env(monkeypatch)
+    monkeypatch.setenv("XAI_API_KEY", "xai-key")
+    assert isinstance(default_client(), GrokClient)
+    monkeypatch.setenv("GEMINI_API_KEY", "gemini-key")
+    assert isinstance(default_client(), GeminiClient)
+    assert isinstance(default_client(provider=PROVIDER_XAI), GrokClient)
+
+
+def test_schema_conversion_matches_the_gemini_contract():
+    """The two providers must be constrained to the same contract, only the type spelling differs."""
+    converted = gemini_schema_to_json_schema(BRIEF_SCHEMA)
+    assert converted["type"] == "object"
+    assert converted["properties"]["summary"]["type"] == "string"
+    items = converted["properties"]["field_assessments"]["items"]
+    assert items["type"] == "object"
+    assert sorted(items["properties"]) == ["field", "reason", "verdict"]
+    # Field names, required list and enum values are carried across unchanged.
+    assert set(converted["properties"]) == set(BRIEF_SCHEMA["properties"])
+    assert converted["required"] == BRIEF_SCHEMA["required"]
+    assert converted["properties"]["confidence"]["enum"] == list(CONFIDENCE_LEVELS)
+    assert items["properties"]["verdict"]["enum"] == list(
+        BRIEF_SCHEMA["properties"]["field_assessments"]["items"]["properties"]["verdict"]["enum"]
+    )
+
+
+def test_schema_conversion_emits_only_lower_case_types():
+    encoded = json.dumps(gemini_schema_to_json_schema(BRIEF_SCHEMA))
+    for upper in ("OBJECT", "ARRAY", "STRING", "NUMBER", "INTEGER", "BOOLEAN"):
+        assert upper not in encoded
+
+
+def test_grok_client_sends_a_bearer_token_and_a_json_schema(stub_server):
+    """The request must carry the key as a bearer token and constrain the model to the schema."""
+    stub_server.RequestHandlerClass.payload = {
+        "choices": [
+            {"finish_reason": "stop", "message": {"content": json.dumps(_passing_payload([]))}}
+        ]
+    }
+    client = GrokClient(
+        api_key="test-xai-key",
+        model="grok-3-mini",
+        endpoint=f"http://127.0.0.1:{stub_server.server_port}",
+    )
+    assert client.available is True
+    payload = client.analyse("system", "dossier")
+    assert payload["confidence"] == "medium"
+
+    sent = stub_server.RequestHandlerClass.last_body
+    assert sent["model"] == "grok-3-mini"
+    assert sent["temperature"] == 0
+    assert sent["messages"][0]["role"] == "system"
+    assert sent["messages"][1]["content"] == "dossier"
+    fmt = sent["response_format"]
+    assert fmt["type"] == "json_schema"
+    assert fmt["json_schema"]["strict"] is True
+    assert fmt["json_schema"]["schema"]["type"] == "object"
+    headers = stub_server.RequestHandlerClass.last_headers
+    assert headers.get("Authorization") == "Bearer test-xai-key"
+
+
+def test_grok_client_rejects_a_truncated_response(stub_server):
+    stub_server.RequestHandlerClass.payload = {
+        "choices": [{"finish_reason": "length", "message": {"content": "{}"}}]
+    }
+    client = GrokClient(
+        api_key="k", model="grok-3-mini", endpoint=f"http://127.0.0.1:{stub_server.server_port}"
+    )
+    with pytest.raises(AnalystUnavailable) as excinfo:
+        client.analyse("system", "dossier")
+    assert "length" in str(excinfo.value)
+
+
+def test_grok_client_rejects_an_empty_choice_list(stub_server):
+    stub_server.RequestHandlerClass.payload = {"choices": []}
+    client = GrokClient(
+        api_key="k", model="grok-3-mini", endpoint=f"http://127.0.0.1:{stub_server.server_port}"
+    )
+    with pytest.raises(AnalystUnavailable):
+        client.analyse("system", "dossier")
+
+
+def test_grok_client_condenses_an_http_error(stub_server):
+    """The Grok path condenses an HTTP failure the same way the Gemini path does."""
+    stub_server.RequestHandlerClass.payload = {
+        "error": {
+            "code": 401,
+            "message": (
+                "Incorrect API key provided. See https://console.x.ai for details."
+            ),
+        }
+    }
+    stub_server.RequestHandlerClass.status = 401
+    client = GrokClient(
+        api_key="bad", model="grok-3-mini", endpoint=f"http://127.0.0.1:{stub_server.server_port}"
+    )
+    with pytest.raises(AnalystUnavailable) as excinfo:
+        client.analyse("system", "dossier")
+    message = str(excinfo.value)
+    assert "Grok" in message
+    assert "401" in message
+    assert "https://" not in message
+    assert "{" not in message
+
+
+def test_grok_client_is_unavailable_without_a_key():
+    assert GrokClient(api_key="").available is False
+    assert GrokClient(api_key="   ").available is False
+
+
+def test_a_grok_brief_goes_through_the_same_verification(analyst_db):
+    """A Grok payload is validated exactly like a Gemini payload: the transport is not trusted."""
+    pid = _project_id(analyst_db)
+    facts = collect_facts(analyst_db, pid)
+    payload = _passing_payload(facts)
+    payload["summary"] = "The project is worth $9,999,999 and is out for bid."
+    client = FakeAnalystClient(payload, model="grok-3-mini")
+    brief = build_brief(analyst_db, pid, client=client)
+    assert brief.status == STATUS_UNVERIFIED
+    assert brief.is_verified is False
+    assert brief.model == "grok-3-mini"
+    assert brief.narrative == deterministic_narrative(brief)
+
+
+def test_a_grounded_grok_payload_is_published(analyst_db):
+    pid = _project_id(analyst_db)
+    facts = collect_facts(analyst_db, pid)
+    client = FakeAnalystClient(_passing_payload(facts), model="grok-3-mini")
+    brief = build_brief(analyst_db, pid, client=client)
+    assert brief.status == STATUS_AVAILABLE
+    assert brief.is_verified is True
+    assert brief.model == "grok-3-mini"
+
+
+def test_build_brief_with_no_key_names_both_options(analyst_db, monkeypatch):
+    """The unavailable message tells the operator both keys that would enable the narrative."""
+    _clear_provider_env(monkeypatch)
+    brief = build_brief(analyst_db, _project_id(analyst_db))
+    assert brief.status == STATUS_UNAVAILABLE
+    assert any("GEMINI_API_KEY" in l and "XAI_API_KEY" in l for l in brief.limitations)
+
+
+def test_build_brief_uses_the_grok_provider_when_only_xai_is_configured(analyst_db, monkeypatch):
+    """With only an xAI key set, the default client is Grok and its model id is recorded."""
+    _clear_provider_env(monkeypatch)
+    monkeypatch.setenv("XAI_API_KEY", "xai-key")
+    monkeypatch.setattr(GrokClient, "analyse", lambda self, system, dossier: _passing_payload(
+        collect_facts(analyst_db, _project_id(analyst_db))
+    ))
+    brief = build_brief(analyst_db, _project_id(analyst_db))
+    assert brief.status == STATUS_AVAILABLE
+    assert brief.model == "grok-3-mini"

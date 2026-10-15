@@ -22,6 +22,9 @@ matter in production are where that file lives and how it is kept fresh.
 | `HOST`, `PORT` | No | `127.0.0.1`, `5000` | Development server bind address. A hosting platform sets `PORT` |
 | `GEMINI_API_KEY` | No | empty | Key for the operator AI analyst (`/ai-analyst`, `/api/project/<id>/analyst`, `analyst-project`). Unset means the analyst reports `UNAVAILABLE` and the deterministic evidence summary is used; nothing else is affected. `Gemini_API_Token` is also read, for sandboxes that inject the key under that name |
 | `GEMINI_MODEL` | No | `gemini-2.5-flash` | Model id the analyst calls |
+| `XAI_API_KEY` | No | empty | Alternative analyst provider: xAI's Grok, via its OpenAI-compatible API. Either provider works and both go through the same grounding and verification. `Grok_API_Token` is also read |
+| `XAI_MODEL` | No | `grok-3-mini` | Model id the Grok provider calls |
+| `AI_ANALYST_PROVIDER` | No | empty | `gemini` or `xai`. Only needed when both keys are set, to pick one deliberately; otherwise Gemini is preferred when its key is present, then xAI |
 
 `CSRF_ENABLED` follows the same convention as the secure-cookie flag: it defaults on, and off only
 when `FLASK_DEBUG` is set, so a real deployment is protected unless someone deliberately disables

@@ -44,6 +44,11 @@ evidence and then re-checked against it. The payload is honest by construction:
   infer absence from a `null`.
 - `caveat` always carries the permit-evidence notice; the endpoint never asserts a bid is open.
 
+The narrative may be written by either configured provider — Gemini or xAI's Grok. `model` records
+which model produced the prose. The provider is a transport choice only: both are constrained to
+the same JSON schema and both pass through the same verification, so the provider does not change
+what the analyst is permitted to claim.
+
 ## Machine-readable honesty
 
 - A missing value is `null`, not a placeholder string.

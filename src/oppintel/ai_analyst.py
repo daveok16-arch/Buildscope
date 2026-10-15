@@ -13,8 +13,9 @@ Four mechanisms make that structural rather than aspirational:
 2. **A dossier, not a prompt trick** (:func:`assemble_dossier`). The facts are serialised into a
    numbered dossier, and the model is asked to write about the dossier. It is never asked to
    recall anything, so it has nothing to hallucinate from.
-3. **Structured output** (:data:`BRIEF_SCHEMA`). Gemini is constrained to a JSON schema, so the
-   response is a fixed set of fields and a hallucinated extra section cannot exist.
+3. **Structured output** (:data:`BRIEF_SCHEMA`). The model is constrained to a JSON schema
+   (Gemini's ``responseSchema``, or xAI's ``response_format`` ``json_schema``), so the response is
+   a fixed set of fields and a hallucinated extra section cannot exist.
 4. **Verification before publication** (:func:`validate_brief`). The model's free text is
    re-checked against the fact list: a number that is not a stored figure, a date that is not a
    stored date, a restated not-verified marker, bid language the permit-evidence notice forbids,
@@ -22,9 +23,15 @@ Four mechanisms make that structural rather than aspirational:
    ``UNVERIFIED`` and replaces the narrative with a deterministic, evidence-only summary. The
    model's reading is then shown only as an explicitly labelled proposal.
 
-With no ``GEMINI_API_KEY``, or on any transport or decoding error, the analyst returns an
-``UNAVAILABLE`` brief built entirely from the evidence. It never blocks a page and never pretends
-an analysis happened.
+With no provider key configured — for either Gemini or xAI — or on any transport or decoding
+error, the analyst returns an ``UNAVAILABLE`` brief built entirely from the evidence. It never
+blocks a page and never pretends an analysis happened.
+
+Two providers are supported, both as dependency-free standard-library clients: Gemini
+(:class:`GeminiClient`, ``generateContent``) and xAI's OpenAI-compatible Grok
+(:class:`GrokClient`, ``chat/completions``). Which one is used is resolved by
+:func:`resolve_provider`, and both go through the same :class:`AnalystClient` protocol, so the
+evidence pipeline and the verification pass are identical whichever model wrote the prose.
 
 The transport is a :class:`Protocol`, so the evidence pipeline and the verification pass are
 tested against a real database with no network at all.
@@ -56,12 +63,32 @@ from .reporting import (
 #: under an older contract is recognisable rather than silently compared with a newer one.
 PROMPT_VERSION = "1"
 
-#: Default model. Flash is fast and cheap and, with a constrained schema and temperature 0,
-#: accurate enough for prose over a dossier the caller has already assembled.
+#: Default model per provider. Flash is fast and cheap and, with a constrained schema and
+#: temperature 0, accurate enough for prose over a dossier the caller has already assembled.
 DEFAULT_MODEL = "gemini-2.5-flash"
+
+#: Provider identifiers. ``resolve_provider`` returns one of these, or ``""`` when neither key is
+#: configured.
+PROVIDER_GEMINI = "gemini"
+PROVIDER_XAI = "xai"
 
 #: The public Gemini endpoint. Overridable so a test can point at a local stub.
 GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models"
+
+#: xAI's OpenAI-compatible endpoint. A single ``POST {endpoint}/chat/completions``.
+XAI_ENDPOINT = "https://api.x.ai/v1"
+
+#: Default xAI model. Grok's cheap, fast tier, used for the same reason as ``DEFAULT_MODEL``.
+DEFAULT_XAI_MODEL = "grok-3-mini"
+
+#: Per-provider model defaults, keyed by provider id.
+_PROVIDER_DEFAULT_MODEL = {
+    PROVIDER_GEMINI: DEFAULT_MODEL,
+    PROVIDER_XAI: DEFAULT_XAI_MODEL,
+}
+
+#: The environment variable that names the preferred provider, when a host sets both keys.
+PROVIDER_ENV = "AI_ANALYST_PROVIDER"
 
 #: Brief statuses.
 STATUS_AVAILABLE = "AVAILABLE"
@@ -134,8 +161,55 @@ def api_key_from_env() -> str:
     )
 
 
-def model_from_env() -> str:
-    return (os.environ.get("GEMINI_MODEL") or "").strip() or DEFAULT_MODEL
+def xai_key_from_env() -> str:
+    """The xAI key, read from the environment under either documented name.
+
+    ``XAI_API_KEY`` is the name ``.env.example`` documents; a sandbox may inject the same key as
+    ``Grok_API_Token``. As with the Gemini key, reading both means no key is ever written down.
+    """
+    return (
+        (os.environ.get("XAI_API_KEY") or "").strip()
+        or (os.environ.get("Grok_API_Token") or "").strip()
+    )
+
+
+def model_from_env(provider: str = PROVIDER_GEMINI) -> str:
+    """The model id for ``provider``, from the environment or the provider default."""
+    if provider == PROVIDER_XAI:
+        return (os.environ.get("XAI_MODEL") or "").strip() or _PROVIDER_DEFAULT_MODEL[PROVIDER_XAI]
+    return (os.environ.get("GEMINI_MODEL") or "").strip() or _PROVIDER_DEFAULT_MODEL[PROVIDER_GEMINI]
+
+
+def resolve_provider() -> str:
+    """Which provider a caller with no explicit choice should use.
+
+    An explicit ``AI_ANALYST_PROVIDER`` wins, so a host that sets both keys picks deliberately.
+    Otherwise Gemini is preferred when its key is present, then xAI. Returns ``""`` when neither
+    key is configured — the analyst then reports ``UNAVAILABLE`` rather than guessing.
+    """
+    preferred = (os.environ.get(PROVIDER_ENV) or "").strip().lower()
+    if preferred in (PROVIDER_GEMINI, PROVIDER_XAI):
+        if preferred == PROVIDER_GEMINI and api_key_from_env():
+            return PROVIDER_GEMINI
+        if preferred == PROVIDER_XAI and xai_key_from_env():
+            return PROVIDER_XAI
+        # Named but unconfigured: fall through to whichever key is actually present, rather than
+        # silently reporting UNAVAILABLE while a usable key sits in the environment.
+    if api_key_from_env():
+        return PROVIDER_GEMINI
+    if xai_key_from_env():
+        return PROVIDER_XAI
+    return ""
+
+
+def provider_model(provider: str) -> str:
+    """The model id a provider will use, for display before a call is made."""
+    return model_from_env(provider) if provider else ""
+
+
+def configured_key_names() -> str:
+    """The env var names a caller can set, for a message that tells the operator what to do."""
+    return "GEMINI_API_KEY or XAI_API_KEY"
 
 
 class GeminiClient:
@@ -147,6 +221,10 @@ class GeminiClient:
     hand-rolled.
     """
 
+    #: Short name used in operator-facing messages, and the ``resolve_provider`` identifier.
+    provider = PROVIDER_GEMINI
+    provider_label = "Gemini"
+
     def __init__(
         self,
         *,
@@ -156,7 +234,7 @@ class GeminiClient:
         timeout: int = 45,
     ):
         self.api_key = (api_key if api_key is not None else api_key_from_env()).strip()
-        self.model = (model or model_from_env()).strip()
+        self.model = (model or model_from_env(PROVIDER_GEMINI)).strip()
         self.endpoint = endpoint.rstrip("/")
         self.timeout = timeout
 
@@ -167,7 +245,7 @@ class GeminiClient:
     def analyse(self, system: str, dossier: str) -> dict[str, Any]:
         if not self.available:
             raise AnalystUnavailable(
-                "No Gemini model is configured (set GEMINI_API_KEY)."
+                f"No {self.provider_label} model is configured (set {configured_key_names()})."
             )
         body = {
             "systemInstruction": {"parts": [{"text": system}]},
@@ -190,21 +268,26 @@ class GeminiClient:
             with urllib.request.urlopen(request, timeout=self.timeout) as response:
                 payload = json.loads(response.read().decode("utf-8"))
         except urllib.error.HTTPError as exc:
-            raise AnalystUnavailable(_http_error_message(exc)) from exc
+            raise AnalystUnavailable(_http_error_message(exc, self.provider_label)) from exc
         except (urllib.error.URLError, TimeoutError, OSError) as exc:
-            raise AnalystUnavailable(f"Gemini could not be reached: {exc}") from exc
+            raise AnalystUnavailable(
+                f"{self.provider_label} could not be reached: {exc}"
+            ) from exc
         except json.JSONDecodeError as exc:
-            raise AnalystUnavailable(f"Gemini returned malformed JSON: {exc}") from exc
+            raise AnalystUnavailable(
+                f"{self.provider_label} returned malformed JSON: {exc}"
+            ) from exc
 
         return _extract_payload(payload)
 
 
-def _http_error_message(exc: urllib.error.HTTPError) -> str:
+def _http_error_message(exc: urllib.error.HTTPError, provider_label: str = "Gemini") -> str:
     """A short, operator-readable reason for an HTTP failure.
 
-    The raw Gemini body is a JSON document that repeats the status, embeds a documentation URL and
-    can run to hundreds of characters. It is reduced to the status and the error's first sentence,
-    so a limitation reads as a sentence and no URL leaks into a brief.
+    The raw body is a JSON document that repeats the status, embeds a documentation URL and can
+    run to hundreds of characters. It is reduced to the status and the error's first sentence, so
+    a limitation reads as a sentence and no URL leaks into a brief. Both providers nest the reason
+    the same way (``error.message``), so one reader serves both.
     """
     code = getattr(exc, "code", "?")
     try:
@@ -215,12 +298,12 @@ def _http_error_message(exc: urllib.error.HTTPError) -> str:
     # Keep the first sentence only; the remainder is usually a link or a billing aside.
     message = re.split(r"\.\s|https?://", message, maxsplit=1)[0].strip().rstrip(".")
     if message:
-        return f"Gemini returned HTTP {code}: {message}."
-    return f"Gemini returned HTTP {code}."
+        return f"{provider_label} returned HTTP {code}: {message}."
+    return f"{provider_label} returned HTTP {code}."
 
 
 def _extract_payload(payload: dict[str, Any]) -> dict[str, Any]:
-    """Pull the structured brief out of a ``generateContent`` response.
+    """Pull the structured brief out of a Gemini ``generateContent`` response.
 
     A blocked or truncated response is an error, not an empty brief: an empty brief would read as
     "the model found nothing", which is a different and false statement.
@@ -246,6 +329,162 @@ def _extract_payload(payload: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(decoded, dict):
         raise AnalystUnavailable("Gemini response was not a JSON object.")
     return decoded
+
+
+# --- the xAI / Grok transport ---------------------------------------------------
+
+#: Gemini's schema dialect spells the primitive types in upper case. JSON Schema, which xAI's
+#: ``response_format`` accepts, spells them in lower case. Everything else about ``BRIEF_SCHEMA``
+#: (properties, required, enum, items) is already valid JSON Schema.
+_GEMINI_TYPE_TO_JSON_SCHEMA = {
+    "OBJECT": "object",
+    "ARRAY": "array",
+    "STRING": "string",
+    "NUMBER": "number",
+    "INTEGER": "integer",
+    "BOOLEAN": "boolean",
+}
+
+
+def gemini_schema_to_json_schema(schema: dict[str, Any]) -> dict[str, Any]:
+    """Translate :data:`BRIEF_SCHEMA` from Gemini's dialect to standard JSON Schema.
+
+    A pure structural conversion — the field names, the ``required`` list and every enum value are
+    carried across unchanged, so the two providers are constrained to the *same* contract. Only the
+    primitive type names differ between the dialects.
+    """
+    converted: dict[str, Any] = {}
+    for key, value in schema.items():
+        if key == "type" and isinstance(value, str):
+            converted[key] = _GEMINI_TYPE_TO_JSON_SCHEMA.get(value.upper(), value.lower())
+        elif key == "properties" and isinstance(value, dict):
+            converted[key] = {
+                name: gemini_schema_to_json_schema(sub) for name, sub in value.items()
+            }
+        elif key == "items" and isinstance(value, dict):
+            converted[key] = gemini_schema_to_json_schema(value)
+        elif key == "enum" and isinstance(value, list):
+            converted[key] = list(value)
+        else:
+            converted[key] = value
+    return converted
+
+
+def _extract_openai_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    """Pull the structured brief out of an OpenAI-compatible ``chat/completions`` response.
+
+    The same rule as the Gemini reader: a blocked, truncated or empty response is an error, not an
+    empty brief, because an empty brief would read as "the model found nothing".
+    """
+    choices = payload.get("choices") or []
+    if not choices:
+        raise AnalystUnavailable("Grok returned no choice.")
+    choice = choices[0]
+    finish = choice.get("finish_reason")
+    if finish in ("length", "content_filter"):
+        raise AnalystUnavailable(f"Grok stopped early ({finish}).")
+    content = (choice.get("message") or {}).get("content")
+    if not isinstance(content, str) or not content.strip():
+        raise AnalystUnavailable("Grok returned an empty response.")
+    try:
+        decoded = json.loads(content)
+    except json.JSONDecodeError as exc:
+        raise AnalystUnavailable(f"Grok response was not the expected JSON: {exc}") from exc
+    if not isinstance(decoded, dict):
+        raise AnalystUnavailable("Grok response was not a JSON object.")
+    return decoded
+
+
+class GrokClient:
+    """A minimal, dependency-free xAI Grok client.
+
+    xAI's API is OpenAI-compatible: one ``POST {endpoint}/chat/completions`` with a bearer token,
+    the same JSON-schema constraint the Gemini client uses, and the structured brief returned as a
+    JSON string in ``choices[0].message.content``. Like :class:`GeminiClient` it is standard
+    library only, so adding the second provider still adds no dependency.
+    """
+
+    provider = PROVIDER_XAI
+    provider_label = "Grok"
+
+    def __init__(
+        self,
+        *,
+        api_key: str | None = None,
+        model: str | None = None,
+        endpoint: str = XAI_ENDPOINT,
+        timeout: int = 45,
+    ):
+        self.api_key = (api_key if api_key is not None else xai_key_from_env()).strip()
+        self.model = (model or model_from_env(PROVIDER_XAI)).strip()
+        self.endpoint = endpoint.rstrip("/")
+        self.timeout = timeout
+
+    @property
+    def available(self) -> bool:
+        return bool(self.api_key and self.model)
+
+    def analyse(self, system: str, dossier: str) -> dict[str, Any]:
+        if not self.available:
+            raise AnalystUnavailable(
+                f"No {self.provider_label} model is configured (set {configured_key_names()})."
+            )
+        body = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": dossier},
+            ],
+            # Temperature 0, for the same reproducibility reason as the Gemini client.
+            "temperature": 0,
+            "response_format": {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "analyst_brief",
+                    "strict": True,
+                    "schema": gemini_schema_to_json_schema(BRIEF_SCHEMA),
+                },
+            },
+        }
+        request = urllib.request.Request(
+            f"{self.endpoint}/chat/completions",
+            data=json.dumps(body).encode("utf-8"),
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.api_key}",
+            },
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=self.timeout) as response:
+                payload = json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            raise AnalystUnavailable(_http_error_message(exc, self.provider_label)) from exc
+        except (urllib.error.URLError, TimeoutError, OSError) as exc:
+            raise AnalystUnavailable(
+                f"{self.provider_label} could not be reached: {exc}"
+            ) from exc
+        except json.JSONDecodeError as exc:
+            raise AnalystUnavailable(
+                f"{self.provider_label} returned malformed JSON: {exc}"
+            ) from exc
+
+        return _extract_openai_payload(payload)
+
+
+def default_client(*, model: str | None = None, provider: str | None = None) -> AnalystClient:
+    """The client for the configured provider, or an unavailable Gemini client as a sentinel.
+
+    When no key is configured, returns a :class:`GeminiClient` with no key: ``available`` is False
+    and the analyst reports ``UNAVAILABLE`` with the evidence intact, which is the documented
+    behaviour for "no model".
+    """
+    chosen = provider if provider is not None else resolve_provider()
+    if chosen == PROVIDER_XAI:
+        return GrokClient(model=model)
+    if chosen == PROVIDER_GEMINI:
+        return GeminiClient(model=model)
+    return GeminiClient(api_key="")
 
 
 #: The schema the model is constrained to. Every field is required, so a response that omits the
@@ -1082,11 +1321,11 @@ def build_brief(
         brief.narrative = deterministic_narrative(brief)
         return brief
 
-    client = client if client is not None else GeminiClient(model=model)
+    client = client if client is not None else default_client(model=model)
     if not client.available:
         brief.limitations.append(
-            "No Gemini model is configured (set GEMINI_API_KEY). The analysis is unavailable; "
-            "the evidence below is unaffected."
+            f"No model is configured (set {configured_key_names()}). The analysis is "
+            "unavailable; the evidence below is unaffected."
         )
         brief.narrative = deterministic_narrative(brief)
         return brief
@@ -1102,7 +1341,7 @@ def build_brief(
         payload,
         project_id=project_id,
         slug=slug,
-        model=client.model if isinstance(client, GeminiClient) else (model or DEFAULT_MODEL),
+        model=getattr(client, "model", None) or (model or DEFAULT_MODEL),
         generated_at=brief.generated_at,
         notice=notice,
     )

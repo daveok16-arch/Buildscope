@@ -1212,9 +1212,9 @@ def create_app(config: AppConfig | None = None) -> Flask:
             DEFAULT_MODEL,
             STATUS_AVAILABLE,
             STATUS_UNAVAILABLE,
-            api_key_from_env,
             build_brief,
-            model_from_env,
+            provider_model,
+            resolve_provider,
         )
 
         project_id = _safe_int(request.args.get("project_id"), 0) or None
@@ -1230,13 +1230,15 @@ def create_app(config: AppConfig | None = None) -> Flask:
             except Exception as exc:  # a bad id must not 500 the operator page
                 brief_error = str(exc)
 
+        provider = resolve_provider()
         return render_template(
             "ai_analyst.html",
             brief=brief,
             brief_error=brief_error,
             project_id=project_id,
-            model_configured=bool(api_key_from_env()),
-            model_name=model_from_env() or DEFAULT_MODEL,
+            model_configured=bool(provider),
+            model_name=provider_model(provider) or DEFAULT_MODEL,
+            provider=provider,
             status_available=STATUS_AVAILABLE,
             status_unavailable=STATUS_UNAVAILABLE,
             page_title="AI Analyst — Operator",
@@ -2557,7 +2559,7 @@ def _register_cli(app: Flask, cfg: AppConfig) -> None:
     def analyst_project_command(project_id: int, as_json: bool, no_model: bool) -> None:
         """Run the grounded AI analyst over one project.
 
-        Prints the evidence-grounded brief and its verification result. With no Gemini key, or
+        Prints the evidence-grounded brief and its verification result. With no provider key, or
         with --no-model, it prints the deterministic evidence summary instead, so the command is
         useful offline and never fails merely because a model is unconfigured.
         """

@@ -29,8 +29,8 @@
   {% if not model_configured %}
     <div class="notice" style="border-left:4px solid #b45309">
       <strong>No model is configured.</strong>
-      Set <code>GEMINI_API_KEY</code> to enable the narrative. The evidence below is produced
-      without a model and is unaffected.
+      Set <code>GEMINI_API_KEY</code> or <code>XAI_API_KEY</code> to enable the narrative. The
+      evidence below is produced without a model and is unaffected.
     </div>
   {% elif brief and brief.status == status_unavailable %}
     <div class="notice" style="border-left:4px solid #b45309">
@@ -53,7 +53,13 @@
         <p class="small muted" style="margin-top:6px">
           Status <strong>{{ brief.status }}</strong>
           {% if brief.is_verified %}· verified against the record{% else %}· not published as verified{% endif %}
-          · model {{ brief.model or 'none configured' }}
+          {% if brief.model %}
+            · model {{ brief.model }}
+          {% elif model_configured %}
+            · model not recorded (no model answered)
+          {% else %}
+            · model none configured
+          {% endif %}
           · confidence {{ brief.confidence or '—' }}
           · prompt v{{ brief.prompt_version }}
         </p>

@@ -14,12 +14,18 @@ PYTHONPATH="src" python -m pytest tests/ -q
 Python 3.13.15. No `vendor/python` in this checkout (it is git-ignored), so dependencies were
 installed from `requirements.txt`.
 
-## B. The Gemini gap
+## B. The Gemini gap (and the second provider)
 
 `metadata.json` declares `majorCapabilities: ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]` and
-`.env.example` documents `GEMINI_API_KEY`, but there is **no AI code anywhere** in the running
+`.env.example` documents `GEMINI_API_KEY`, but there was **no AI code anywhere** in the running
 app. `docs/engineering/BUILD_SCOPE_REPOSITORY_AUDIT.md` already flagged this as an unimplemented
 capability. The analyst fills that gap without weakening any honesty rule.
+
+A second provider, xAI's Grok (`XAI_API_KEY`), was added afterwards at the operator's request. It
+is a transport alternative, not a second design: the same dossier, the same `BRIEF_SCHEMA` (its
+Gemini-dialect types converted to standard JSON Schema), the same temperature 0, and the same
+`validate_brief` pass. Because verification runs on the payload rather than the transport, a Grok
+brief is demoted exactly like a Gemini one when the evidence does not license its prose.
 
 ## C. What the analyst must never do
 
@@ -100,9 +106,19 @@ flow — the model is never the source of a fact, only of prose about facts that
   render, and no surface fails.
 * A fabricated payload (an unsupported `$9,999,999` and "out for bid") is demoted to `UNVERIFIED`
   with the deterministic summary, exactly as designed.
-* Tests: `tests/test_ai_analyst.py` (31) and `tests/test_ai_analyst_app.py` (16). Full suite:
-  1179 passed, 1 skipped. No test reaches the public endpoint — the model is reached through the
-  `AnalystClient` Protocol, with a real local HTTP stub for the transport itself.
+* Tests: `tests/test_ai_analyst.py` (48) and `tests/test_ai_analyst_app.py` (16). Full suite:
+  1196 passed, 1 skipped. No test reaches a public endpoint — the model is reached through the
+  `AnalystClient` Protocol, with a real local HTTP stub for each transport (Gemini's
+  `generateContent` and xAI's `chat/completions`).
+* Provider selection: `resolve_provider` prefers an explicit `AI_ANALYST_PROVIDER`, then Gemini,
+  then xAI, then `""`. Unit tests cover each branch, the fall-through when a named provider has no
+  key, and the schema conversion (same field names, `required` and enums; only type spelling
+  differs).
+* **Live verification is asymmetric, and the doc says so.** The Gemini path was verified live
+  against `gemini-2.5-flash` (an `AVAILABLE`/`verified` brief on a real Dallas mechanical permit).
+  The Grok path is verified against the documented xAI request/response shape through a local stub
+  only: **no `XAI_API_KEY`/`Grok_API_Token` was present in this environment**, so it has not been
+  exercised against the live xAI API. Its test coverage must not be read as a live confirmation.
 * Live stability, five consecutive real projects: three `AVAILABLE`/`verified`, one demoted to
   `UNVERIFIED` because the model slipped "not verified" into a limitation (the guard caught it and
   the operator sees the evidence-only summary), and one `UNAVAILABLE` when the free-tier quota was

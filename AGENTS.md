@@ -422,8 +422,16 @@ running and cannot give a writable persistent directory) is **usually unsuitable
 * `src/oppintel/ai_analyst.py`. An LLM writes prose about the evidence; it is never the source of
   a fact. The flow inverts the usual one: `collect_facts` emits a fact only for a field a stored
   evidence row supports (`reporting.field_verdict`), an unsupported field becomes an explicit
-  unknown, `assemble_dossier` serialises the facts into a numbered dossier, and Gemini is
+  unknown, `assemble_dossier` serialises the facts into a numbered dossier, and the model is
   constrained to a JSON schema (`BRIEF_SCHEMA`) at temperature 0.
+* **Two providers, one contract.** Gemini (`GeminiClient`, `generateContent`) and xAI's Grok
+  (`GrokClient`, the OpenAI-compatible `chat/completions`). `resolve_provider` picks one: an
+  explicit `AI_ANALYST_PROVIDER` (`gemini`/`xai`) wins, else Gemini when its key is present, else
+  xAI, else `""`. `default_client` builds the matching transport. `BRIEF_SCHEMA` is written in
+  Gemini's dialect (upper-case types); `gemini_schema_to_json_schema` converts it to standard JSON
+  Schema for xAI, changing only the type spelling — field names, `required` and enums are carried
+  across, so both providers are constrained to the *same* contract. `build_brief` reads the model
+  id off whichever client ran, so a Grok brief records a Grok model.
 * **Verification before publication.** `validate_brief` re-derives support from the fact list and
   flags any fact-shaped token in the model's free text that is not among the supported values: a
   number not in the dossier (scale shorthand such as `2.5M` of a stored `2,500,000` is accepted;
@@ -431,26 +439,33 @@ running and cannot give a writable persistent directory) is **usually unsuitable
   language the notice forbids, or a field verdict the model re-graded. A violation sets
   `status=UNVERIFIED`, floors confidence, and **discards every piece of model prose** — narrative,
   `why_it_matters`, field assessments, questions and limitations are all replaced with
-  evidence-derived text, so an offending sentence cannot survive in the page or the JSON.
+  evidence-derived text, so an offending sentence cannot survive in the page or the JSON. The
+  check is provider-blind: it runs on the payload, not on the transport, so a Grok payload is
+  verified exactly like a Gemini one.
 * **The bid-language check is clause-scoped and negation-aware.** The caveat is itself a negation
   ("does not by itself confirm that the package is currently available for bid"), so a model
   restating it is honest, not claiming. `_negated` excuses a forbidden phrase only when *every*
   occurrence sits in a clause containing a negation; a claim in its own clause still flags. The
   negation list holds whole words only, so a bare "No." does not excuse the next sentence.
-* **Errors are sentences, not payloads.** `_http_error_message` reduces a Gemini HTTP failure to
-  the status and the error's first sentence, because the raw body is a JSON document with a
-  documentation URL that would otherwise be pasted into a limitation (and leak a URL into a brief).
-* **Graceful absence.** No `GEMINI_API_KEY` (or any transport/decoding error) yields
-  `status=UNAVAILABLE` with the evidence intact; a page never fails and never pretends an
-  analysis happened. The page distinguishes "no model configured" from "the model could not be
-  reached". The key is read from `GEMINI_API_KEY` or `Gemini_API_Token`; never committed.
+* **Errors are sentences, not payloads.** `_http_error_message(exc, provider_label)` reduces an
+  HTTP failure to the status and the error's first sentence, because the raw body is a JSON
+  document with a documentation URL that would otherwise be pasted into a limitation (and leak a
+  URL into a brief). Both providers nest the reason as `error.message`, so one reader serves both.
+* **Graceful absence.** No key for either provider (or any transport/decoding error) yields
+  `status=UNAVAILABLE` with the evidence intact; a page never fails and never pretends an analysis
+  happened. The page distinguishes "no model configured" from "the model could not be reached".
+  Keys are read from `GEMINI_API_KEY`/`Gemini_API_Token` and `XAI_API_KEY`/`Grok_API_Token`; never
+  committed.
 * **Free-tier quota.** `gemini-2.5-flash` on a free key returns `429` under sustained use, which
   surfaces as `UNAVAILABLE` — the design already covers it, so a quota wall degrades to the
   evidence-only summary rather than an error page.
-* **No SDK.** `GeminiClient` is a standard-library `generateContent` POST, so the analyst adds no
-  dependency (the repo ships four). The transport is an `AnalystClient` Protocol, so the evidence
-  pipeline and the verification pass are tested with no network; `GeminiClient` is tested against
-  a real local HTTP stub, and the live path was verified against `gemini-2.5-flash`.
+* **No SDK.** Both clients are standard-library JSON POSTs (`urllib.request`), so the analyst adds
+  no dependency (the repo ships four). The transport is an `AnalystClient` Protocol, so the
+  evidence pipeline and the verification pass are tested with no network; each client is tested
+  against a real local HTTP stub. The Gemini path was verified live against `gemini-2.5-flash`;
+  **the Grok path is unit-verified against the documented xAI request/response shape but has not
+  been exercised against a live xAI key in this environment** (no `XAI_API_KEY`/`Grok_API_Token`
+  was available) — do not read its test coverage as a live confirmation.
 * Surfaces: `/ai-analyst` (HTML, ADMIN), `/api/project/<id>/analyst` (JSON, ADMIN: 401/403/404),
   `flask ... analyst-project ID [--json] [--no-model]` (CLI). `/ai-analyst` joins `/admin` in the
   robots disallow list and is `noindex`. Tests: `tests/test_ai_analyst.py`,

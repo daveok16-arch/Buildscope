@@ -34,7 +34,9 @@ contractors. It is currently active for the Dallas–Fort Worth market.
 - **AI analyst (operator)** — a model writes a narrative about a project's stored evidence, and
   the narrative is re-checked against that evidence before it is shown. A figure, date or name the
   record does not support is flagged; a narrative that fails the check is shown as unverified with
-  its evidence-only summary instead. The model never supplies a fact.
+  its evidence-only summary instead. The model never supplies a fact. Runs on Gemini or xAI's Grok;
+  both are constrained to the same schema and pass the same check, so the provider is only a
+  transport choice.
 
 Every capability above is implemented and covered by the test suite. Planned work is labelled as
 such in the documentation, not presented as live.

@@ -111,19 +111,33 @@ def test_the_page_separates_no_key_from_an_unreachable_model(admin_client, monke
     """The two failure modes read differently, so an operator can tell them apart.
 
     "No model configured" is a setup problem; "the model could not be reached" is a runtime one.
-    Both must leave the evidence on the page.
+    Both must leave the evidence on the page. The transport is patched so no test reaches a
+    provider endpoint.
     """
     from oppintel import ai_analyst
 
-    monkeypatch.setattr(ai_analyst, "api_key_from_env", lambda: "")
+    monkeypatch.setattr(ai_analyst, "resolve_provider", lambda: "")
     no_key = admin_client.get("/ai-analyst?project_id=1").get_data(as_text=True)
     assert "No model is configured" in no_key
     assert "could not be reached" not in no_key
 
-    monkeypatch.setattr(ai_analyst, "api_key_from_env", lambda: "present-but-failing")
+    class _FailingClient:
+        available = True
+        model = "gemini-2.5-flash"
+
+        def analyse(self, system, dossier):
+            raise ai_analyst.AnalystUnavailable("Gemini returned HTTP 429: quota exhausted.")
+
+    monkeypatch.setattr(ai_analyst, "resolve_provider", lambda: ai_analyst.PROVIDER_GEMINI)
+    monkeypatch.setattr(ai_analyst, "default_client", lambda **kwargs: _FailingClient())
     unreachable = admin_client.get("/ai-analyst?project_id=1").get_data(as_text=True)
     assert "could not be reached" in unreachable
     assert "No model is configured" not in unreachable
+    # The status line must not claim no model is configured when one is: it says the model is not
+    # recorded, which is what "the call failed" actually means.
+    assert "model none configured" not in unreachable
+    assert "no model answered" in unreachable
+    assert "model none configured" in no_key
     # Either way the evidence is on the page, and each unsupported field is named with no value
     # beside it. (The marker check is line-scoped, as in the neighbouring test: the site chrome
     # carries a "Not verified" collection link further down the page.)
