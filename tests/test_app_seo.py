@@ -97,6 +97,50 @@ def test_opportunity_meta_description_does_not_overclaim(client, app_db):
         assert claim not in lowered, f"description overclaims: {claim}"
 
 
+def test_pages_expose_a_share_card_and_icons(client):
+    """A shared link must render a card, not a bare URL.
+
+    LinkedIn and other unfurlers show nothing without an og:image, which reads as unfinished.
+    """
+    for path in ("/", "/opportunities", "/markets/dfw"):
+        body = client.get(path).get_data(as_text=True)
+        assert re.search(r'property="og:image" content="\S*og-image\.png"', body), path
+        assert re.search(r'name="twitter:image" content="\S*og-image\.png"', body), path
+        assert 'name="twitter:card" content="summary_large_image"' in body, path
+        assert 'property="og:image:width" content="1200"' in body, path
+        assert 'property="og:image:height" content="630"' in body, path
+        assert 'rel="icon"' in body and "favicon" in body, path
+        assert 'rel="apple-touch-icon"' in body, path
+
+
+def test_share_image_url_uses_the_canonical_origin(app_db):
+    """The OG image must be absolute and share the canonical's origin, never a guessed host."""
+    from oppintel.app.config import AppConfig
+    from oppintel.app.wsgi import create_app
+
+    cfg = app_db.config["APP_CONFIG"]
+    public = AppConfig(
+        database_path=cfg.database_path,
+        secret_key="test-secret-key",
+        base_url="https://example.test",
+    )
+    app = create_app(public)
+    app.config["TESTING"] = True
+    body = app.test_client().get("/").get_data(as_text=True)
+
+    canonical = re.search(r'<link rel="canonical" href="([^"]*)"', body).group(1)
+    image = re.search(r'property="og:image" content="([^"]*)"', body).group(1)
+    assert canonical == "https://example.test/"
+    assert image == "https://example.test/static/og-image.png"
+
+
+def test_share_image_stays_relative_when_the_origin_is_unknown(client):
+    """With no BASE_URL the path must stay relative rather than assert a made-up domain."""
+    body = client.get("/").get_data(as_text=True)
+    image = re.search(r'property="og:image" content="([^"]*)"', body).group(1)
+    assert image == "/static/og-image.png"
+
+
 # --- indexability --------------------------------------------------------------
 
 def test_filtered_view_is_noindex(client):

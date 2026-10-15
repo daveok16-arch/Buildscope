@@ -19,10 +19,14 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
 
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlsplit
 
 from ..config import MarketConfig, TradeConfig
 from .config import AppConfig
+
+#: Default Open Graph / Twitter share card. A path, not a URL: the origin is added from the
+#: canonical so the two never disagree, and it stays relative when the origin is unknown.
+DEFAULT_OG_IMAGE = "/static/og-image.png"
 
 
 @dataclass
@@ -38,9 +42,26 @@ class Seo:
     json_ld: list[dict[str, Any]] = field(default_factory=list)
     noindex: bool = False
 
+    def __post_init__(self) -> None:
+        if not self.og_image:
+            self.og_image = DEFAULT_OG_IMAGE
+
     @property
     def robots_directive(self) -> str:
         return "noindex,nofollow" if self.noindex else self.robots
+
+    @property
+    def og_image_url(self) -> str:
+        """Absolute share-image URL, derived from the canonical origin.
+
+        Mirrors ``SeoBuilder.url``: when no public origin is known the path stays relative
+        rather than inventing a domain that would point the crawler at the wrong host.
+        """
+        image = self.og_image or DEFAULT_OG_IMAGE
+        if image.startswith("http") or not self.canonical.startswith("http"):
+            return image
+        parts = urlsplit(self.canonical)
+        return f"{parts.scheme}://{parts.netloc}{image}"
 
 
 class SeoBuilder:
@@ -428,6 +449,7 @@ class SeoBuilder:
         }
         if self.cfg.base_url:
             data["url"] = self.cfg.base_url
+            data["logo"] = f"{self.cfg.base_url}/static/logo.png"
         return data
 
     def _dataset_json_ld(self, stats: dict[str, Any]) -> dict[str, Any]:
