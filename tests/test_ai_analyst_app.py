@@ -107,6 +107,33 @@ def test_robots_disallows_the_analyst_route(client):
     assert "Disallow: /ai-analyst" in body
 
 
+def test_the_page_separates_no_key_from_an_unreachable_model(admin_client, monkeypatch):
+    """The two failure modes read differently, so an operator can tell them apart.
+
+    "No model configured" is a setup problem; "the model could not be reached" is a runtime one.
+    Both must leave the evidence on the page.
+    """
+    from oppintel import ai_analyst
+
+    monkeypatch.setattr(ai_analyst, "api_key_from_env", lambda: "")
+    no_key = admin_client.get("/ai-analyst?project_id=1").get_data(as_text=True)
+    assert "No model is configured" in no_key
+    assert "could not be reached" not in no_key
+
+    monkeypatch.setattr(ai_analyst, "api_key_from_env", lambda: "present-but-failing")
+    unreachable = admin_client.get("/ai-analyst?project_id=1").get_data(as_text=True)
+    assert "could not be reached" in unreachable
+    assert "No model is configured" not in unreachable
+    # Either way the evidence is on the page, and each unsupported field is named with no value
+    # beside it. (The marker check is line-scoped, as in the neighbouring test: the site chrome
+    # carries a "Not verified" collection link further down the page.)
+    for body in (no_key, unreachable):
+        assert "Not stated in the record" in body
+        section = body.split("Not stated in the record", 1)[1].split("</div>", 1)[0]
+        assert section.strip()
+        assert "Not verified" not in section
+
+
 def test_analyst_route_is_absent_from_the_sitemap(client):
     body = client.get("/sitemap.xml").get_data(as_text=True)
     assert "ai-analyst" not in body

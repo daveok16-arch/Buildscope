@@ -100,8 +100,8 @@ flow — the model is never the source of a fact, only of prose about facts that
   render, and no surface fails.
 * A fabricated payload (an unsupported `$9,999,999` and "out for bid") is demoted to `UNVERIFIED`
   with the deterministic summary, exactly as designed.
-* Tests: `tests/test_ai_analyst.py` (31) and `tests/test_ai_analyst_app.py` (15). Full suite:
-  1178 passed, 1 skipped. No test reaches the public endpoint — the model is reached through the
+* Tests: `tests/test_ai_analyst.py` (31) and `tests/test_ai_analyst_app.py` (16). Full suite:
+  1179 passed, 1 skipped. No test reaches the public endpoint — the model is reached through the
   `AnalystClient` Protocol, with a real local HTTP stub for the transport itself.
 * Live stability, five consecutive real projects: three `AVAILABLE`/`verified`, one demoted to
   `UNVERIFIED` because the model slipped "not verified" into a limitation (the guard caught it and
