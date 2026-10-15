@@ -1,0 +1,92 @@
+{# Inline SVG bar chart of projects by city, with the mechanical-evidence share shown inside
+   each bar. No charting library: the series is small and server-rendered, so an <svg> of
+   <rect>s is the whole dependency.
+
+   The two-tone bar is deliberate and is the point of the chart: the navy remainder is the
+   projects we hold for that city, the gold portion is how many of them carry documented
+   mechanical evidence. Showing the shortfall rather than hiding it is the same rule the rest
+   of the site follows — a reader can see where coverage is thin, not just where it is deep.
+
+   Carries a <title> per bar, a legend, and a table alternative, so the chart can never tell a
+   different story from the numbers. #}
+{% set rows = cities[:12] %}
+{% if rows %}
+{% set ns = namespace(max=0) %}
+{% for c in rows %}{% if (c.n or 0) > ns.max %}{% set ns.max = c.n %}{% endif %}{% endfor %}
+{% set top = ns.max if ns.max > 0 else 1 %}
+{% set row_h = 30 %}
+{% set pad_y = 10 %}
+{% set label_w = 140 %}
+{% set bar_max = 500 %}
+{% set chart_w = 720 %}
+{% set chart_h = pad_y * 2 + (rows | length) * row_h %}
+{% set bar_h = 15 %}
+{% set total_cities = cities | length %}
+<figure class="chart-figure" style="margin-top:24px">
+  <figcaption>
+    <strong>Projects by city, and how many carry mechanical evidence</strong>
+    <span class="small muted" style="display:block; margin-top:2px">
+      Showing the {{ rows | length }} cities with the most projects{% if total_cities > rows | length %}
+      of {{ total_cities }} with at least one public project{% endif %}. The gold portion of each
+      bar is the subset with a documented mechanical/HVAC permit. Counts are lower bounds where a
+      source is capped by a pagination limit, as in every metric above.
+    </span>
+  </figcaption>
+
+  <svg class="bar-chart bar-chart-h" viewBox="0 0 {{ chart_w }} {{ chart_h }}" role="img"
+       aria-label="Bar chart of projects by city, showing how many carry mechanical evidence">
+    <title>Projects by city with mechanical evidence</title>
+    {% for c in rows %}
+      {% set y = pad_y + loop.index0 * row_h %}
+      {% set bar_y = y + (row_h - bar_h) / 2 %}
+      {% set n = c.n or 0 %}
+      {% set mech = c.mech or 0 %}
+      {% set total_w = (n / top) * bar_max %}
+      {% set mech_w = (mech / top) * bar_max %}
+      {# Track: the full-width slot, so a short bar still reads against a common scale. #}
+      <rect x="{{ label_w }}" y="{{ '%.1f'|format(bar_y) }}" width="{{ bar_max }}"
+            height="{{ bar_h }}" rx="3" fill="var(--slate-100,#f1f5f9)" />
+      <rect class="bar-chart-bar" x="{{ label_w }}" y="{{ '%.1f'|format(bar_y) }}"
+            width="{{ '%.1f'|format(total_w) }}" height="{{ bar_h }}" rx="3"
+            fill="var(--navy-700,#1e3160)" style="--bs-bar-delay: {{ loop.index0 * 45 }}ms">
+        <title>{{ c.city }}: {{ n }} project{{ '' if n == 1 else 's' }}, {{ mech }} with mechanical evidence</title>
+      </rect>
+      {% if mech %}
+      <rect class="bar-chart-bar" x="{{ label_w }}" y="{{ '%.1f'|format(bar_y) }}"
+            width="{{ '%.1f'|format(mech_w) }}" height="{{ bar_h }}" rx="3"
+            fill="var(--gold-500,#d97706)" style="--bs-bar-delay: {{ loop.index0 * 45 }}ms">
+        <title>{{ c.city }}: {{ mech }} with mechanical evidence</title>
+      </rect>
+      {% endif %}
+      {# Label and value sit outside the SVG text flow so they never inherit the bar fill. #}
+      <text x="{{ label_w - 10 }}" y="{{ '%.1f'|format(bar_y + bar_h - 3) }}" text-anchor="end"
+            font-size="12.5" fill="var(--slate-700,#334155)">{{ c.city }}</text>
+      <text x="{{ '%.1f'|format(label_w + total_w + 8) }}" y="{{ '%.1f'|format(bar_y + bar_h - 3) }}"
+            font-size="12.5" font-weight="650" fill="var(--slate-600,#475569)">{{ n }}</text>
+    {% endfor %}
+  </svg>
+
+  <p class="chart-legend small muted">
+    <span class="chart-key"><span class="chart-swatch" style="background:var(--navy-700,#1e3160)"></span>Projects held</span>
+    <span class="chart-key"><span class="chart-swatch" style="background:var(--gold-500,#d97706)"></span>With mechanical evidence</span>
+  </p>
+
+  <details class="chart-data">
+    <summary>View the numbers as a table</summary>
+    <div class="table-scroll" tabindex="0" role="region" aria-label="Projects by city">
+      <table class="table" style="width:100%; margin-top:10px">
+        <thead><tr><th>City</th><th class="num">Projects</th><th class="num">With mechanical evidence</th></tr></thead>
+        <tbody>
+          {% for c in rows %}
+          <tr>
+            <td>{{ c.city }}</td>
+            <td class="num">{{ c.n or 0 }}</td>
+            <td class="num">{{ c.mech or 0 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </details>
+</figure>
+{% endif %}

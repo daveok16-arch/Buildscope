@@ -1474,6 +1474,38 @@ body.drawer-open .mobile-drawer {
   padding: 6px 0;
 }
 
+/* Horizontal bars grow from the left, so they need a different transform origin than the
+   vertical chart above. The draw-in, the stagger and the reduced-motion escape are otherwise
+   the same rules, keyed off the same --bs-bar-delay. */
+.bs-js .bar-chart-h .bar-chart-bar {
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+.bs-js .chart-figure.bs-in .bar-chart-h .bar-chart-bar,
+.bs-js .bar-chart-h .bar-chart-bar.bs-in { transform: scaleX(1); }
+@media (prefers-reduced-motion: reduce) {
+  .bs-js .bar-chart-h .bar-chart-bar { transform: none; transition: none; }
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 10px 0 0;
+}
+.chart-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.chart-swatch {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  flex: none;
+}
+
 
 .card-header-block h3 {
   font-size: 1.15rem;
