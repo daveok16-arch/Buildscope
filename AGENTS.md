@@ -495,3 +495,17 @@ running and cannot give a writable persistent directory) is **usually unsuitable
   when changing the filter layout.
 * Tests: `tests/test_controls.py` (markup contract), `audit/m1_probe.py` (browser: keyboard,
   bottom sheet, no console errors), `audit/live/` for release screenshots.
+
+## Share card and brand assets
+
+* `ops/make_brand_assets.py` draws the static brand files from the same tokens as `app.css`:
+  `og-image.png` (the Open Graph / Twitter share card), `favicon.svg`, `favicon.ico`,
+  `apple-touch-icon.png` and `logo.png` (the square mark for Organization JSON-LD). Pillow is a
+  dev-only tool for regenerating them — the built files are committed, so Pillow is not a
+  runtime dependency. Regenerate with `pip install Pillow && python ops/make_brand_assets.py`.
+* The card is **1200x627**, LinkedIn's Post Inspector recommendation. That size lives once, as
+  `OG_IMAGE_WIDTH`/`OG_IMAGE_HEIGHT` in `seo.py`; `base.html` declares it and the generator draws
+  it from the same constants, so the advertised size cannot drift from the file (a mismatch makes
+  a scraper letterbox or reject the image). `Seo.og_image_url` derives the origin from the
+  canonical, so the image URL is absolute on a deploy and relative when no `BASE_URL` is known —
+  never a guessed host. Tests: the share-card section of `tests/test_app_seo.py`.
