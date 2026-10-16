@@ -28,6 +28,13 @@ from .config import AppConfig
 #: canonical so the two never disagree, and it stays relative when the origin is unknown.
 DEFAULT_OG_IMAGE = "/static/og-image.png"
 
+#: The share card's intrinsic size. 1200x627 is what LinkedIn's Post Inspector recommends for a
+#: large card. These are the single source of truth: `base.html` declares them and
+#: `ops/make_brand_assets.py` draws the card at this size, so a declared size can never drift
+#: from the actual file (a mismatch makes a scraper letterbox or reject the image).
+OG_IMAGE_WIDTH = 1200
+OG_IMAGE_HEIGHT = 627
+
 
 @dataclass
 class Seo:
@@ -62,6 +69,14 @@ class Seo:
             return image
         parts = urlsplit(self.canonical)
         return f"{parts.scheme}://{parts.netloc}{image}"
+
+    @property
+    def og_image_width(self) -> int:
+        return OG_IMAGE_WIDTH
+
+    @property
+    def og_image_height(self) -> int:
+        return OG_IMAGE_HEIGHT
 
 
 class SeoBuilder:

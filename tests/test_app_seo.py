@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import re
+import struct
 import xml.etree.ElementTree as ET
 
 from oppintel.db import Database
@@ -108,9 +109,31 @@ def test_pages_expose_a_share_card_and_icons(client):
         assert re.search(r'name="twitter:image" content="\S*og-image\.png"', body), path
         assert 'name="twitter:card" content="summary_large_image"' in body, path
         assert 'property="og:image:width" content="1200"' in body, path
-        assert 'property="og:image:height" content="630"' in body, path
+        assert 'property="og:image:height" content="627"' in body, path
         assert 'rel="icon"' in body and "favicon" in body, path
         assert 'rel="apple-touch-icon"' in body, path
+
+
+def test_declared_share_image_size_matches_the_file(client):
+    """The advertised width/height must equal the real PNG's.
+
+    A mismatch is the classic share-card defect: a scraper reserves the declared box and then
+    letterboxes or rejects the image. This is why the size is one constant, not a literal in
+    the template, the generator and the test independently.
+    """
+    from oppintel.app.seo import OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH
+
+    body = client.get("/").get_data(as_text=True)
+    assert f'property="og:image:width" content="{OG_IMAGE_WIDTH}"' in body
+    assert f'property="og:image:height" content="{OG_IMAGE_HEIGHT}"' in body
+
+    resp = client.get("/static/og-image.png")
+    assert resp.status_code == 200
+    assert resp.headers["Content-Type"] == "image/png"
+    data = resp.get_data()
+    assert data[:8] == b"\x89PNG\r\n\x1a\n", "og-image.png is not a PNG"
+    width, height = struct.unpack(">II", data[16:24])
+    assert (width, height) == (OG_IMAGE_WIDTH, OG_IMAGE_HEIGHT), (width, height)
 
 
 def test_share_image_url_uses_the_canonical_origin(app_db):

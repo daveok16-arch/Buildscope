@@ -6,9 +6,11 @@ the Apple touch icon are drawn here from the same tokens as the site CSS, so the
 consistent and the images can be regenerated instead of re-exported from a design tool.
 
 Run:  python ops/make_brand_assets.py
-Out:  src/oppintel/app/static/{og-image.png,favicon.svg,favicon.ico,apple-touch-icon.png}
+Out:  src/oppintel/app/static/{og-image.png,favicon.svg,favicon.ico,apple-touch-icon.png,logo.png}
 
-Requires Pillow (already a dependency). No network access.
+Requires Pillow, which is a dev tool for regenerating these files only — it is deliberately not a
+runtime dependency (the built assets are committed). Install with `pip install Pillow` before
+running this. No network access.
 """
 
 from __future__ import annotations
@@ -17,6 +19,13 @@ import sys
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT / "src"))
+
+# The card's size comes from the app, not a literal here: the same constants are what the
+# <head> declares, so the drawn file and the advertised dimensions cannot drift apart.
+from oppintel.app.seo import OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH  # noqa: E402
 
 # Brand tokens, kept in step with src/oppintel/app/static/css/app.css.
 NAVY_950 = (6, 11, 23)
@@ -29,7 +38,6 @@ GOLD_300 = (252, 211, 77)
 WHITE = (255, 255, 255)
 
 FONT_DIR = Path("/usr/share/fonts/truetype/dejavu")
-REPO_ROOT = Path(__file__).resolve().parents[1]
 STATIC_DIR = REPO_ROOT / "src" / "oppintel" / "app" / "static"
 
 
@@ -68,7 +76,7 @@ def _grid(draw: ImageDraw.ImageDraw, w: int, h: int, step: int, color: tuple[int
 
 
 def make_og_image() -> Path:
-    w, h = 1200, 630
+    w, h = OG_IMAGE_WIDTH, OG_IMAGE_HEIGHT
     img = Image.new("RGB", (w, h), NAVY_950)
     draw = ImageDraw.Draw(img)
     # A faint blueprint grid and a diagonal navy field keep the card from reading as flat black.
