@@ -18,35 +18,20 @@
 The rate limiter is per-process, so it is a defence in depth rather than the only one. The
 documented [production deployment](deployment.md) puts a real limiter in front of the app.
 
-## Google / Firebase sign-in configuration
+## Sign-in surface
 
-Google sign-in uses a Firebase web configuration containing a Firebase web `apiKey` (an `AIza...`
-value). That key is public client configuration — it ships to the browser by design and is used
-server-side only to call the Identity Toolkit lookup endpoint — but an unrestricted key committed
-to a public repository is a finding in its own right, so the file is **not committed**.
+Email and password is the only sign-in method. The Google/Firebase integration was removed: the
+`/auth/google` and `/auth/firebase-verify` routes, the `_verify_firebase_id_token` verifier, the
+Firebase JS SDK, and the Firebase config loader are all gone, and the Content-Security-Policy no
+longer allowlists any Google or Firebase origin.
 
-`_load_firebase_config` resolves the configuration in this order:
+The removal is why the `/auth/google` account-takeover bypass cannot recur: the route that accepted
+an email address from a query parameter is not registered, rather than merely refusing to act.
 
-1. `FIREBASE_CONFIG_JSON` — the JSON object inline (for managed hosts that inject secrets as
-   environment values).
-2. `FIREBASE_CONFIG_PATH` — a path to a JSON file outside the repository.
-3. `firebase-applet-config.json` in the working directory or repository root — **local development
-   only**; the path is git-ignored.
-
-`firebase-applet-config.example.json` shows the shape. `tests/test_firebase_config.py` fails if the
-file is tracked again, if any committed file contains an `AIza...` key, or if the injection
-precedence regresses.
-
-The key already appears in this repository's history, so removing the file from the tree does not
-un-expose it:
-
-- **Rotate the key** in Firebase Console → Project settings → General → Web API key, then update
-  the value in the injected configuration.
-- **Restrict it** by HTTP referrer and API (Identity Toolkit / Token Service).
-- Do **not** rotate `oAuthClientId` without also updating Firebase Authorized Domains, or Google
-  sign-in breaks.
-
-No Firebase service-account private key exists in the repository.
+A Firebase web `apiKey` (`AIza...`) still appears in this repository's git history from the earlier
+integration. Removing the code does not un-expose a historical value, so if that project is still
+in use, rotate the key in Firebase Console → Project settings → General → Web API key. No Firebase
+service-account private key ever existed in the repository.
 
 ## Accounts, plans and entitlement
 

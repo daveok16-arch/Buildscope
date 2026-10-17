@@ -49,7 +49,6 @@ class User:
     access_level: str
     created_at: str
     last_login_at: str | None
-    google_id: str | None = None
     company: str | None = None
     role: str | None = None
     onboarding_completed: bool = False
@@ -124,7 +123,6 @@ class AccountService:
             access_level=row["access_level"],
             created_at=row["created_at"],
             last_login_at=row["last_login_at"],
-            google_id=row["google_id"] if "google_id" in keys else None,
             company=row["company"] if "company" in keys else None,
             role=row["role"] if "role" in keys else None,
             onboarding_completed=bool(row["onboarding_completed"]) if "onboarding_completed" in keys else False,
@@ -146,111 +144,6 @@ class AccountService:
         )
 
     # --- lifecycle & authentication -------------------------------------------
-
-    def authenticate_or_link_google(
-        self,
-        email: str,
-        google_id: str,
-        display_name: str | None,
-        *,
-        market: MarketConfig,
-        trade: TradeConfig,
-    ) -> tuple[User, bool]:
-        """Sign in with a *verified* Google/Firebase identity.
-
-        The caller is responsible for verifying the ID token; `google_id` must be the identity
-        provider's own subject (`sub` / `localId`) and `email` the address from that verified
-        token. This method never trusts an email on its own:
-
-        * An account is matched by its linked `google_id` first, so a returning Google user
-          signs in to the account they linked.
-        * An existing **password** account is never claimed by email. Knowing a victim's address
-          must not be enough to take over their account, so this raises `AuthError` instead of
-          silently attaching the Google identity to it. Linking to an existing account is an
-          authenticated action and is out of scope for this flow.
-        * If an account already holds a *different* Google identity, it is refused rather than
-          overwritten.
-        """
-        email = self.validate_email(email)
-        google_id = (google_id or "").strip()
-        if not google_id:
-            raise AuthError("Google authentication did not provide an identity.")
-        now = datetime.now(timezone.utc).isoformat()
-
-        # 1. Match by the linked provider identity (the trusted key).
-        row = self.db.conn.execute(
-            "SELECT * FROM app_user WHERE google_id = ?", (google_id,)
-        ).fetchone()
-
-        # 2. No identity match: consider an account with the same email, but never claim it.
-        if row is None:
-            existing = self.db.conn.execute(
-                "SELECT * FROM app_user WHERE email = ?", (email,)
-            ).fetchone()
-            if existing is not None:
-                raise AuthError(
-                    "An account already exists for that email. Sign in with your password, "
-                    "or contact support to link Google to your account."
-                )
-            # Create a fresh account for this verified Google identity. An account that has no
-            # password yet is not an existing credential account, so it is safe to create.
-            return self._create_google_account(email, google_id, display_name, market, trade)
-
-        user_id = int(row["id"])
-        if not row["is_active"]:
-            raise AuthError("This account is not active.")
-        self.db.conn.execute(
-            """
-            UPDATE app_user
-            SET display_name = COALESCE(display_name, ?),
-                last_login_at = ?
-            WHERE id = ?
-            """,
-            ((display_name or "").strip()[:80] or None, now, user_id),
-        )
-        self.db.conn.commit()
-        user = self.get_user(user_id)
-        return user, False  # type: ignore[return-value]
-
-    def _create_google_account(
-        self,
-        email: str,
-        google_id: str,
-        display_name: str | None,
-        market: MarketConfig,
-        trade: TradeConfig,
-    ) -> tuple[User, bool]:
-        """Create an account backed only by a verified Google identity."""
-        now = datetime.now(timezone.utc).isoformat()
-
-        secure_placeholder_hash = generate_password_hash(secrets.token_urlsafe(32))
-        cursor = self.db.conn.execute(
-            """
-            INSERT INTO app_user (email, password_hash, display_name, access_level,
-                                  is_active, google_id, onboarding_completed, created_at, last_login_at)
-            VALUES (?, ?, ?, 'FREE', 1, ?, 0, ?, ?)
-            """,
-            (
-                email,
-                secure_placeholder_hash,
-                (display_name or "").strip()[:80] or None,
-                google_id,
-                now,
-                now,
-            ),
-        )
-        user_id = int(cursor.lastrowid)
-        self.db.conn.execute(
-            """
-            INSERT INTO user_preference (user_id, market_id, trade_id, cities, project_types,
-                                         notify_in_app, notify_email, updated_at)
-            VALUES (?, ?, ?, '[]', '[]', 1, 0, ?)
-            """,
-            (user_id, market.id, trade.id, now),
-        )
-        self.db.conn.commit()
-        user = self.get_user(user_id)
-        return user, True  # type: ignore[return-value]
 
     def complete_onboarding(
         self,

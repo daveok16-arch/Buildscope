@@ -9,11 +9,8 @@ layer and applying them twice would let the two disagree.
 from __future__ import annotations
 
 import hashlib
-import json
 import logging
-import os
 import secrets
-import urllib.request
 from datetime import date, datetime, timedelta, timezone
 from functools import lru_cache
 
@@ -80,151 +77,6 @@ from .workflow import (
 )
 
 log = logging.getLogger(__name__)
-
-
-class FirebaseVerificationError(Exception):
-    """A Firebase ID token could not be trusted as proof of identity."""
-
-
-def _load_firebase_config() -> dict[str, Any] | None:
-    """Read the Firebase web configuration, which is public client configuration.
-
-    The apiKey here is a Firebase *web* key, not a secret credential: it is shipped to the
-    browser by design and only identifies the project. It is used server-side solely to call
-    the Identity Toolkit lookup endpoint, which is what validates a token; it cannot mint a
-    session on its own.
-
-    The configuration is injected per deployment rather than committed. Precedence:
-
-    1. ``FIREBASE_CONFIG_JSON`` — the JSON object inline, for hosts that inject secrets as
-       environment values and cannot mount a file.
-    2. ``FIREBASE_CONFIG_PATH`` — a path to a JSON file.
-    3. ``firebase-applet-config.json`` in the working directory or the repository root, for
-       local development only. The file is git-ignored, so a checkout never carries the key.
-    """
-    inline = os.environ.get("FIREBASE_CONFIG_JSON")
-    if inline:
-        try:
-            parsed = json.loads(inline)
-            if isinstance(parsed, dict):
-                return parsed
-        except Exception:
-            log.warning("FIREBASE_CONFIG_JSON is set but is not valid JSON; ignoring it.")
-    candidates = [
-        os.environ.get("FIREBASE_CONFIG_PATH"),
-        "firebase-applet-config.json",
-        os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))),
-            "firebase-applet-config.json",
-        ),
-    ]
-    for p in candidates:
-        if p and os.path.exists(p):
-            try:
-                with open(p, "r", encoding="utf-8") as f:
-                    return json.load(f)
-            except Exception:
-                pass
-    return None
-
-
-def _expected_firebase_audience() -> str | None:
-    """The Firebase project the ID token must have been minted for.
-
-    Prefer an explicit environment variable so a deployment is not tied to the committed
-    config file; fall back to the projectId in the Firebase config.
-    """
-    project_id = os.environ.get("FIREBASE_PROJECT_ID")
-    if project_id:
-        return project_id
-    cfg = _load_firebase_config()
-    if cfg:
-        return cfg.get("projectId")
-    return None
-
-
-def _verify_firebase_id_token(id_token: str) -> dict[str, Any]:
-    """Verify a Firebase/Google ID token and return its trusted claims.
-
-    Two independent server-side checks, and a claim is only trusted when the *Google* endpoint
-    confirms the signature and expiry:
-
-    1. Google's OAuth2 `tokeninfo` endpoint cryptographically verifies the ID token signature,
-       issuer and expiry, and returns the verified claims.
-    2. Firebase Identity Toolkit `accounts:lookup` verifies the token against the project and
-       returns the account's own email, so the identity cannot be spoofed by a token minted for
-       a different audience.
-
-    The token is never trusted as a raw payload, and no claim supplied elsewhere by the client
-    (an email query parameter, a form field, a client-supplied uid) is consulted.
-    """
-    token = (id_token or "").strip()
-    if not token or len(token) > 8192:
-        raise FirebaseVerificationError("missing or malformed token")
-
-    claims: dict[str, Any] = {}
-    verified = False
-
-    # 1. Google tokeninfo: verifies signature, iss and exp.
-    try:
-        req = urllib.request.Request(
-            f"https://oauth2.googleapis.com/tokeninfo?id_token={token}",
-            headers={"User-Agent": "BuildScope-Backend/1.0"},
-        )
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-        if data.get("email"):
-            claims = {
-                "email": data.get("email"),
-                "sub": data.get("sub") or data.get("user_id"),
-                "name": data.get("name"),
-                "email_verified": str(data.get("email_verified", "")).lower() == "true",
-                "aud": data.get("aud"),
-                "iss": data.get("iss"),
-            }
-            verified = True
-    except Exception:
-        verified = False
-
-    # 2. Firebase Identity Toolkit: verifies against the project and is authoritative for uid.
-    fb_cfg = _load_firebase_config()
-    api_key = fb_cfg.get("apiKey") if fb_cfg else None
-    if api_key:
-        try:
-            payload = json.dumps({"idToken": token}).encode("utf-8")
-            req2 = urllib.request.Request(
-                f"https://identitytoolkit.googleapis.com/v1/accounts:lookup?key={api_key}",
-                data=payload,
-                headers={"Content-Type": "application/json", "User-Agent": "BuildScope-Backend/1.0"},
-            )
-            with urllib.request.urlopen(req2, timeout=10) as resp2:
-                acc_data = json.loads(resp2.read().decode("utf-8"))
-            users = acc_data.get("users", [])
-            if users:
-                u = users[0]
-                claims = {
-                    "email": u.get("email"),
-                    "sub": u.get("localId"),
-                    "name": u.get("displayName"),
-                    "email_verified": bool(u.get("emailVerified")),
-                    "aud": claims.get("aud"),
-                    "iss": claims.get("iss"),
-                }
-                verified = True
-        except Exception as exc2:
-            logging.warning("Firebase Identity Toolkit lookup failed: %s", exc2)
-
-    if not verified or not claims.get("email") or not claims.get("sub"):
-        raise FirebaseVerificationError("token could not be verified")
-
-    # The token must belong to this project and must carry a verified email.
-    expected_aud = _expected_firebase_audience()
-    if expected_aud and claims.get("aud") and claims["aud"] != expected_aud:
-        raise FirebaseVerificationError("token audience does not match this project")
-    if not claims.get("email_verified"):
-        raise FirebaseVerificationError("email is not verified by the identity provider")
-
-    return claims
 
 
 def create_app(config: AppConfig | None = None) -> Flask:
@@ -333,7 +185,6 @@ def create_app(config: AppConfig | None = None) -> Flask:
                 if getattr(g, "user", None) and getattr(g, "alerts", None)
                 else 0
             ),
-            "firebase_config": _load_firebase_config(),
             "asset_url": asset_url,
             "preview_mode": cfg.preview_mode,
             "release": cfg.release,
@@ -1426,60 +1277,6 @@ def create_app(config: AppConfig | None = None) -> Flask:
                 g, "Create Free Account", "Save opportunities and set preferences."
             ),
         )
-
-    @app.route("/auth/google", methods=["GET", "POST"])
-    def auth_google() -> Any:
-        """Legacy Google entry point. It no longer authenticates anyone.
-
-        This route previously accepted an email address from a query parameter and started a
-        session as that account, which allowed anyone who knew an address to sign in as its
-        owner. Google sign-in is now performed entirely in the browser (Firebase), which posts
-        a signed ID token to `/auth/firebase-verify`; the server trusts only that verified
-        token. Any identity a client supplies here is ignored.
-        """
-        if g.user:
-            return redirect(url_for("home"))
-        flash("Continue with Google from the sign-in page to authenticate.", "info")
-        return redirect(url_for("signin"))
-
-    @app.route("/auth/firebase-verify", methods=["POST"])
-    def auth_firebase_verify() -> Any:
-        """Verify a Firebase / Google ID token server-side and create the session.
-
-        Identity is taken only from the verified token. No email parameter, form field or other
-        client-supplied value is ever used to decide who the caller is.
-        """
-        if g.user:
-            return jsonify({"ok": True, "redirect": url_for("dashboard")})
-
-        data = request.get_json(silent=True) or request.form
-        id_token = data.get("id_token")
-        if not id_token:
-            return jsonify({"ok": False, "error": "Missing Firebase ID token."}), 400
-
-        try:
-            claims = _verify_firebase_id_token(id_token)
-        except FirebaseVerificationError:
-            return jsonify({"ok": False, "error": "Invalid or expired Firebase token."}), 401
-
-        email = claims["email"]
-        google_id = claims["sub"]
-        display_name = claims.get("name")
-
-        try:
-            user, is_new = g.accounts.authenticate_or_link_google(
-                email,
-                google_id,
-                display_name,
-                market=g.market,
-                trade=g.trade,
-            )
-            _start_session(user.id)
-            record_analytics(g.db, "signin_google_firebase", market_id=g.market.id, trade_id=g.trade.id)
-            next_url = _safe_redirect(request.args.get("next") or url_for("dashboard"))
-            return jsonify({"ok": True, "redirect": next_url})
-        except AuthError as exc:
-            return jsonify({"ok": False, "error": str(exc)}), 400
 
     @app.route("/forgot-password", methods=["GET", "POST"])
     def forgot_password() -> Any:

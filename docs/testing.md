@@ -20,8 +20,7 @@ application tests run against a real database and a real Flask app.
 | `test_app_api.py` | API contract, null encoding, statistics, no internal leakage |
 | `test_app_admin.py` | `/admin/data` access: anonymous, non-operator, operator, escalation, exposure |
 | `test_app_architecture.py` | Market/trade are configuration; no intelligence logic duplicated |
-| `test_auth_security.py` | Google/Firebase token verification, account takeover resistance, password reset |
-| `test_firebase_config.py` | Firebase web config is injected, never committed; injection precedence |
+| `test_auth_security.py` | Logout, password reset, reset-token non-exposure, delivery boundary |
 | `test_changes.py` | Change detection: real differences recorded, no-op passes silent, before/after values |
 | `test_workflow.py` | Watching, pipeline, notes, tags, assignment, per-account isolation, stage/procurement separation |
 | `test_alerts.py` | Event-driven alerts, watch scoping, no-change-means-no-alert, alert integrity |

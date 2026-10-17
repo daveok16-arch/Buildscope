@@ -393,7 +393,6 @@ CREATE TABLE IF NOT EXISTS app_user (
     display_name       TEXT,
     access_level       TEXT NOT NULL DEFAULT 'FREE',
     is_active          INTEGER NOT NULL DEFAULT 1,
-    google_id          TEXT,
     company            TEXT,
     role               TEXT,
     onboarding_completed INTEGER NOT NULL DEFAULT 0,
@@ -839,7 +838,6 @@ class Database:
         expected: dict[str, tuple[tuple[str, str], ...]] = {
             "user_preference": (("min_value", "REAL"), ("max_value", "REAL")),
             "app_user": (
-                ("google_id", "TEXT"),
                 ("company", "TEXT"),
                 ("role", "TEXT"),
                 ("onboarding_completed", "INTEGER DEFAULT 0"),

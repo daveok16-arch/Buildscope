@@ -30,9 +30,6 @@ matter in production are where that file lives and how it is kept fresh.
 when `FLASK_DEBUG` is set, so a real deployment is protected unless someone deliberately disables
 it. See `.env.example`.
 
-For Firebase Google Sign-In configuration (`FIREBASE_CONFIG_JSON`, `FIREBASE_CONFIG_PATH`,
-`FIREBASE_PROJECT_ID`), see [security](security.md).
-
 ## Deployment model and hosting requirements
 
 BuildScope is a standard Flask app served by gunicorn. SQLite is a file, so the two things that

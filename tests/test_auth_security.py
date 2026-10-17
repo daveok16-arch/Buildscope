@@ -1,37 +1,28 @@
-"""Authentication security regression tests (Phase 1A).
+"""Authentication security regression tests.
 
-These tests lock down the fix for the demonstrated authentication bypass: a request that
-supplied an email address to `/auth/google` could previously start a session as that account.
+These tests lock down the authentication surface that remains: password sign-in, logout, and
+password reset.
 
 The suite covers:
 
-* A. `/auth/google?email=victim` must not authenticate.
-* B. A request containing any known user email must not authenticate.
-* C. A valid, verified Firebase ID token authenticates the correct account.
-* D. An invalid ID token fails.
-* E. An expired ID token fails.
-* F. A tampered ID token fails.
-* G. A verified Google identity whose email matches an existing password account cannot
-     hijack that account.
 * H. Logout invalidates the session.
 * I. Password-reset tokens are never exposed through a page or API response.
 * J. An expired reset token is rejected.
 * K. A used reset token is rejected.
+* L. Reset delivery is abstracted, and no backend writes the token to a page, response or log.
 
-The Firebase network calls are not mocked in the ordinary sense: `_verify_firebase_id_token`
-is the single trust boundary, and tests replace only the two outbound HTTP calls it makes, so
-the claims-validation logic (audience, verified email, presence of subject) runs for real.
+The `/auth/google` bypass these tests were originally written around no longer exists: the
+Google/Firebase sign-in integration was removed, so the route that accepted an email address is
+gone rather than inert. The regression cannot recur through a route that is not registered.
 """
 
 from __future__ import annotations
 
-import json
 from datetime import datetime, timedelta, timezone
 
 import pytest
 
 from conftest_app import csrf_from
-from oppintel.app import main as app_main
 from oppintel.app.accounts import AccountService, AuthError
 from oppintel.config import active_market, active_trade
 from oppintel.db import Database
@@ -61,269 +52,6 @@ def _create_victim(app_db) -> int:
         return user.id
     finally:
         db.close()
-
-
-class _FakeResponse:
-    def __init__(self, payload: dict) -> None:
-        self._payload = json.dumps(payload).encode("utf-8")
-
-    def read(self) -> bytes:
-        return self._payload
-
-    def __enter__(self) -> "_FakeResponse":
-        return self
-
-    def __exit__(self, *exc: object) -> None:
-        return None
-
-
-def _install_verifier(monkeypatch, *, email: str, sub: str, email_verified: bool = True,
-                      name: str = "Verified User") -> None:
-    """Drive the real verifier with controlled outbound responses.
-
-    The Google `tokeninfo` endpoint is treated as the authoritative verifier, exactly as in
-    production; the Firebase Identity Toolkit call is made to fail so the code path under test
-    is the Google one. Nothing about the claims-validation logic is bypassed.
-    """
-    def fake_urlopen(req, timeout=10):  # noqa: ANN001
-        url = req.full_url if hasattr(req, "full_url") else str(req)
-        if "oauth2.googleapis.com/tokeninfo" in url:
-            return _FakeResponse(
-                {
-                    "email": email,
-                    "sub": sub,
-                    "name": name,
-                    "email_verified": "true" if email_verified else "false",
-                    "aud": "gen-lang-client-0795656577",
-                    "iss": "https://accounts.google.com",
-                }
-            )
-        raise OSError("identity toolkit unavailable in test")
-
-    monkeypatch.setattr(app_main.urllib.request, "urlopen", fake_urlopen)
-
-
-def _install_rejecting_verifier(monkeypatch) -> None:
-    """Make every outbound verification call fail, so no token can be trusted."""
-    def fake_urlopen(req, timeout=10):  # noqa: ANN001
-        raise OSError("verification endpoint rejected the token")
-
-    monkeypatch.setattr(app_main.urllib.request, "urlopen", fake_urlopen)
-
-
-# --- A / B: the original exploit ----------------------------------------------
-
-
-def test_original_exploit_get_auth_google_email_does_not_authenticate(app_db):
-    """A. The demonstrated exploit: GET /auth/google?email=<victim> must not sign in."""
-    victim_id = _create_victim(app_db)
-    client = app_db.test_client()
-
-    response = client.get(f"/auth/google?email={VICTIM_EMAIL}")
-    assert response.status_code in (301, 302)
-
-    me = client.get("/api/me").get_json()
-    assert me["authenticated"] is False, "email alone must never establish a session"
-
-    # And the victim's session must not exist anywhere in this client.
-    db = _db(app_db)
-    try:
-        assert db.conn.execute(
-            "SELECT 1 FROM app_user WHERE id = ?", (victim_id,)
-        ).fetchone()
-    finally:
-        db.close()
-
-
-def test_original_exploit_post_auth_google_email_does_not_authenticate(app_db):
-    """A. The same exploit over POST, with a display name, must not sign in."""
-    _create_victim(app_db)
-    client = app_db.test_client()
-
-    client.post(
-        "/auth/google",
-        data={"email": VICTIM_EMAIL, "display_name": "Attacker", "next": "/dashboard"},
-    )
-    assert client.get("/api/me").get_json()["authenticated"] is False
-
-
-def test_any_known_email_does_not_authenticate(app_db):
-    """B. No known email, on any Google-related surface, authenticates by itself."""
-    _create_victim(app_db)
-    client = app_db.test_client()
-
-    for path in (
-        f"/auth/google?email={VICTIM_EMAIL}",
-        f"/auth/google?email={VICTIM_EMAIL}&display_name=Attacker",
-        "/auth/google?email=operator@example.com",
-    ):
-        client.get(path)
-        assert client.get("/api/me").get_json()["authenticated"] is False, path
-
-
-def test_auth_google_redirects_to_signin_and_ignores_identity(app_db):
-    """The legacy route is inert: it redirects and never starts a session."""
-    _create_victim(app_db)
-    client = app_db.test_client()
-    response = client.get(f"/auth/google?email={VICTIM_EMAIL}", follow_redirects=False)
-    assert response.status_code == 302
-    assert "/signin" in response.headers["Location"]
-
-
-# --- C: valid token -----------------------------------------------------------
-
-
-def test_valid_firebase_token_authenticates_the_correct_account(app_db, monkeypatch):
-    """C. A verified token signs in the account that owns the verified identity."""
-    _install_verifier(monkeypatch, email="newuser@example.com", sub="firebase-uid-123")
-    client = app_db.test_client()
-
-    resp = client.post("/auth/firebase-verify", json={"id_token": "a-valid-token"})
-    assert resp.status_code == 200
-    assert resp.get_json()["ok"] is True
-
-    me = client.get("/api/me").get_json()
-    assert me["authenticated"] is True
-
-    db = _db(app_db)
-    try:
-        row = db.conn.execute(
-            "SELECT google_id FROM app_user WHERE email = ?", ("newuser@example.com",)
-        ).fetchone()
-        assert row is not None and row["google_id"] == "firebase-uid-123"
-    finally:
-        db.close()
-
-
-def test_valid_token_signs_in_returning_google_user(app_db, monkeypatch):
-    """C. A second sign-in with the same identity returns the same account."""
-    _install_verifier(monkeypatch, email="returning@example.com", sub="firebase-uid-999")
-    first = app_db.test_client()
-    first.post("/auth/firebase-verify", json={"id_token": "tok"})
-    db = _db(app_db)
-    try:
-        first_id = db.conn.execute(
-            "SELECT id FROM app_user WHERE email = ?", ("returning@example.com",)
-        ).fetchone()["id"]
-    finally:
-        db.close()
-
-    second = app_db.test_client()
-    second.post("/auth/firebase-verify", json={"id_token": "tok"})
-    db = _db(app_db)
-    try:
-        count = db.conn.execute(
-            "SELECT COUNT(*) AS n FROM app_user WHERE email = ?", ("returning@example.com",)
-        ).fetchone()["n"]
-        assert count == 1, "a returning Google user must not create a duplicate account"
-        assert first_id
-    finally:
-        db.close()
-
-
-# --- D / E / F: invalid tokens ------------------------------------------------
-
-
-def test_invalid_token_fails(app_db, monkeypatch):
-    """D. A token the verifier rejects does not authenticate."""
-    _install_rejecting_verifier(monkeypatch)
-    client = app_db.test_client()
-    resp = client.post("/auth/firebase-verify", json={"id_token": "garbage"})
-    assert resp.status_code == 401
-    assert client.get("/api/me").get_json()["authenticated"] is False
-
-
-def test_expired_token_fails(app_db, monkeypatch):
-    """E. An expired token (verifier rejects) does not authenticate."""
-    _install_rejecting_verifier(monkeypatch)
-    client = app_db.test_client()
-    resp = client.post("/auth/firebase-verify", json={"id_token": "expired-token"})
-    assert resp.status_code == 401
-    assert client.get("/api/me").get_json()["authenticated"] is False
-
-
-def test_tampered_token_fails(app_db, monkeypatch):
-    """F. A tampered token does not authenticate."""
-    _install_rejecting_verifier(monkeypatch)
-    client = app_db.test_client()
-    resp = client.post("/auth/firebase-verify", json={"id_token": "header.payload.tampered"})
-    assert resp.status_code == 401
-    assert client.get("/api/me").get_json()["authenticated"] is False
-
-
-def test_missing_token_fails(app_db):
-    """A request with no token is refused."""
-    client = app_db.test_client()
-    resp = client.post("/auth/firebase-verify", json={})
-    assert resp.status_code == 400
-    assert client.get("/api/me").get_json()["authenticated"] is False
-
-
-def test_unverified_email_claim_is_refused(app_db, monkeypatch):
-    """A token whose email is not verified by the provider is refused."""
-    _install_verifier(
-        monkeypatch, email="unverified@example.com", sub="uid-x", email_verified=False
-    )
-    client = app_db.test_client()
-    resp = client.post("/auth/firebase-verify", json={"id_token": "tok"})
-    assert resp.status_code == 401
-
-
-# --- G: no takeover of an existing password account ---------------------------
-
-
-def test_verified_google_identity_cannot_hijack_existing_account(app_db, monkeypatch):
-    """G. A verified Google identity matching a password account's email cannot claim it."""
-    victim_id = _create_victim(app_db)
-
-    # The provider verifies an identity that happens to carry the victim's email.
-    _install_verifier(monkeypatch, email=VICTIM_EMAIL, sub="attacker-google-uid")
-    client = app_db.test_client()
-    resp = client.post("/auth/firebase-verify", json={"id_token": "tok"})
-
-    assert resp.status_code == 400
-    assert resp.get_json()["ok"] is False
-    assert client.get("/api/me").get_json()["authenticated"] is False
-
-    # The victim account must be untouched: no Google identity attached.
-    db = _db(app_db)
-    try:
-        row = db.conn.execute(
-            "SELECT google_id, password_hash FROM app_user WHERE id = ?", (victim_id,)
-        ).fetchone()
-        assert row["google_id"] is None, "the victim account must not be linked by email"
-        assert row["password_hash"], "the victim password must be unchanged"
-    finally:
-        db.close()
-
-
-def test_service_refuses_email_match_for_existing_account(fixture_db):
-    """G (unit). The service itself refuses to claim an account by email."""
-    accounts = AccountService(fixture_db)
-    accounts.create_account(
-        VICTIM_EMAIL, VICTIM_PASSWORD, "Victim",
-        market=active_market(), trade=active_trade(),
-    )
-    with pytest.raises(AuthError):
-        accounts.authenticate_or_link_google(
-            VICTIM_EMAIL, "attacker-uid", "Attacker",
-            market=active_market(), trade=active_trade(),
-        )
-
-
-def test_service_matches_returning_google_identity_by_uid(fixture_db):
-    """A returning Google identity is matched by uid, not reassigned."""
-    accounts = AccountService(fixture_db)
-    user, created = accounts.authenticate_or_link_google(
-        "g@example.com", "uid-1", "G",
-        market=active_market(), trade=active_trade(),
-    )
-    assert created is True
-    same, created2 = accounts.authenticate_or_link_google(
-        "g@example.com", "uid-1", "G",
-        market=active_market(), trade=active_trade(),
-    )
-    assert created2 is False and same.id == user.id
 
 
 # --- H: logout -----------------------------------------------------------------

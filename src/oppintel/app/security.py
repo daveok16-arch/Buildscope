@@ -63,7 +63,10 @@ RATE_LIMITS: tuple[tuple[str, int, int], ...] = (
 )
 
 #: Paths exempt from CSRF because they authenticate without a cookie, or are safe by design.
-CSRF_EXEMPT_PREFIXES = ("/auth/firebase-verify",)
+#: Empty: the only former entry was the token-authenticated `/auth/firebase-verify` endpoint,
+#: which was removed with the Google/Firebase integration. Every state-changing request now
+#: requires a valid CSRF token.
+CSRF_EXEMPT_PREFIXES: tuple[str, ...] = ()
 
 
 def csrf_token() -> str:
@@ -237,17 +240,18 @@ def apply_security_headers(response: Response) -> Response:
         "Permissions-Policy", "geolocation=(), microphone=(), camera=()"
     )
     # The CSP allows the app's own stylesheet, inline JSON-LD and inline dialog/nav scripts by
-    # per-request nonce (never 'unsafe-inline' for scripts), and the Firebase/Google Auth CDN.
+    # per-request nonce (never 'unsafe-inline' for scripts). There is no third-party script
+    # origin: the Google/Firebase sign-in CDN was removed with the integration, so script-src is
+    # 'self' plus the nonce and nothing else.
     # style-src keeps 'unsafe-inline': the templates carry ~350 inline style= attributes (layout
     # only), and a nonce cannot cover an attribute. Moving those to classes is tracked separately.
     nonce = csp_nonce()
     response.headers.setdefault(
         "Content-Security-Policy",
-        "default-src 'self'; img-src 'self' data: https://*.googleusercontent.com; "
+        "default-src 'self'; img-src 'self' data:; "
         "style-src 'self' 'unsafe-inline'; "
-        f"script-src 'self' 'nonce-{nonce}' https://www.gstatic.com https://apis.google.com; "
-        "connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.googleapis.com https://*.firebaseio.com; "
-        "frame-src 'self' https://*.firebaseapp.com; "
+        f"script-src 'self' 'nonce-{nonce}'; "
+        "connect-src 'self'; "
         "base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'",
     )
     return response

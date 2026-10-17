@@ -396,20 +396,22 @@ running and cannot give a writable persistent directory) is **usually unsuitable
   `content_linkedin.html`. `discover_candidates` ranks by stored signals and lists every reason;
   closed projects are never proposed. Tests: `tests/test_linkedin.py`.
 
-## Firebase web config is injected, never committed
+## Sign-in is email/password only
 
-* `firebase-applet-config.json` holds a Firebase web `apiKey` (an `AIza...` value). It is public
-  client configuration, but an unrestricted key in a public repository is still a finding, so the
-  file is git-ignored and untracked. `_load_firebase_config` reads, in order:
-  `FIREBASE_CONFIG_JSON` (inline JSON) -> `FIREBASE_CONFIG_PATH` (file) -> a local
-  `firebase-applet-config.json` (dev only). `firebase-applet-config.example.json` shows the shape.
-* `tests/test_firebase_config.py` fails if the file is tracked again, if any committed file
-  contains an `AIza...` key, or if the injection precedence regresses. If you must rotate the
-  key: Firebase Console -> Project settings -> Web API key. Do not rotate `oAuthClientId` without
-  updating Firebase Authorized Domains, or Google sign-in breaks.
-* The key already appears in this repository's history. Removing it from the tree does not remove
-  it from history; rotate it in the Firebase console and, if the history must be scrubbed, filter
-  the repository separately.
+* The Google/Firebase sign-in integration was removed. Gone with it: the `/auth/google` and
+  `/auth/firebase-verify` routes, `_verify_firebase_id_token` / `_load_firebase_config`, the
+  Firebase JS SDK in `signin.html` / `signup.html`, `firebase_config` template injection, the
+  `google_id` column on `app_user`, `AccountService.authenticate_or_link_google`, and the
+  `firebase-applet-config.example.json` file. The CSP no longer allowlists any Google or Firebase
+  origin (`script-src` is `'self'` + nonce; `connect-src` is `'self'`).
+* `tests/test_firebase_config.py` was deleted with the integration. `tests/test_auth_security.py`
+  keeps sections H (logout) and I-L (password reset); its Google/Firebase sections (A-G) went with
+  the routes. The `/auth/google` account-takeover bypass cannot recur because the route is not
+  registered, not because it refuses to act.
+* A Firebase web `apiKey` (`AIza...`) still exists in this repository's git history from the
+  earlier integration. Removing the code does not un-expose a historical value; if that Firebase
+  project is still in use, rotate the key (Firebase Console -> Project settings -> Web API key).
+  Scrubbing history is a separate, filter-repo operation.
 
 ## Release trigger (Render preview)
 
