@@ -2,8 +2,16 @@
 
 The analyst's grounding logic is covered by `test_ai_analyst.py`; these tests cover the surfaces:
 the operator page, the JSON endpoint, the CLI command, and the crawler rules. They run against a
-real database and a real application, and — deliberately — against a debug configuration with no
-`GEMINI_API_KEY` exported, so no test reaches the public Gemini endpoint.
+real database and a real application.
+
+**Offline by construction.** A developer or CI machine may hold a real provider credential in the
+environment (`GEMINI_API_KEY`/`Gemini_API_Token` or the xAI equivalents). If a surface test called
+the provider whenever a key was present, the suite would depend on the machine, reach the public
+endpoint with a live credential, and vary its own result. The autouse `offline_analyst` fixture
+below therefore replaces the transport with a stub that reports "no model configured", so these
+tests assert the surfaces and never open a socket. The model transport itself is exercised
+separately, against a local stub server, in `test_ai_analyst.py`; a live call is an explicit,
+opt-in integration check that no default run performs.
 """
 
 from __future__ import annotations
@@ -15,6 +23,27 @@ import pytest
 from conftest_app import build_database, grant_admin
 from oppintel.app.config import AppConfig
 from oppintel.app.main import create_app
+
+
+@pytest.fixture(autouse=True)
+def offline_analyst(monkeypatch):
+    """Force the "no model configured" path, whatever keys the host environment carries.
+
+    The stub is the sentinel `default_client` itself returns when no key is set — a Gemini client
+    with an empty key, whose ``available`` is False — so the view takes exactly its documented
+    no-model branch. Nothing is invented: the model is genuinely not called, and the brief is the
+    deterministic evidence summary. Keys are read through `ai_analyst.default_client`, which is
+    the single place the transport is chosen, so patching it there is the correct boundary.
+    """
+    from oppintel import ai_analyst
+
+    def _no_model_client(*, model=None, provider=None):
+        return ai_analyst.GeminiClient(api_key="")
+
+    monkeypatch.setattr(ai_analyst, "default_client", _no_model_client)
+    # Belt and braces for the page's own status line: the view reads `resolve_provider()` to
+    # decide whether to say a model is configured, and it must agree with the client above.
+    monkeypatch.setattr(ai_analyst, "resolve_provider", lambda: "")
 
 
 @pytest.fixture
