@@ -14,6 +14,7 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
+from .identity import entity_key
 from .models import Evidence, Permit, Project, ProjectParty
 
 #: How many model responses the analyst cache keeps. The cache is an optimisation, not a store of
@@ -720,6 +721,19 @@ def _evidence_fingerprint(project_id: int, ev: dict[str, Any]) -> str:
     return digest.hexdigest()[:40]
 
 
+def _entity_key_for_sql(raw: Any) -> str | None:
+    """SQLite binding for :func:`oppintel.identity.entity_key`.
+
+    Company aggregation must merge the spellings of one company the way the entity graph
+    already does. Exposing the same function to SQL means a directory query groups by the
+    same key the graph used, so the two can never disagree about identity. Returns None for a
+    name that does not resolve, so a noise value never becomes its own group.
+    """
+    if raw is None:
+        return None
+    return entity_key(str(raw))
+
+
 class Database:
     """Thin wrapper around sqlite3 with the operations the pipeline needs."""
 
@@ -741,6 +755,7 @@ class Database:
         # A single writer means a checkpoint cannot race another writer, so the default
         # autocheckpoint (1000 pages) is left in place.
         self.conn.execute("PRAGMA synchronous = NORMAL")
+        self.conn.create_function("entity_key", 1, _entity_key_for_sql, deterministic=True)
 
     def close(self) -> None:
         self.conn.close()

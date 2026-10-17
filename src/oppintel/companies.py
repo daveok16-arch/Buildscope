@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from .db import Database
+from .identity import entity_key
 from .slugs import slugify
 
 
@@ -138,7 +139,14 @@ class CompanyService:
         city_exact = city.strip().lower() if city and city.strip() else None
 
         def branch(role_expr: str, name_expr: str) -> tuple[str, list[Any]]:
-            """The filter fragment and its bindings for one branch."""
+            """The role/city filter fragment and its bindings for one branch.
+
+            The name query is deliberately not applied here. It selects *companies*, and a
+            company may be observed under several spellings; filtering the raw rows by the
+            typed text would count only the rows that happened to spell the name that way, so
+            one directory entry could report a different project total than the listing without
+            the query. The query is applied once, to the canonical keys, below.
+            """
             clauses = [
                 "p.classification IN ('HIGH', 'MEDIUM')",
                 f"{name_expr} IS NOT NULL",
@@ -150,9 +158,6 @@ class CompanyService:
                 placeholders = ", ".join("?" for _ in role_selection)
                 clauses.append(f"{role_expr} IN ({placeholders})")
                 branch_params.extend(role_selection)
-            if name_like is not None:
-                clauses.append(f"LOWER({name_expr}) LIKE ?")
-                branch_params.append(name_like)
             if city_exact is not None:
                 clauses.append("LOWER(p.city) = ?")
                 branch_params.append(city_exact)
@@ -164,7 +169,9 @@ class CompanyService:
 
         # Union stakeholders from project_party and the direct project role columns. The role
         # and name columns are aliased before the filters apply, so the same filter text is
-        # valid in every branch without a substitution step.
+        # valid in every branch without a substitution step. The union is then reduced by the
+        # canonical entity key, so two spellings of one company are one row and a project that
+        # appears in more than one branch is counted once.
         query = f"""
         WITH stakeholder_raw AS (
             SELECT p.id as project_id, pp.role as role, pp.name as name, p.city, p.project_type,
@@ -182,21 +189,69 @@ class CompanyService:
                    p.city, p.project_type, p.estimated_project_value, p.mechanical_evidence_tier
               FROM project p
              WHERE {owner_where}
+        ),
+        observations AS (
+            SELECT entity_key(name) AS company_key, project_id, role, name, city, project_type,
+                   estimated_project_value, mechanical_evidence_tier
+              FROM stakeholder_raw
+             WHERE entity_key(name) IS NOT NULL
+        ),
+        company_keys AS (
+            SELECT DISTINCT company_key FROM observations
+             WHERE ? IS NULL
+                OR EXISTS (
+                       SELECT 1 FROM observations o2
+                        WHERE o2.company_key = observations.company_key
+                          AND LOWER(o2.name) LIKE ?
+                   )
+        ),
+        company_projects AS (
+            SELECT DISTINCT o.company_key, o.project_id, o.city, o.project_type,
+                   o.estimated_project_value, o.mechanical_evidence_tier
+              FROM observations o
+              JOIN company_keys ck ON ck.company_key = o.company_key
+        ),
+        totals AS (
+            SELECT company_key,
+                   COUNT(*) as project_count,
+                   SUM(CASE WHEN mechanical_evidence_tier IN (1, 2) THEN 1 ELSE 0 END) as mechanical_project_count,
+                   SUM(COALESCE(estimated_project_value, 0)) as total_declared_value,
+                   GROUP_CONCAT(DISTINCT city) as cities_concat,
+                   GROUP_CONCAT(DISTINCT project_type) as project_types_concat
+              FROM company_projects
+             GROUP BY company_key
+        ),
+        names AS (
+            SELECT company_key, name,
+                   ROW_NUMBER() OVER (
+                       PARTITION BY company_key ORDER BY LENGTH(name) DESC, name ASC
+                   ) as rn
+              FROM (SELECT DISTINCT company_key, name FROM observations)
+        ),
+        roles AS (
+            SELECT company_key, role, COUNT(DISTINCT project_id) as n
+              FROM observations
+             GROUP BY company_key, role
+        ),
+        primary_role AS (
+            SELECT company_key, role,
+                   ROW_NUMBER() OVER (PARTITION BY company_key ORDER BY n DESC, role ASC) as rn
+              FROM roles
         )
-        SELECT name,
-               role as primary_role,
-               COUNT(DISTINCT project_id) as project_count,
-               SUM(CASE WHEN mechanical_evidence_tier IN (1, 2) THEN 1 ELSE 0 END) as mechanical_project_count,
-               SUM(COALESCE(estimated_project_value, 0)) as total_declared_value,
-               GROUP_CONCAT(DISTINCT city) as cities_concat,
-               GROUP_CONCAT(DISTINCT project_type) as project_types_concat
-          FROM stakeholder_raw
-         GROUP BY LOWER(TRIM(name))
-        HAVING project_count >= 1
-         ORDER BY project_count DESC, total_declared_value DESC
+        SELECT n.name as name,
+               pr.role as primary_role,
+               t.project_count,
+               t.mechanical_project_count,
+               t.total_declared_value,
+               t.cities_concat,
+               t.project_types_concat
+          FROM totals t
+          JOIN names n ON n.company_key = t.company_key AND n.rn = 1
+          JOIN primary_role pr ON pr.company_key = t.company_key AND pr.rn = 1
+         ORDER BY t.project_count DESC, t.total_declared_value DESC
          LIMIT ?
         """
-        params: list[Any] = [*party_params, *gc_params, *owner_params, limit]
+        params: list[Any] = [*party_params, *gc_params, *owner_params, name_like, name_like, limit]
 
         rows = self.db.conn.execute(query, tuple(params)).fetchall()
         summaries: list[CompanySummary] = []
@@ -291,19 +346,61 @@ class CompanyService:
 
         query = (
             "WITH raw AS (" + " UNION ALL ".join(unions) + ") "
-            "SELECT role_key, COUNT(DISTINCT LOWER(TRIM(name))) AS n "
+            "SELECT role_key, COUNT(DISTINCT entity_key(name)) AS n "
             "FROM raw WHERE role_key IN ('contractor','owner','architect','developer') "
+            "AND entity_key(name) IS NOT NULL "
             "GROUP BY role_key"
         )
         rows = self.db.conn.execute(query, tuple(all_params)).fetchall()
         return {r["role_key"]: int(r["n"]) for r in rows if int(r["n"]) > 0}
 
+    def _observed_roles(self, company_key: str) -> list[str]:
+        """The stakeholder roles this canonical company was actually observed in.
+
+        Read from the same two observation sources as the directory — the ``project_party``
+        rows and the direct project role columns — so a role is reported only when a stored
+        record states it. A role the source never published is absent, not defaulted.
+        """
+        query = """
+        WITH observed AS (
+            SELECT pp.role AS role, p.id AS project_id
+              FROM project p JOIN project_party pp ON pp.project_id = p.id
+             WHERE entity_key(pp.name) = ?
+            UNION ALL
+            SELECT 'general_contractor', p.id FROM project p
+             WHERE entity_key(p.general_contractor) = ?
+            UNION ALL
+            SELECT 'owner', p.id FROM project p WHERE entity_key(p.owner) = ?
+            UNION ALL
+            SELECT 'architect', p.id FROM project p WHERE entity_key(p.architect) = ?
+            UNION ALL
+            SELECT 'developer', p.id FROM project p WHERE entity_key(p.developer) = ?
+        )
+        SELECT role, COUNT(DISTINCT project_id) AS n
+          FROM observed
+         WHERE role IN ('general_contractor','contractor','owner','architect','developer')
+         GROUP BY role
+         ORDER BY n DESC, role ASC
+        """
+        rows = self.db.conn.execute(
+            query, (company_key, company_key, company_key, company_key, company_key)
+        ).fetchall()
+        return [(r["role"] or "").replace("_", " ").title() for r in rows if r["role"]]
+
     def get_company_profile(self, slug_or_name: str) -> CompanyProfile | None:
-        """Retrieve full company intelligence dossier by slug or name."""
+        """Retrieve full company intelligence dossier by slug or name.
+
+        Resolution is by canonical entity key, so a slug, a display name or any observed
+        spelling of the company all reach the same dossier the directory links to.
+        """
+        requested_key = entity_key(slug_or_name.replace("-", " ").strip())
         all_companies = self.list_companies(limit=500)
         target = None
         for c in all_companies:
             if c.slug == slug_or_name or c.name.lower() == slug_or_name.lower():
+                target = c
+                break
+            if requested_key is not None and entity_key(c.name) == requested_key:
                 target = c
                 break
 
@@ -317,7 +414,11 @@ class CompanyService:
         if not target:
             return None
 
-        # Fetch all associated projects with details
+        # Fetch all associated projects with details. Matching is by canonical entity key, not
+        # by raw spelling, so every variant of the company's name resolves to the same dossier.
+        company_key = entity_key(target.name)
+        if company_key is None:
+            return None
         query = """
         SELECT DISTINCT p.id, ps.slug, p.project_name, p.address, p.city, p.state,
                         p.project_type, p.classification, p.mechanical_evidence_tier,
@@ -326,15 +427,15 @@ class CompanyService:
           FROM project p
           LEFT JOIN project_slug ps ON ps.project_id = p.id
           LEFT JOIN project_party pp ON pp.project_id = p.id
-         WHERE (LOWER(TRIM(p.general_contractor)) = LOWER(TRIM(?))
-            OR LOWER(TRIM(p.owner)) = LOWER(TRIM(?))
-            OR LOWER(TRIM(p.architect)) = LOWER(TRIM(?))
-            OR LOWER(TRIM(p.developer)) = LOWER(TRIM(?))
-            OR LOWER(TRIM(pp.name)) = LOWER(TRIM(?)))
+         WHERE entity_key(p.general_contractor) = ?
+            OR entity_key(p.owner) = ?
+            OR entity_key(p.architect) = ?
+            OR entity_key(p.developer) = ?
+            OR entity_key(pp.name) = ?
          ORDER BY p.permit_date DESC NULLS LAST, p.id DESC
          LIMIT 50
         """
-        rows = self.db.conn.execute(query, (target.name, target.name, target.name, target.name, target.name)).fetchall()
+        rows = self.db.conn.execute(query, (company_key, company_key, company_key, company_key, company_key)).fetchall()
 
         projects: list[dict[str, Any]] = []
         project_ids: list[int] = []
@@ -362,41 +463,47 @@ class CompanyService:
                 "source_name": r["source_name"],
             })
 
-        # Calculate recurring partners (other stakeholders on the same projects)
+        # Calculate recurring partners (other stakeholders on the same projects). Grouped by
+        # canonical entity key so two spellings of one partner are one row, and the company
+        # itself is excluded by key so its own variant spelling is not listed as a partner.
         recurring_partners: list[RecurringPartner] = []
         if project_ids:
             placeholders = ",".join("?" for _ in project_ids)
             partner_query = f"""
-            SELECT pp.name, pp.role, COUNT(DISTINCT pp.project_id) as shared_projects
+            SELECT entity_key(pp.name) as partner_key,
+                   pp.name, pp.role, COUNT(DISTINCT pp.project_id) as shared_projects
               FROM project_party pp
              WHERE pp.project_id IN ({placeholders})
-               AND LOWER(TRIM(pp.name)) != LOWER(TRIM(?))
-               AND LENGTH(TRIM(pp.name)) > 1
-               AND LOWER(TRIM(pp.name)) NOT IN ('none', 'n/a', 'unknown', 'null', 'owner')
-             GROUP BY LOWER(TRIM(pp.name)), pp.role
-            HAVING shared_projects >= 1
+               AND entity_key(pp.name) IS NOT NULL
+               AND entity_key(pp.name) != ?
+             GROUP BY entity_key(pp.name), pp.name, pp.role
              ORDER BY shared_projects DESC, pp.name ASC
-             LIMIT 10
+             LIMIT 40
             """
-            p_params = list(project_ids) + [target.name]
+            p_params = list(project_ids) + [company_key]
             p_rows = self.db.conn.execute(partner_query, tuple(p_params)).fetchall()
+            seen_partners: set[str] = set()
             for pr in p_rows:
                 p_name = clean_company_name(pr["name"])
-                if p_name:
-                    recurring_partners.append(
-                        RecurringPartner(
-                            name=p_name,
-                            slug=slugify(p_name),
-                            role=(pr["role"] or "Partner").replace("_", " ").title(),
-                            shared_projects=int(pr["shared_projects"]),
-                        )
+                if not p_name or pr["partner_key"] in seen_partners:
+                    continue
+                seen_partners.add(pr["partner_key"])
+                recurring_partners.append(
+                    RecurringPartner(
+                        name=p_name,
+                        slug=slugify(p_name),
+                        role=(pr["role"] or "Partner").replace("_", " ").title(),
+                        shared_projects=int(pr["shared_projects"]),
                     )
+                )
+                if len(recurring_partners) >= 10:
+                    break
 
         return CompanyProfile(
             name=target.name,
             slug=target.slug,
             primary_role=target.primary_role,
-            roles_observed=[target.primary_role],
+            roles_observed=self._observed_roles(company_key) or [target.primary_role],
             project_count=len(projects),
             total_declared_value=target.total_declared_value,
             cities=target.cities,
