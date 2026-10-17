@@ -116,6 +116,18 @@ def build_database(path: Path) -> Database:
     return db
 
 
+@pytest.fixture(autouse=True)
+def _no_provider_keys(monkeypatch):
+    """Keep the suite off the public model endpoints.
+
+    The analyst reads its key from the environment, so a shell that exports GEMINI_API_KEY would
+    otherwise make the app-surface tests call Gemini for real - slow, non-deterministic, and a
+    paid egress from a test run.
+    """
+    for name in ("GEMINI_API_KEY", "Gemini_API_Token", "XAI_API_KEY", "Grok_API_Token"):
+        monkeypatch.delenv(name, raising=False)
+
+
 @pytest.fixture
 def app_db(tmp_path):
     """A database plus a Flask app bound to it."""
