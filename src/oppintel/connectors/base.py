@@ -11,19 +11,53 @@ import json
 import logging
 import time
 from dataclasses import dataclass
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Iterator
 
 import requests
 
 from ..config import DATA_DIR, SourceConfig
-from ..models import RawPermit, utcnow
+from ..models import RawPermit, parse_date, utcnow
 
 log = logging.getLogger(__name__)
 
 
 class ConnectorError(RuntimeError):
     pass
+
+
+def coerce_since(since: Any) -> date | None:
+    """A `since` bound as a date, or None when it is absent or unusable.
+
+    Callers pass either a `date` (the pipeline resolves `SourceConfig.resolved_since`) or a
+    string (a CLI `--since`). A value that is neither, or an unparseable string, yields None
+    rather than a guess: a malformed bound must widen the request, never silently filter on a
+    wrong date and quietly drop rows.
+    """
+    if since is None:
+        return None
+    if isinstance(since, datetime):
+        return since.date()
+    if isinstance(since, date):
+        return since
+    return parse_date(since)
+
+
+def within_since(value: Any, since: date | None) -> bool | None:
+    """Whether a source date falls inside the `since` window.
+
+    True when the date is on/after the bound, False when it is provably before it, and None
+    when the value carries no usable date. The None case is deliberate: a record the source
+    left undated (or dated in a format we do not recognise) cannot be shown to be out of
+    window, so it is kept rather than silently dropped from a bounded crawl.
+    """
+    if since is None:
+        return True
+    parsed = parse_date(value)
+    if parsed is None:
+        return None
+    return parsed >= since
 
 
 @dataclass

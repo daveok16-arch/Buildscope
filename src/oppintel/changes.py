@@ -19,7 +19,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
 #: Fields whose value is compared between passes. Chosen because each is a field the product
@@ -53,6 +53,10 @@ TRACKED_FIELDS: tuple[tuple[str, str], ...] = (
 #: an event the same way instead of each inventing its own labels.
 NEW_PROJECT = "new_project"
 NEW_PERMIT = "new_permit"
+#: A permit the source already recorded as issued before the freshness window, imported for the
+#: first time today. It is a genuine addition to the store but not a new filing, so it is a
+#: timeline entry rather than a notification. See `classify_added_permit`.
+HISTORICAL_PERMIT = "historical_permit"
 MECHANICAL_ADDED = "mechanical_evidence_added"
 STATUS_CHANGED = "status_changed"
 PROCUREMENT_CHANGED = "procurement_changed"
@@ -63,10 +67,17 @@ CLOSED = "project_closed"
 
 #: Kinds that a contractor would want an alert about, as opposed to a routine correction.
 #: A record correction is still shown on the timeline; it just does not raise a notification.
+#: `historical_permit` is deliberately absent: an old permit ingested today must never alert
+#: as if it were newly filed.
 NOTIFIABLE_KINDS = frozenset(
     {NEW_PROJECT, NEW_PERMIT, MECHANICAL_ADDED, STATUS_CHANGED, PROCUREMENT_CHANGED,
      CLASSIFICATION_CHANGED, CLOSED}
 )
+
+#: Fallback freshness window (days) when a trade profile does not declare one. Matches the
+#: default the classifier uses for its recency points, so "recent" means the same thing in
+#: both places rather than drifting apart.
+DEFAULT_RECENT_PERMIT_DAYS = 180
 
 
 @dataclass
@@ -143,15 +154,60 @@ def _permits_added(previous: list[str], current: list[str]) -> list[str]:
     return [key for key in current if key not in set(previous)]
 
 
+def classify_added_permit(
+    permit: dict[str, Any], *, today: date | None = None, recent_days: int | None = None
+) -> tuple[str, str]:
+    """Decide whether an added permit is a new filing or a historical import.
+
+    Returns `(change_kind, summary)`. The rule is anchored to the permit's own source date, not
+    to when BuildScope saw it: a record the source dated before the freshness window is a
+    `historical_permit` even though it is new *to us*, and only a permit dated inside the window
+    is a `new_permit` that may alert. A permit with no usable date cannot be shown to be fresh,
+    so it is treated as historical rather than claimed as new — never infer issuance from
+    ingestion time.
+
+    `today` defaults to the current UTC date; it is a parameter so the policy is testable
+    without freezing the clock.
+    """
+    today = today or datetime.now(timezone.utc).date()
+    window = DEFAULT_RECENT_PERMIT_DAYS if recent_days is None else int(recent_days)
+    number = permit.get("permit_number") or permit.get("natural_key") or "unknown"
+    raw_date = permit.get("permit_date") or permit.get("source_date")
+    parsed = _parse_source_date(raw_date)
+
+    if parsed is not None and parsed >= today - timedelta(days=window):
+        return NEW_PERMIT, f"New permit recorded: {number}."
+    return (
+        HISTORICAL_PERMIT,
+        f"Historical permit imported: {number} (issued {parsed.isoformat() if parsed else 'date not stated'}).",
+    )
+
+
+def _parse_source_date(value: Any) -> date | None:
+    """A stored permit date as a `date`, or None. Delegates to the shared parser so the change
+    layer recognises exactly the formats the connectors already accept."""
+    from .models import parse_date
+
+    return parse_date(value)
+
+
 def diff_project(
     project: dict[str, Any],
     previous_values: dict[str, Any] | None,
     permits: list[dict[str, Any]] | None = None,
+    *,
+    recent_days: int | None = None,
+    today: date | None = None,
 ) -> list[DetectedChange]:
     """Differences between a project's current state and its previous snapshot.
 
     `previous_values is None` means the project has not been seen before, which is itself an
     event: it is the moment the opportunity entered the system.
+
+    An added permit is classified by its own source date (see `classify_added_permit`): one
+    dated inside the freshness window is a `new_permit`, an older or undated one is a
+    `historical_permit`. `recent_days` and `today` come from the caller's trade profile and
+    observation clock so the policy is configured once, not re-derived here.
     """
     current = snapshot_values(project, permits)
     project_id = int(project["id"])
@@ -252,12 +308,15 @@ def diff_project(
                  if str(p.get("natural_key") or p.get("permit_number") or "") == key),
                 {},
             )
+            kind, summary = classify_added_permit(
+                record, today=today, recent_days=recent_days
+            )
             changes.append(
                 DetectedChange(
                     project_id=project_id,
                     field_name="__permits__",
-                    change_kind=NEW_PERMIT,
-                    summary=f"New permit recorded: {record.get('permit_number') or key}.",
+                    change_kind=kind,
+                    summary=summary,
                     current_value=record.get("permit_number") or key,
                     source_id=record.get("source_id"),
                     source_name=record.get("source_display_name") or project.get("source_name"),

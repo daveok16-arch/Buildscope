@@ -236,6 +236,10 @@ class Pipeline:
 
         The snapshot is written before the changes so that a failure while recording an event
         cannot leave the project marked as already-seen and silently drop the event.
+
+        The freshness window for an added permit comes from the trade profile, so "a new
+        permit" means the same thing here as it does to the classifier. A permit the source
+        dated before the window is recorded as a historical import and cannot alert.
         """
         from .changes import diff_project, snapshot_values, state_hash
 
@@ -250,7 +254,10 @@ class Pipeline:
             # Nothing moved. Writing a snapshot again would be a no-op, so skip the work.
             return
 
-        changes = diff_project(row, prior_values, permits)
+        recent_days = (self.trade.scoring or {}).get("recent_permit_days")
+        changes = diff_project(
+            row, prior_values, permits, recent_days=recent_days
+        )
         self.db.record_changes([c for c in changes if c.is_notifiable or c.change_kind])
         self.db.save_snapshot(project_id, current, digest)
 

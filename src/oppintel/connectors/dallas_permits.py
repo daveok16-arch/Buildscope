@@ -25,7 +25,7 @@ from ..models import (
     parse_money,
     parse_sqft,
 )
-from .base import BaseConnector
+from .base import BaseConnector, coerce_since, within_since
 
 log = logging.getLogger(__name__)
 
@@ -42,11 +42,19 @@ class DallasGisPermitsConnector(BaseConnector):
 
     def fetch_raw(self, since: Any = None, batch_size: int | None = None) -> Iterator[RawPermit]:
         batch_size = batch_size or self.page_size
+        bound = coerce_since(since)
+        # The layer's ISSUE_DATE is a real date field, so the bound belongs in the server-side
+        # `where`: it cuts the download rather than trimming rows after they arrive. The
+        # client-side check below is a backstop, not the mechanism, so a source that ignores
+        # the predicate still cannot leak an out-of-window row into the store.
+        where = "1=1"
+        if bound is not None:
+            where = f"ISSUE_DATE >= timestamp '{bound.isoformat()} 00:00:00'"
         offset = 0
         page = 0
         while page < self.max_pages:
             params = {
-                "where": "1=1",
+                "where": where,
                 "outFields": self.OUT_FIELDS,
                 "returnGeometry": "false",
                 "orderByFields": "ISSUE_DATE DESC",
@@ -63,6 +71,8 @@ class DallasGisPermitsConnector(BaseConnector):
             for feature in features:
                 row = feature.get("attributes", {})
                 if not row.get("PERMIT_No"):
+                    continue
+                if within_since(row.get("ISSUE_DATE"), bound) is False:
                     continue
                 yield RawPermit(
                     source_id=self.source_id,
@@ -128,6 +138,7 @@ class DallasPermitsSocrataConnector(BaseConnector):
 
     def fetch_raw(self, since: Any = None, batch_size: int | None = None) -> Iterator[RawPermit]:
         batch_size = batch_size or self.page_size
+        bound = coerce_since(since)
         offset = 0
         page = 0
         while page < self.max_pages:
@@ -136,13 +147,18 @@ class DallasPermitsSocrataConnector(BaseConnector):
                 "$offset": offset,
                 "$order": "issued_date DESC",
             }
-            if since is not None:
-                params["$where"] = f"issued_date > '{since}'"
+            # Socrata supports a server-side predicate on `issued_date`, so the bound cuts
+            # the download. `>=` matches the inclusive contract the other sources use; a
+            # strict `>` silently dropped rows dated exactly on the boundary.
+            if bound is not None:
+                params["$where"] = f"issued_date >= '{bound.isoformat()}T00:00:00.000'"
             rows = self.get_json(self._endpoint(), params=params)
             if not rows:
                 break
             for row in rows:
                 if not row.get("permit_number"):
+                    continue
+                if within_since(row.get("issued_date"), bound) is False:
                     continue
                 yield RawPermit(
                     source_id=self.source_id,
