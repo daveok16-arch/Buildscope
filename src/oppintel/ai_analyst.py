@@ -149,6 +149,23 @@ class AnalystClient(Protocol):
         """Return the structured brief payload for a dossier."""
 
 
+def prompt_contract_digest(system: str, schema: dict[str, Any] | None = None) -> str:
+    """The digest of everything the model is shown *besides* the dossier.
+
+    The system instruction and the response schema are one contract: the instruction says what to
+    produce and the schema constrains its shape. Folding both into the digest means an edit to
+    either is a cache miss on its own, without anyone remembering to bump ``PROMPT_VERSION``. A
+    schema change that silently reused an old payload would be a stale answer served as a fresh
+    one, which is the failure this cache must not be able to cause.
+    """
+    digest = hashlib.sha256()
+    digest.update(system.encode("utf-8"))
+    digest.update(b"\x1f")
+    resolved = BRIEF_SCHEMA if schema is None else schema
+    digest.update(json.dumps(resolved, sort_keys=True).encode("utf-8"))
+    return digest.hexdigest()
+
+
 def cache_key(provider: str, model: str, prompt_version: str, system: str, dossier: str) -> str:
     """The content address of one model response.
 
@@ -157,9 +174,12 @@ def cache_key(provider: str, model: str, prompt_version: str, system: str, dossi
     permit, a corrected value, a source that stopped supporting a field - produces a different
     dossier, a different key, and therefore a miss. There is no time-based expiry to tune and no
     invalidation hook to forget: the evidence is the invalidation.
+
+    ``system`` is hashed together with the response schema (see :func:`prompt_contract_digest`),
+    so the two halves of the prompt contract cannot drift apart in the address.
     """
     digest = hashlib.sha256()
-    for part in (provider, model, prompt_version, system, dossier):
+    for part in (provider, model, prompt_version, prompt_contract_digest(system), dossier):
         digest.update(part.encode("utf-8"))
         digest.update(b"\x1f")  # unit separator: "ab"+"c" must not collide with "a"+"bc"
     return digest.hexdigest()
@@ -175,9 +195,10 @@ class CachingClient:
     verification runs on the payload, not on the cached bytes.
     """
 
-    def __init__(self, inner: AnalystClient, db: Database):
+    def __init__(self, inner: AnalystClient, db: Database, project_id: int | None = None):
         self._inner = inner
         self._db = db
+        self._project_id = project_id
 
     @property
     def available(self) -> bool:
@@ -207,6 +228,7 @@ class CachingClient:
             provider=self.provider,
             model=self.model or "",
             prompt_version=PROMPT_VERSION,
+            project_id=self._project_id,
         )
         self._db.commit()
         return payload
@@ -1004,6 +1026,10 @@ class AnalystBrief:
     slug: str | None
     status: str
     model: str | None
+    #: When the brief was *assembled* (at request time), which is not necessarily when the model
+    #: ran: a cache hit re-uses a payload the model produced earlier. The prose is unchanged and
+    #: every fact is re-derived, so this marks when the page was built, not when the project
+    #: happened. It is never evidence about the project.
     generated_at: str
     prompt_version: str = PROMPT_VERSION
     narrative: str = ""
@@ -1406,7 +1432,7 @@ def build_brief(
     # object - a test double, or the no-model sentinel - and must behave exactly as it would with
     # no cache in front of it.
     if use_cache and not caller_supplied:
-        client = CachingClient(client, db)
+        client = CachingClient(client, db, project_id=project_id)
 
     try:
         payload = client.analyse(SYSTEM_INSTRUCTION, dossier.text)

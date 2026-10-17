@@ -477,10 +477,32 @@ running and cannot give a writable persistent directory) is **usually unsuitable
   bypass a grounding check; a response that fails verification fails it identically from storage.
   Only the *production* transport is wrapped: a caller-supplied client (a test double, the
   no-model sentinel) is passed through untouched, which is what keeps `tests/test_ai_analyst.py`
-  honest about call counts. Measured live: 6.57s cold → 0.00s warm, identical prose. A missing
-  table or a corrupt row is a miss, not an error (the cache is an optimisation). Tests:
+  honest about call counts. Measured live: 5.67–7.09s cold → 0.00s warm, identical prose. A
+  missing table or a corrupt row is a miss, not an error (the cache is an optimisation). Tests:
   `test_cache_hit_skips_the_second_call`, `test_a_changed_value_invalidates_the_cached_response`,
   `test_a_cached_response_is_still_verified_on_read`, `test_cache_stores_the_payload_not_a_brief`.
+* **The prompt contract is in the key, and it is hashed, not remembered.**
+  `prompt_contract_digest(system, schema)` folds the system instruction *and* `BRIEF_SCHEMA` into
+  the address. The schema is a separate request field, not prose in the dossier, so a key built
+  from `(system, dossier)` alone would let a schema edit reuse a payload produced under the old
+  shape — a stale answer served as a current one. Because the digest is computed, nobody has to
+  remember to bump `PROMPT_VERSION` when they add a field; the key moves on its own. `PROMPT_VERSION`
+  stays for a *semantic* change (a reworded instruction) and travels on the brief. Tests:
+  `test_cache_key_changes_when_the_response_schema_changes`,
+  `test_a_schema_edit_makes_a_stored_payload_unreachable`.
+* **The cache is bounded (`ANALYST_CACHE_MAX_ROWS`, 5000).** Evidence-keyed caching means a
+  corrected value writes a *new* row and orphans the old one, so the table would otherwise gain a
+  row per distinct dossier forever — a slow leak on the persistent disk this deployment is meant
+  to have. `store_analyst_payload` prunes to the newest N, with a 1.2x hysteresis band so the
+  prune is off the write path for almost every insert. Dropping a row costs a model call; it can
+  never serve a wrong answer, because the key is content-addressed. A key-scheme change (as in the
+  bullet above) orphans every existing row at once; those are harmless — unreachable, never read —
+  and age out through the same prune.
+* **`generated_at` is the assembly time, not the model time.** A cache hit stamps the brief when
+  the page is built, so the prose may be older than the timestamp that reports it. It is never
+  evidence about the project and must not be read as one. `project_id` on a cache row is
+  informational (the key is what addresses it); a row written before that column was wired reads
+  `NULL`.
 * **The key travels in a header.** `GeminiClient` sends `x-goog-api-key`, never `?key=` in the
   URL: a query string is written to proxy access logs and quoted in error traces. Verified live
   against `gemini-2.5-flash` and pinned by

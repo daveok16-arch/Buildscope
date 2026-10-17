@@ -8,6 +8,7 @@ No test calls the public Gemini endpoint.
 
 from __future__ import annotations
 
+import copy
 import json
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -767,6 +768,10 @@ def _caching(analyst_db, payload):
     return CachingClient(inner, analyst_db), inner
 
 
+def _cache_count(db) -> int:
+    return db.conn.execute("SELECT COUNT(*) FROM analyst_response_cache").fetchone()[0]
+
+
 def test_cache_hit_skips_the_second_call(analyst_db):
     """The same dossier is analysed once; the second request is served from storage."""
     pid = _project_id(analyst_db)
@@ -805,6 +810,70 @@ def test_cache_key_changes_when_the_dossier_changes(analyst_db):
 def test_cache_key_does_not_collide_on_field_boundaries():
     """The separator matters: ("ab", "c") must not address the same row as ("a", "bc")."""
     assert cache_key("p", "m", "1", "ab", "c") != cache_key("p", "m", "1", "a", "bc")
+
+
+def test_cache_key_changes_when_the_response_schema_changes():
+    """The response schema is part of the prompt contract, so it is part of the address.
+
+    The schema is not sent as prose - it is a separate field of the request - so a key built only
+    from (system, dossier) would let a schema edit reuse a payload produced under the old shape.
+    The fix is structural rather than a convention: nobody has to remember to bump
+    PROMPT_VERSION when they add a field, because the digest moves on its own.
+    """
+    from oppintel.ai_analyst import prompt_contract_digest
+
+    base = prompt_contract_digest("sys")
+    assert base == prompt_contract_digest("sys", BRIEF_SCHEMA), "default must be the real schema"
+
+    widened = copy.deepcopy(BRIEF_SCHEMA)
+    widened["properties"]["a_new_field"] = {"type": "STRING"}
+    assert prompt_contract_digest("sys", widened) != base, "a schema edit must move the digest"
+
+
+def test_a_schema_edit_makes_a_stored_payload_unreachable(analyst_db, monkeypatch):
+    """A row written under one schema must not answer a request built from another.
+
+    This is the failure the digest prevents: the schema is not part of the dossier, so without it
+    in the key a shape change would be served the old payload as though it were current. The
+    schema global is swapped for a widened copy - a different *input constant*, not a stub of the
+    code under test - so the assertion is about real ``cache_key`` behaviour.
+    """
+    import oppintel.ai_analyst as ai
+
+    dossier = "dossier text"
+    key_old = cache_key("gemini", "m", "1", "sys", dossier)
+    analyst_db.store_analyst_payload(
+        key_old,
+        {"summary": "written under the old schema"},
+        provider="gemini",
+        model="m",
+        prompt_version="1",
+    )
+    assert analyst_db.cached_analyst_payload(key_old) is not None
+
+    widened = copy.deepcopy(BRIEF_SCHEMA)
+    widened["properties"]["a_new_field"] = {"type": "STRING"}
+    monkeypatch.setattr(ai, "BRIEF_SCHEMA", widened)
+
+    key_new = cache_key("gemini", "m", "1", "sys", dossier)
+    assert key_new != key_old, "a changed schema must not address the old payload"
+    assert analyst_db.cached_analyst_payload(key_new) is None, "the new contract is a miss"
+
+
+def test_generated_at_is_stamped_on_every_brief(analyst_db):
+    """The brief always carries an assembly timestamp, even when the prose came from cache.
+
+    It means "when this page was built", not "when the model ran" - a cached payload is older
+    than the timestamp that reports it. Pinned so the field is not later read as evidence.
+    """
+    pid = _project_id(analyst_db)
+    payload = _passing_payload(collect_facts(analyst_db, pid))
+    counter = _CountingClient(payload)
+    first = build_brief(analyst_db, pid, client=counter)
+    second = build_brief(analyst_db, pid, client=counter)
+    assert first.generated_at
+    assert second.generated_at
+    assert first.generated_at <= second.generated_at
 
 
 def test_a_changed_value_invalidates_the_cached_response(analyst_db):
@@ -899,3 +968,59 @@ def test_a_corrupt_cache_row_costs_a_call_not_an_error(analyst_db):
     brief = build_brief(analyst_db, pid, client=client)
     assert inner.calls == 2, "a corrupt row must fall through to a fresh call"
     assert brief.status == STATUS_AVAILABLE
+
+
+def test_the_cache_is_bounded_and_prunes_the_oldest(analyst_db):
+    """The cache must not grow without limit, and pruning must drop the oldest entries.
+
+    Evidence-keyed caching means a corrected value writes a new row and orphans the old one, so
+    the table would otherwise gain a row per distinct dossier forever. Pruning is safe because the
+    key is content-addressed: a dropped entry costs a call, it cannot serve a stale answer.
+    """
+    from oppintel.db import ANALYST_CACHE_MAX_ROWS
+
+    for i in range(8):
+        analyst_db.store_analyst_payload(
+            f"key-{i}",
+            {"summary": f"payload {i}"},
+            provider="gemini",
+            model="m",
+            prompt_version="1",
+        )
+    analyst_db.commit()
+
+    # Below the hysteresis threshold nothing is dropped, so the write path stays cheap.
+    assert analyst_db.prune_analyst_cache(max_rows=10) == 0
+    assert _cache_count(analyst_db) == 8
+
+    # Past it, the table is trimmed to the cap and the newest rows survive.
+    removed = analyst_db.prune_analyst_cache(max_rows=5)
+    assert removed == 3
+    assert _cache_count(analyst_db) == 5
+    assert analyst_db.cached_analyst_payload("key-7") is not None, "newest kept"
+    assert analyst_db.cached_analyst_payload("key-0") is None, "oldest dropped"
+    assert ANALYST_CACHE_MAX_ROWS >= 100, "the production cap must be a real bound"
+
+
+def test_a_cached_row_records_its_project(analyst_db, monkeypatch):
+    """The row carries the project id, so an operator can see which record a payload belongs to.
+
+    This exercises the production path - no client is passed, so ``build_brief`` builds the
+    transport and wraps it. The client *factory* is patched to hand back the counting transport,
+    which is the network boundary rather than the code under test.
+    """
+    import oppintel.ai_analyst as ai
+
+    pid = _project_id(analyst_db)
+    inner = _CountingClient(_passing_payload(collect_facts(analyst_db, pid)))
+    monkeypatch.setattr(ai, "default_client", lambda **kwargs: inner)
+
+    build_brief(analyst_db, pid)
+
+    row = analyst_db.conn.execute(
+        "SELECT project_id, provider, model, prompt_version FROM analyst_response_cache"
+    ).fetchone()
+    assert row["project_id"] == pid
+    assert row["provider"] == PROVIDER_GEMINI
+    assert row["model"], "the model that produced the payload is recorded"
+

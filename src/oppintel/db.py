@@ -16,6 +16,11 @@ from typing import Any, Iterable
 
 from .models import Evidence, Permit, Project, ProjectParty
 
+#: How many model responses the analyst cache keeps. The cache is an optimisation, not a store of
+#: record, so a bounded table is the right trade: the newest entries are the ones a live page is
+#: most likely to ask for, and dropping an old one costs a model call, never a wrong answer.
+ANALYST_CACHE_MAX_ROWS = 5000
+
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS source (
     id                 TEXT PRIMARY KEY,
@@ -1479,6 +1484,41 @@ class Database:
             )
         except sqlite3.OperationalError:
             return
+        self.prune_analyst_cache()
+
+    def prune_analyst_cache(self, max_rows: int | None = None) -> int:
+        """Trim the response cache to its newest ``max_rows`` entries. Returns rows removed.
+
+        The cache is keyed by evidence, so a corrected value does not overwrite the old row - it
+        writes a *new* one and leaves the previous unreachable. Left alone the table would grow by
+        one row per distinct dossier forever, which is a slow leak on the persistent disk this
+        deployment is meant to have. The key is content-addressed, so dropping the oldest rows
+        only costs a future model call; it can never serve a wrong answer.
+
+        A hysteresis band (prune at 1.2x the cap) keeps this off the write path for almost every
+        insert: a prune runs once per 20% of the cap, not once per write.
+        """
+        cap = ANALYST_CACHE_MAX_ROWS if max_rows is None else max_rows
+        try:
+            count = self.conn.execute(
+                "SELECT COUNT(*) FROM analyst_response_cache"
+            ).fetchone()[0]
+        except sqlite3.OperationalError:
+            return 0
+        if count <= int(cap * 1.2):
+            return 0
+        self.conn.execute(
+            """
+            DELETE FROM analyst_response_cache
+            WHERE cache_key NOT IN (
+                SELECT cache_key FROM analyst_response_cache
+                ORDER BY created_at DESC, rowid DESC
+                LIMIT ?
+            )
+            """,
+            (cap,),
+        )
+        return count - cap
 
     def record_changes(self, changes: list[Any]) -> int:
         """Persist detected changes. Returns the number written.
