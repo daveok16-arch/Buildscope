@@ -103,6 +103,13 @@ These are enforced by tests, not by convention. Breaking one fails the suite.
 * `app_db` / `client` / `session_client` / `admin_client` run with protections off (debug).
 * `secured_client` runs with CSRF and rate limiting **on** — use it for security tests.
 * `csrf_from(client, path)` extracts a token as a browser form post would carry it.
+* **The suite must pass with a provider key in the environment.** An autouse fixture
+  (`_no_provider_keys`) in `conftest_app.py` scrubs `GEMINI_API_KEY`/`Gemini_API_Token` and
+  `XAI_API_KEY`/`Grok_API_Token`, so app-surface tests never make a live model call. An autouse
+  fixture in one test *file* does not apply to another file, so this belongs in the shared conftest.
+  CI exports a dummy key on purpose to prove it.
+* `requirements.txt` is **pinned** (`==`), not ranged, so a deploy builds the dependency set CI
+  tested. Bump a pin deliberately, with the suite run against the new version.
 
 ## Automation
 
@@ -459,6 +466,31 @@ running and cannot give a writable persistent directory) is **usually unsuitable
 * **Free-tier quota.** `gemini-2.5-flash` on a free key returns `429` under sustained use, which
   surfaces as `UNAVAILABLE` — the design already covers it, so a quota wall degrades to the
   evidence-only summary rather than an error page.
+* **Response cache (`CachingClient`).** A page view must not pay for a model call the platform has
+  already made, so the provider's *raw response* is stored in `analyst_response_cache`, addressed
+  by `cache_key(provider, model, prompt_version, system, dossier)` — a sha256 of exactly what the
+  model was shown, with a unit separator between fields so `("ab","c")` cannot collide with
+  `("a","bc")`. **Evidence is the invalidator:** the dossier is built from the stored facts, so a
+  changed fact is a different key and the old row is unreachable. There is no TTL and no
+  invalidation hook to forget. The brief is never cached — facts, verdicts, status and
+  `validate_brief` are re-derived on every read — so a hit can only skip the network call, never
+  bypass a grounding check; a response that fails verification fails it identically from storage.
+  Only the *production* transport is wrapped: a caller-supplied client (a test double, the
+  no-model sentinel) is passed through untouched, which is what keeps `tests/test_ai_analyst.py`
+  honest about call counts. Measured live: 6.57s cold → 0.00s warm, identical prose. A missing
+  table or a corrupt row is a miss, not an error (the cache is an optimisation). Tests:
+  `test_cache_hit_skips_the_second_call`, `test_a_changed_value_invalidates_the_cached_response`,
+  `test_a_cached_response_is_still_verified_on_read`, `test_cache_stores_the_payload_not_a_brief`.
+* **The key travels in a header.** `GeminiClient` sends `x-goog-api-key`, never `?key=` in the
+  URL: a query string is written to proxy access logs and quoted in error traces. Verified live
+  against `gemini-2.5-flash` and pinned by
+  `test_gemini_client_sends_the_key_in_a_header_not_the_url`.
+* **The suite runs with a key present, by construction.** `tests/conftest_app.py` has an autouse
+  fixture (`_no_provider_keys`) that scrubs both documented names for both providers. Without it,
+  `test_ai_analyst_page_renders_for_an_operator` made a real, paid Gemini call and then *failed*,
+  because a reachable model renders a brief instead of the "no model configured" text the test
+  asserts — a green suite that depended on the absence of a credential. CI
+  (`.github/workflows/ci.yml`) exports a dummy `GEMINI_API_KEY` so this cannot regress silently.
 * **No SDK.** Both clients are standard-library JSON POSTs (`urllib.request`), so the analyst adds
   no dependency (the repo ships four). The transport is an `AnalystClient` Protocol, so the
   evidence pipeline and the verification pass are tested with no network; each client is tested

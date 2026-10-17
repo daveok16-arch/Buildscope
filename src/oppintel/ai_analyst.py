@@ -39,6 +39,7 @@ tested against a real database with no network at all.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -146,6 +147,69 @@ class AnalystClient(Protocol):
 
     def analyse(self, system: str, dossier: str) -> dict[str, Any]:
         """Return the structured brief payload for a dossier."""
+
+
+def cache_key(provider: str, model: str, prompt_version: str, system: str, dossier: str) -> str:
+    """The content address of one model response.
+
+    Every input that can change the response is in the digest, so the key is a statement of what
+    the model was shown. The dossier is built from the stored facts, so a changed fact - a new
+    permit, a corrected value, a source that stopped supporting a field - produces a different
+    dossier, a different key, and therefore a miss. There is no time-based expiry to tune and no
+    invalidation hook to forget: the evidence is the invalidation.
+    """
+    digest = hashlib.sha256()
+    for part in (provider, model, prompt_version, system, dossier):
+        digest.update(part.encode("utf-8"))
+        digest.update(b"\x1f")  # unit separator: "ab"+"c" must not collide with "a"+"bc"
+    return digest.hexdigest()
+
+
+class CachingClient:
+    """Wraps a transport so a dossier the platform has already analysed is not sent again.
+
+    The cache stores the provider's *raw response*, not a brief. Facts, verdicts, the status and
+    the verification pass are all recomputed by :func:`build_brief` on every read, so a hit skips
+    only the network call and can never bypass a grounding check or serve a stale value. A
+    response that fails verification today would fail it identically from cache, because the
+    verification runs on the payload, not on the cached bytes.
+    """
+
+    def __init__(self, inner: AnalystClient, db: Database):
+        self._inner = inner
+        self._db = db
+
+    @property
+    def available(self) -> bool:
+        return self._inner.available
+
+    @property
+    def model(self) -> str | None:
+        return getattr(self._inner, "model", None)
+
+    @property
+    def provider(self) -> str:
+        return getattr(self._inner, "provider", "") or ""
+
+    def analyse(self, system: str, dossier: str) -> dict[str, Any]:
+        key = cache_key(
+            self.provider, self.model or "", PROMPT_VERSION, system, dossier
+        )
+        cached = self._db.cached_analyst_payload(key)
+        if cached is not None:
+            return cached
+        payload = self._inner.analyse(system, dossier)
+        # Commit here: the analyst is also reachable from a CLI path that does not run the app's
+        # per-request commit, and a cache write that is rolled back would silently never hit.
+        self._db.store_analyst_payload(
+            key,
+            payload,
+            provider=self.provider,
+            model=self.model or "",
+            prompt_version=PROMPT_VERSION,
+        )
+        self._db.commit()
+        return payload
 
 
 def api_key_from_env() -> str:
@@ -259,9 +323,15 @@ class GeminiClient:
             },
         }
         request = urllib.request.Request(
-            f"{self.endpoint}/{self.model}:generateContent?key={self.api_key}",
+            f"{self.endpoint}/{self.model}:generateContent",
             data=json.dumps(body).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
+            headers={
+                "Content-Type": "application/json",
+                # The key travels in a header, not the query string: a URL is recorded by proxies,
+                # written to access logs and quoted in error traces, and a credential that leaks
+                # into any of those is a credential spent.
+                "x-goog-api-key": self.api_key,
+            },
             method="POST",
         )
         try:
@@ -1284,6 +1354,7 @@ def build_brief(
     notice: str = PERMIT_EVIDENCE_NOTICE,
     market: str | None = None,
     trade: str | None = None,
+    use_cache: bool = True,
 ) -> AnalystBrief:
     """Build a grounded analysis of one project.
 
@@ -1321,6 +1392,7 @@ def build_brief(
         brief.narrative = deterministic_narrative(brief)
         return brief
 
+    caller_supplied = client is not None
     client = client if client is not None else default_client(model=model)
     if not client.available:
         brief.limitations.append(
@@ -1329,6 +1401,12 @@ def build_brief(
         )
         brief.narrative = deterministic_narrative(brief)
         return brief
+
+    # Only the production transport is cached. A caller-supplied client is that caller's own
+    # object - a test double, or the no-model sentinel - and must behave exactly as it would with
+    # no cache in front of it.
+    if use_cache and not caller_supplied:
+        client = CachingClient(client, db)
 
     try:
         payload = client.analyse(SYSTEM_INSTRUCTION, dossier.text)

@@ -25,11 +25,13 @@ from oppintel.ai_analyst import (
     STATUS_UNAVAILABLE,
     STATUS_UNVERIFIED,
     AnalystUnavailable,
+    CachingClient,
     GeminiClient,
     GrokClient,
     api_key_from_env,
     assemble_dossier,
     build_brief,
+    cache_key,
     collect_facts,
     default_client,
     deterministic_narrative,
@@ -403,6 +405,7 @@ class _StubHandler(BaseHTTPRequestHandler):
     status: int = 200
     last_body: dict = {}
     last_headers: dict = {}
+    last_path: str = ""
 
     def do_POST(self):  # noqa: N802 - the handler API is fixed
         length = int(self.headers.get("Content-Length", 0))
@@ -412,6 +415,7 @@ class _StubHandler(BaseHTTPRequestHandler):
         except (json.JSONDecodeError, UnicodeDecodeError):  # pragma: no cover - defensive
             type(self).last_body = {}
         type(self).last_headers = dict(self.headers)
+        type(self).last_path = self.path
         body = json.dumps(self.payload).encode("utf-8")
         self.send_response(self.status)
         self.send_header("Content-Type", "application/json")
@@ -449,6 +453,30 @@ def test_gemini_client_parses_a_structured_response(stub_server):
     assert client.available is True
     payload = client.analyse("system", "dossier")
     assert payload["confidence"] == "medium"
+
+
+def test_gemini_client_sends_the_key_in_a_header_not_the_url(stub_server):
+    """The credential must not travel in the query string.
+
+    A URL is written to proxy access logs, retained by intermediaries and quoted in error traces.
+    The key belongs in a header, which those layers do not record by default.
+    """
+    stub_server.RequestHandlerClass.payload = {
+        "candidates": [
+            {"finishReason": "STOP", "content": {"parts": [{"text": json.dumps(_passing_payload([]))}]}}
+        ]
+    }
+    client = GeminiClient(
+        api_key="secret-key-value",
+        model="gemini-2.5-flash",
+        endpoint=f"http://127.0.0.1:{stub_server.server_port}",
+    )
+    client.analyse("system", "dossier")
+
+    headers = {k.lower(): v for k, v in stub_server.RequestHandlerClass.last_headers.items()}
+    assert headers.get("x-goog-api-key") == "secret-key-value"
+    # The handler records the request path; the key must not appear in it.
+    assert "secret-key-value" not in stub_server.RequestHandlerClass.last_path
 
 
 def test_gemini_client_rejects_a_blocked_response(stub_server):
@@ -705,3 +733,169 @@ def test_build_brief_uses_the_grok_provider_when_only_xai_is_configured(analyst_
     brief = build_brief(analyst_db, _project_id(analyst_db))
     assert brief.status == STATUS_AVAILABLE
     assert brief.model == "grok-3-mini"
+
+
+# --- response cache --------------------------------------------------------------
+#
+# The cache stores the model's raw response, addressed by a digest of exactly what the model was
+# shown. These tests pin the two properties that make that safe: a hit saves the call, and a
+# changed fact is a miss. A third pins the honesty rule at the cache boundary - a response that
+# fails verification must fail it identically when it comes back from storage.
+
+class _CountingClient:
+    """A transport that records how many times it was asked, and returns a fixed payload."""
+
+    provider = PROVIDER_GEMINI
+
+    def __init__(self, payload):
+        self._payload = payload
+        self.model = "counting-model"
+        self.calls = 0
+
+    @property
+    def available(self) -> bool:
+        return True
+
+    def analyse(self, system: str, dossier: str):
+        self.calls += 1
+        return dict(self._payload)
+
+
+def _caching(analyst_db, payload):
+    """A CachingClient over a counting transport, plus the transport for assertions."""
+    inner = _CountingClient(payload)
+    return CachingClient(inner, analyst_db), inner
+
+
+def test_cache_hit_skips_the_second_call(analyst_db):
+    """The same dossier is analysed once; the second request is served from storage."""
+    pid = _project_id(analyst_db)
+    payload = _passing_payload(collect_facts(analyst_db, pid))
+    client, inner = _caching(analyst_db, payload)
+
+    first = build_brief(analyst_db, pid, client=client)
+    second = build_brief(analyst_db, pid, client=client)
+
+    assert inner.calls == 1, "the model must be asked exactly once for one dossier"
+    assert first.status == STATUS_AVAILABLE
+    assert second.status == STATUS_AVAILABLE
+    assert first.narrative == second.narrative
+
+
+def test_cache_key_changes_when_the_dossier_changes(analyst_db):
+    """A changed fact produces a different address, so a stale entry cannot be reached.
+
+    This is the whole invalidation story: the key is a digest of the dossier, and the dossier is
+    built from the stored facts, so evidence is the invalidator. No TTL to tune, no hook to
+    forget.
+    """
+    pid = _project_id(analyst_db)
+    facts = collect_facts(analyst_db, pid)
+    dossier = assemble_dossier(pid, facts, market="DFW", trade="HVAC").text
+
+    same = cache_key(PROVIDER_GEMINI, "m", "1", "sys", dossier)
+    assert same == cache_key(PROVIDER_GEMINI, "m", "1", "sys", dossier)
+    assert same != cache_key(PROVIDER_GEMINI, "m", "1", "sys", dossier + " ")
+    assert same != cache_key(PROVIDER_GEMINI, "m", "2", "sys", dossier)
+    assert same != cache_key(PROVIDER_GEMINI, "other-model", "1", "sys", dossier)
+    # A different prompt is a different response, so it must not share an address.
+    assert same != cache_key(PROVIDER_GEMINI, "m", "1", "other system", dossier)
+
+
+def test_cache_key_does_not_collide_on_field_boundaries():
+    """The separator matters: ("ab", "c") must not address the same row as ("a", "bc")."""
+    assert cache_key("p", "m", "1", "ab", "c") != cache_key("p", "m", "1", "a", "bc")
+
+
+def test_a_changed_value_invalidates_the_cached_response(analyst_db):
+    """A corrected value changes the dossier, so the next analysis is a miss, not a stale hit."""
+    pid = _project_id(analyst_db)
+    payload = _passing_payload(collect_facts(analyst_db, pid))
+    client, inner = _caching(analyst_db, payload)
+
+    build_brief(analyst_db, pid, client=client)
+    assert inner.calls == 1
+
+    # The record's declared value is corrected at the source. The dossier quotes it, so the
+    # address changes and the old entry can no longer be reached.
+    analyst_db.conn.execute(
+        "UPDATE project SET estimated_project_value = estimated_project_value + 111 WHERE id = ?",
+        (pid,),
+    )
+    analyst_db.commit()
+
+    build_brief(analyst_db, pid, client=client)
+    assert inner.calls == 2, "a changed dossier must not be served from the old entry"
+
+
+def test_a_cached_response_is_still_verified_on_read(analyst_db):
+    """A cached payload goes through the same verification, so the cache cannot launder prose.
+
+    The stored bytes are the provider's raw response, never a finished brief. A response that
+    violates the grounding rules is demoted exactly as it would be on the first pass, whether it
+    arrives from the network or from storage.
+    """
+    pid = _project_id(analyst_db)
+    facts = collect_facts(analyst_db, pid)
+    bad = _passing_payload(facts)
+    bad["summary"] = "The work is out for bid at 9999999 dollars."
+
+    client, inner = _caching(analyst_db, bad)
+
+    first = build_brief(analyst_db, pid, client=client)
+    second = build_brief(analyst_db, pid, client=client)
+
+    assert inner.calls == 1, "the second read must come from the cache"
+    for brief in (first, second):
+        assert brief.status == STATUS_UNVERIFIED
+        assert brief.verification_issues
+        assert "9999999" not in brief.narrative
+        assert "out for bid" not in brief.narrative.lower()
+
+
+def test_cache_stores_the_payload_not_a_brief(analyst_db):
+    """What lands in the table is the provider's response, not a rendered brief.
+
+    A stored brief would freeze the verification result; storing the raw payload keeps every
+    derived field - facts, verdicts, status - on the live code path.
+    """
+    pid = _project_id(analyst_db)
+    payload = _passing_payload(collect_facts(analyst_db, pid))
+    client, _ = _caching(analyst_db, payload)
+    build_brief(analyst_db, pid, client=client)
+
+    row = analyst_db.conn.execute("SELECT payload FROM analyst_response_cache").fetchone()
+    assert row is not None
+    stored = json.loads(row["payload"])
+    assert "summary" in stored, "the raw provider response is what is cached"
+    assert "verification_issues" not in stored, "a finished brief must never be cached"
+
+
+def test_cache_is_not_used_for_a_caller_supplied_client(analyst_db):
+    """An explicitly-passed client is never wrapped, so a test double behaves as it always did."""
+    pid = _project_id(analyst_db)
+    client = _CountingClient(_passing_payload(collect_facts(analyst_db, pid)))
+
+    build_brief(analyst_db, pid, client=client)
+    build_brief(analyst_db, pid, client=client)
+
+    assert client.calls == 2, "a passed-in client is not cached"
+    count = analyst_db.conn.execute(
+        "SELECT COUNT(*) FROM analyst_response_cache"
+    ).fetchone()[0]
+    assert count == 0
+
+
+def test_a_corrupt_cache_row_costs_a_call_not_an_error(analyst_db):
+    """A payload that no longer parses is treated as absent, so a bad row cannot break a page."""
+    pid = _project_id(analyst_db)
+    payload = _passing_payload(collect_facts(analyst_db, pid))
+    client, inner = _caching(analyst_db, payload)
+
+    build_brief(analyst_db, pid, client=client)
+    analyst_db.conn.execute("UPDATE analyst_response_cache SET payload = 'not json'")
+    analyst_db.commit()
+
+    brief = build_brief(analyst_db, pid, client=client)
+    assert inner.calls == 2, "a corrupt row must fall through to a fresh call"
+    assert brief.status == STATUS_AVAILABLE

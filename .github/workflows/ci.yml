@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: ".python-version"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pytest
+
+      # A dummy key is exported on purpose. The suite must pass with a provider credential in the
+      # environment, not merely in its absence: a test that only goes green when no key is set is
+      # not testing the code, it is testing the shell. The key is fake and reaches no endpoint -
+      # the app-surface tests scrub it (tests/conftest_app.py::_no_provider_keys), and the
+      # transport tests point at a local HTTP server.
+      - name: Run the test suite
+        env:
+          GEMINI_API_KEY: dummy-key-for-ci
+          SECRET_KEY: ci-only-not-for-production
+        run: PYTHONPATH="src:tests" python -m pytest tests/ -q
+
+      # Guard the contracts this suite exists to protect: the app layer holds no intelligence
+      # logic, and the AI analyst's grounding rules are enforced by tests. Run them explicitly so
+      # a failure names the contract rather than a line number in a combined run.
+      - name: Intelligence and analyst contracts
+        env:
+          GEMINI_API_KEY: dummy-key-for-ci
+          SECRET_KEY: ci-only-not-for-production
+        run: PYTHONPATH="src:tests" python -m pytest tests/test_ai_analyst.py tests/test_ai_analyst_app.py tests/test_app_architecture.py -q

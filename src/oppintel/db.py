@@ -342,6 +342,25 @@ CREATE TABLE IF NOT EXISTS evidence_history (
 );
 CREATE INDEX IF NOT EXISTS idx_ehistory_project ON evidence_history(project_id, field_name);
 CREATE INDEX IF NOT EXISTS idx_ehistory_source ON evidence_history(source_id, source_record_key);
+
+-- The model's raw response for a dossier, so a page view does not pay for a network call the
+-- platform has already made. Keyed by a digest of *exactly what the model was shown* (provider,
+-- model, prompt version and the full dossier text), so any change to a stored fact changes the
+-- key and the entry becomes unreachable. The brief itself is never cached: facts, verdicts and
+-- the verification pass are re-derived from the evidence on every read, so a cached response can
+-- only ever save the call, never bypass a grounding check. Losing this table costs a call, not a
+-- fact, which is why it is safe for a redeploy to drop it.
+CREATE TABLE IF NOT EXISTS analyst_response_cache (
+    cache_key      TEXT PRIMARY KEY,      -- sha256 of provider|model|prompt_version|system|dossier
+    provider       TEXT NOT NULL,
+    model          TEXT NOT NULL,
+    prompt_version TEXT NOT NULL,
+    project_id     INTEGER,               -- informational; the key is what addresses the row
+    payload        TEXT NOT NULL,         -- the provider's JSON, verbatim
+    created_at     TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_analyst_cache_created ON analyst_response_cache(created_at);
 """
 
 #: Application-layer schema. Kept separate from the intelligence schema above so the
@@ -1402,6 +1421,64 @@ class Database:
             """,
             (project_id, digest, json.dumps(values, sort_keys=True), _utcnow()),
         )
+
+    def cached_analyst_payload(self, cache_key: str) -> dict[str, Any] | None:
+        """The stored model response for a dossier, or None.
+
+        The cache is an optimisation, so anything that stops it from answering is a miss rather
+        than an error: a table that does not exist yet, or a row that no longer parses as JSON,
+        must cost one call, not a failed page.
+        """
+        try:
+            row = self.conn.execute(
+                "SELECT payload FROM analyst_response_cache WHERE cache_key = ?", (cache_key,)
+            ).fetchone()
+        except sqlite3.OperationalError:
+            return None
+        if row is None:
+            return None
+        try:
+            payload = json.loads(row["payload"])
+        except (TypeError, ValueError):
+            return None
+        return payload if isinstance(payload, dict) else None
+
+    def store_analyst_payload(
+        self,
+        cache_key: str,
+        payload: dict[str, Any],
+        *,
+        provider: str,
+        model: str,
+        prompt_version: str,
+        project_id: int | None = None,
+    ) -> None:
+        """Record a model response under the digest of what produced it.
+
+        ``INSERT OR REPLACE`` on a content-addressed key, so re-storing the same response is
+        idempotent and a later response for the same dossier supersedes the earlier one. A store
+        that cannot happen is skipped: the response has already been returned to the caller, and
+        the only cost of losing it is one future call.
+        """
+        try:
+            self.conn.execute(
+                """
+                INSERT OR REPLACE INTO analyst_response_cache
+                    (cache_key, provider, model, prompt_version, project_id, payload, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    cache_key,
+                    provider,
+                    model,
+                    prompt_version,
+                    project_id,
+                    json.dumps(payload, sort_keys=True),
+                    _utcnow(),
+                ),
+            )
+        except sqlite3.OperationalError:
+            return
 
     def record_changes(self, changes: list[Any]) -> int:
         """Persist detected changes. Returns the number written.
