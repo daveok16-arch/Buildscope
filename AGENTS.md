@@ -351,6 +351,61 @@ running and cannot give a writable persistent directory) is **usually unsuitable
   command runs the same audit. Tests: `tests/test_intelligence.py`,
   `tests/test_intelligence_service.py`.
 
+## Company directory aggregates canonically (Phase 9)
+
+* `CompanyService.list_companies` groups stakeholders by the **same** canonical key the entity
+  graph uses. `Database.__init__` registers `entity_key()` as a SQL function
+  (`db._entity_key_for_sql` -> `identity.entity_key`), so a directory query and the graph can
+  never disagree about whether two spellings are one company. A name that does not resolve is
+  `NULL` and is excluded, never its own group.
+* Two defects are pinned by tests in `tests/test_companies.py`. (1) A project reached the union
+  through both the `project_party` branch and a direct project-column branch, so
+  `mechanical_project_count` and `total_declared_value` were **doubled**; the union is now
+  de-duplicated per `(company_key, project_id)` before summing. (2) Grouping by the raw spelling
+  split `ACME HEALTH LLC` and `ACME HEALTH, L.L.C.` into two directory rows although
+  `identity.py` merges them; the row is now keyed canonically.
+* The `q` filter selects **companies**, not raw rows: it is applied once to the canonical keys
+  (a name search for either spelling returns the merged company's full project total). Applying
+  it to raw spellings would let one spelling report a smaller total than the same company shows
+  unfiltered. Role and city filters stay on the row (they describe the observation, not the
+  company).
+* `role_counts` counts distinct canonical keys, so a role count equals the length of the list it
+  filters to. `get_company_profile` resolves by key, so a slug, the display name, or any observed
+  variant reach one dossier; `roles_observed` is read from the stored parties/columns, so a role
+  no source published stays absent. `recurring_partners` are merged by key and exclude the
+  company itself. Participant *data* is still owner-only until a source publishes a contractor
+  (`assemble.py` projects `permit.contractor` only when set; the enabled sources set it `None`).
+
+## Historical ingestion integrity (Phase 12)
+
+* **A permit the source already dated before the freshness window must never be presented or
+  alerted on as newly filed.** `changes.classify_added_permit` classifies an added permit by its
+  own source date: inside the window → `new_permit` (alertable), older or undated →
+  `HISTORICAL_PERMIT` (a timeline entry, deliberately **absent** from `NOTIFIABLE_KINDS`). An
+  undated permit cannot be shown to be fresh, so it is treated as historical — issuance is never
+  inferred from ingestion time. The window is `trade.scoring.recent_permit_days` (default 180, the
+  same value the classifier uses), with `changes.DEFAULT_RECENT_PERMIT_DAYS` as fallback.
+  `Pipeline._monitor_project` passes it in. The *first* pass over a backfill is already safe: with
+  no prior snapshot the only change is `new_project`, which is not alertable. Tests:
+  `tests/test_historical_ingestion.py`.
+* **A connector's `since` bound must reach the source's own filter.** `connectors/base.coerce_since`
+  turns a `date`/ISO string into a bound (a malformed value returns `None` so the request widens
+  rather than filtering on a guess); `connectors/base.within_since` returns True/False/None — the
+  `None` ("no usable date") case must be **kept**, never silently dropped. `dallas_gis_permits`
+  previously hard-coded `where=1=1` and ignored `since`; `dallas_permits_socrata`'s predicate was
+  dead code (the pipeline passes `None` for a source with no `since_months`) and used an exclusive
+  `>`. Both now filter server-side with a client-side backstop. Tests:
+  `tests/test_connector_date_filtering.py`.
+* **Attribution-only enrichment is safe on the permit path, blocked off it.** Adding owner/contractor
+  attribution to a permit the system already holds updates the same project in place (identity is
+  `sha1(trade|address_key)`), records provenance via `assert_field`, and converges because
+  `upsert_project` rebuilds evidence/parties each pass. A **non-permit** attribution overlay would be
+  wiped by that rebuild: it needs either routing through the connector/Permit path (no schema change)
+  or one `origin` column. Not built — no current source needs it. Tests:
+  `tests/test_attribution_only.py`.
+* Report: `audit/PHASE_12_HISTORICAL_INGESTION_INTEGRITY_2026-10-17.md`. Phase 11 decision C
+  (no participant source qualifies) unchanged.
+
 ## Search intelligence (Phase 8, capability 1)
 
 * Search infrastructure is layered and must stay layered: `search_vocabulary.yaml` (configured
