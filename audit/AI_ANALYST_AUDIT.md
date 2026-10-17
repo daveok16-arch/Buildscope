@@ -74,9 +74,13 @@ flow — the model is never the source of a fact, only of prose about facts that
    impossible.
 4. **Verification, then publication.** `validate_brief` re-derives support from the fact list and
    flags any fact-shaped token in the model's free text that is not among the supported values:
-   a number that is not a stored figure, an ISO date that is not a stored date, a restated
-   `Not verified` marker, or bid language the notice forbids. A violation demotes the brief to
-   `UNVERIFIED` and replaces the narrative with a deterministic, evidence-only summary.
+   a number that is not a stored figure, an ISO date that is not a stored date, a unit attached
+   to a figure the evidence does not mark with it, a restated `Not verified` marker, or bid
+   language the notice forbids. A violation demotes the brief to `UNVERIFIED` and replaces the
+   narrative with a deterministic, evidence-only summary. The dossier renders each figure with its
+   unit (`$30,918`, `685 sq ft`), and the unit is checked as an *association* — a unit adjacent to
+   the figure, not merely present in the sentence — so a model cannot present a project value as an
+   area without either inventing a figure or moving a unit, both of which are caught.
 5. **No fabricated judgment.** The model may not re-grade a field: `field_assessments[].verdict`
    must equal the dossier's verdict for that field. `confidence` is constrained to
    `high`/`medium`/`low`.

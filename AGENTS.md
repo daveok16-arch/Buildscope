@@ -446,7 +446,8 @@ running and cannot give a writable persistent directory) is **usually unsuitable
 * **Verification before publication.** `validate_brief` re-derives support from the fact list and
   flags any fact-shaped token in the model's free text that is not among the supported values: a
   number not in the dossier (scale shorthand such as `2.5M` of a stored `2,500,000` is accepted;
-  any other figure is not), a date not stored, a restated `Not verified` marker, a URL, bid
+  any other figure is not), a date not stored, a unit attached to a figure the evidence does not
+  mark with it, a restated `Not verified` marker, a URL, bid
   language the notice forbids, or a field verdict the model re-graded. A violation sets
   `status=UNVERIFIED`, floors confidence, and **discards every piece of model prose** — narrative,
   `why_it_matters`, field assessments, questions and limitations are all replaced with
@@ -458,6 +459,14 @@ running and cannot give a writable persistent directory) is **usually unsuitable
   restating it is honest, not claiming. `_negated` excuses a forbidden phrase only when *every*
   occurrence sits in a clause containing a negation; a claim in its own clause still flags. The
   negation list holds whole words only, so a bare "No." does not excuse the next sentence.
+* **A figure carries its unit, and the unit is verified.** `_display` renders a project value as
+  `$30,918` and an area as `685 sq ft` (identical to `report_generator`), because a dossier of
+  bare numbers lets a model write "30,918 and 685 square feet" — every figure stored, the sentence
+  still wrong. `validate_brief` reads the figure-to-unit association (`_marked_units_in`, a unit
+  adjacent after or before the figure, not merely present in the sentence) and flags a figure
+  marked with a unit the evidence does not give it. A unit the evidence never states (a `%` on a
+  dollar figure) is flagged the same way. A bare figure with no unit claim passes, because naming
+  a stored number asserts nothing extra.
 * **Errors are sentences, not payloads.** `_http_error_message(exc, provider_label)` reduces an
   HTTP failure to the status and the error's first sentence, because the raw body is a JSON
   document with a documentation URL that would otherwise be pasted into a limitation (and leak a

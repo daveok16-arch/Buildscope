@@ -18,10 +18,14 @@ Four mechanisms make that structural rather than aspirational:
    a fixed set of fields and a hallucinated extra section cannot exist.
 4. **Verification before publication** (:func:`validate_brief`). The model's free text is
    re-checked against the fact list: a number that is not a stored figure, a date that is not a
-   stored date, a restated not-verified marker, bid language the permit-evidence notice forbids,
-   or a field verdict the model re-graded, are all violations. A violation demotes the brief to
-   ``UNVERIFIED`` and replaces the narrative with a deterministic, evidence-only summary. The
-   model's reading is then shown only as an explicitly labelled proposal.
+   stored date, a unit attached to a figure the evidence does not mark with it, a restated
+   not-verified marker, bid language the permit-evidence notice forbids, or a field verdict the
+   model re-graded, are all violations. A violation demotes the brief to ``UNVERIFIED`` and
+   replaces the narrative with a deterministic, evidence-only summary. The model's reading is
+   then shown only as an explicitly labelled proposal. A figure carries its unit in the dossier
+   (``$30,918``, ``685 sq ft``), and the unit is checked as an association, not as presence, so
+   the model cannot present a project value as an area without either inventing a number or
+   moving a unit — both of which are caught.
 
 With no provider key configured — for either Gemini or xAI — or on any transport or decoding
 error, the analyst returns an ``UNAVAILABLE`` brief built entirely from the evidence. It never
@@ -665,14 +669,22 @@ class Dossier:
 def _display(field_name: str, value: Any) -> str:
     """Render a field the way the rest of the platform renders it.
 
-    Reimplemented rather than imported from ``report_generator`` (whose helper is private) but
-    deliberately identical in output, so a brief and a report describe a value the same way.
+    Reimplemented rather than imported from ``report_generator`` (whose helpers are private) but
+    deliberately identical in output, so a brief and a report describe a value the same way — and,
+    critically, so a figure carries its unit. A bare ``30,918`` in the dossier cannot be told from
+    an area, and a model handed two bare numbers will attach the wrong one to "square feet"; the
+    dollar sign and the ``sq ft`` suffix make the unit part of the evidence, not a guess.
     """
     if value is None or (isinstance(value, str) and not value.strip()):
         return NOT_VERIFIED_SENTENCE.rstrip(".")
-    if field_name in ("estimated_project_value", "square_footage"):
+    if field_name == "estimated_project_value":
         try:
-            return f"{float(value):,.0f}"
+            return f"${float(value):,.0f}"
+        except (TypeError, ValueError):
+            return str(value)
+    if field_name == "square_footage":
+        try:
+            return f"{float(value):,.0f} sq ft"
         except (TypeError, ValueError):
             return str(value)
     if field_name == "permit_date":
@@ -1001,7 +1013,10 @@ Absolute rules, in priority order:
 5. In field_assessments, `field` must be the field id used in the dossier (for example
    project_name, estimated_project_value), never the display label.
 6. Keep every number you write identical to a number in the dossier.
-7. Your interpretation is a reading, not a fact. State the comparison it rests on.
+7. Keep every figure with the unit the dossier gives it. A project value is dollars and a square
+   footage is an area; never move a figure to another unit, never write "square feet" after a
+   value that is money, and never supply a unit the dossier does not show.
+8. Your interpretation is a reading, not a fact. State the comparison it rests on.
 
 Write plainly and briefly. Prefer what the record shows over adjectives."""
 
@@ -1083,24 +1098,38 @@ class AnalystBrief:
 def _supported_numbers(facts: list[Fact]) -> set[str]:
     """Every number a brief is allowed to contain, from the facts themselves.
 
-    A figure is supported when it literally appears in the dossier, or is a derived aggregate of
-    stored values (the count of facts, the count of permits, the sum of stored values). This makes
-    the check "did the model stay inside the evidence" rather than "is this number plausible".
+    A figure is supported when it appears in the dossier's own rendering of a stored value. The
+    check runs over ``Fact.display`` through the same reader the prose is checked with, so a scale
+    shorthand the reader expands ("2.5M" -> 2500000) is accepted here for the same reason it is
+    accepted in the prose — the two cannot disagree. Derived aggregates the dossier also shows (the
+    count of supported facts, the count of permits) are added, because the model may count what it
+    can see. A raw ``numeric`` floor is deliberately not added: the display is what the model is
+    given, and a figure the model cannot see is one it cannot have used.
     """
     allowed: set[str] = set()
     for fact in facts:
         if fact.kind == KIND_UNVERIFIED:
             continue
-        for token in _NUMBER_RE.findall(_strip_dates(str(fact.display))):
-            allowed.add(_norm_number(token))
-        if fact.numeric is not None:
-            allowed.add(_norm_number(fact.numeric))
+        allowed |= _numbers_in(str(fact.display))
     allowed.add(_norm_number(len([f for f in facts if f.kind != KIND_UNVERIFIED])))
-    values = [f.numeric for f in facts if f.kind != KIND_UNVERIFIED and f.numeric is not None]
-    if values:
-        allowed.add(_norm_number(sum(values)))
     allowed.add(_norm_number(len([f for f in facts if f.fact_id.startswith("permit:")])))
     return {a for a in allowed if a}
+
+
+def _supported_number_units(facts: list[Fact]) -> dict[str, set[str]]:
+    """For each stored figure, the units the evidence marks on it.
+
+    A figure's unit is part of the evidence: the dossier shows ``$30,918`` and ``685 sq ft``, so a
+    brief may not present 30,918 as an area. A figure the evidence shows without a unit maps to an
+    empty set, so a unit the model attaches to it is a mismatch rather than a free choice.
+    """
+    supported: dict[str, set[str]] = {}
+    for fact in facts:
+        if fact.kind == KIND_UNVERIFIED:
+            continue
+        for number, units in _marked_units_in(str(fact.display)).items():
+            supported.setdefault(number, set()).update(units)
+    return supported
 
 
 def _supported_dates(facts: list[Fact]) -> set[str]:
@@ -1145,7 +1174,13 @@ _SCALES = {
 
 
 def _strip_dates(text: str) -> str:
-    return _DATE_RE.sub(" ", text)
+    """Blank ISO dates, preserving length so character offsets stay aligned.
+
+    Length preservation matters because :func:`_figure_spans` reports offsets into this string and
+    :func:`_marked_units_in` then reads the *original* text at those offsets to find a unit. A
+    date collapsing to a single space would shift every later figure and mis-pair it with a unit.
+    """
+    return _DATE_RE.sub(lambda m: " " * len(m.group()), text)
 
 
 def _numbers_in(text: str) -> set[str]:
@@ -1170,6 +1205,84 @@ def _numbers_in(text: str) -> set[str]:
 
 def _dates_in(text: str) -> set[str]:
     return set(_DATE_RE.findall(text))
+
+
+#: Unit families a figure can carry, canonicalised so "sq ft", "sqft" and "square feet" agree. A
+#: figure's unit is evidence in its own right: "30,918" is a value and "685" is an area, and
+#: swapping the two misinforms without inventing a number.
+_UNIT_CANON: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"\bsquare feet\b|\bsquare foot\b|\bsq\.?\s?ft\.?\b|\bsqft\b", re.IGNORECASE), "sq ft"),
+    (re.compile(r"\b(?:usd|dollars?)\b|\$", re.IGNORECASE), "$"),
+    (re.compile(r"%|\bpercent\b|\bper cent\b", re.IGNORECASE), "%"),
+)
+
+#: How far after a figure a unit may sit and still be read as labelling that figure — "685 sq ft",
+#: "685 square feet", "$30,918". Deliberately short: a longer window starts pairing a number with
+#: an unrelated unit later in the sentence.
+_UNIT_WINDOW = 24
+
+
+def _figure_spans(text: str) -> list[tuple[str, int, int]]:
+    """Every figure in a piece of text as ``(normalised, start, end)``.
+
+    Mirrors :func:`_numbers_in`: dates are removed first and a scale suffix is absorbed into its
+    figure, so "2.5M" is one span whose mantissa is not also reported as a bare ``2``. Offsets are
+    into :func:`_strip_dates` output, which preserves length, so they index ``text`` too.
+    """
+    scrubbed = _strip_dates(text)
+    spans: list[tuple[str, int, int]] = []
+    for match in _SCALE_RE.finditer(scrubbed):
+        value = float(match.group(1).replace(",", "")) * _SCALES[match.group(2).lower()]
+        spans.append((_norm_number(value), match.start(), match.end()))
+    for match in _NUMBER_RE.finditer(scrubbed):
+        if any(start <= match.start() and match.end() <= end for _n, start, end in spans):
+            continue
+        spans.append((_norm_number(match.group()), match.start(), match.end()))
+    return sorted((s for s in spans if s[0]), key=lambda s: s[1])
+
+
+def _unit_after(text: str, end: int) -> str | None:
+    """The canonical unit token immediately following position ``end``, if any."""
+    window = text[end : end + _UNIT_WINDOW]
+    for pattern, canon in _UNIT_CANON:
+        if pattern.match(window.lstrip()):
+            return canon
+    return None
+
+
+def _unit_before(text: str, start: int) -> str | None:
+    """The canonical unit token immediately preceding position ``start``, if any.
+
+    Adjacency is required, not proximity: the window must *end* with the unit. A ``$`` before the
+    previous figure ("$30,918 for 685") must not be read as labelling ``685``, which is what a
+    plain "contains a unit" test would do.
+    """
+    window = text[max(0, start - _UNIT_WINDOW) : start].rstrip()
+    for pattern, canon in _UNIT_CANON:
+        last = None
+        for match in pattern.finditer(window):
+            last = match
+        if last is not None and last.end() == len(window):
+            return canon
+    return None
+
+
+def _marked_units_in(text: str) -> dict[str, set[str]]:
+    """Each figure in ``text`` mapped to the units attached to it.
+
+    A unit counts as attached when it sits immediately after the figure ("685 sq ft") or
+    immediately before it ("$30,918"). A figure with no adjacent unit maps to an empty set.
+    """
+    marked: dict[str, set[str]] = {}
+    for number, start, end in _figure_spans(text):
+        units = marked.setdefault(number, set())
+        after = _unit_after(text, end)
+        if after:
+            units.add(after)
+        before = _unit_before(text, start)
+        if before:
+            units.add(before)
+    return marked
 
 
 #: A whole word that denies a claim it sits beside. Contractions are included as-is; a token with
@@ -1231,6 +1344,7 @@ def validate_brief(
     issues: list[str] = []
     allowed_numbers = _supported_numbers(facts)
     allowed_dates = _supported_dates(facts)
+    number_units = _supported_number_units(facts)
     # A field is assessable when it is a presented field of the record, whether or not a source
     # supports it. An unsupported field has an expected verdict of NOT VERIFIED, so a model that
     # correctly reports it as unverified passes, and one that upgrades it does not.
@@ -1257,6 +1371,20 @@ def validate_brief(
         for found_date in sorted(_dates_in(text)):
             if found_date not in allowed_dates:
                 issues.append(f"{where}: date {found_date} is not supported by any stored date.")
+
+        for number, units in sorted(_marked_units_in(text).items()):
+            if not units:
+                continue
+            supported_units = number_units.get(number)
+            if supported_units is None:
+                # An unsupported figure is already reported above; do not double-report it.
+                continue
+            for unit in sorted(units - supported_units):
+                issues.append(
+                    f"{where}: figure {number} is marked '{unit}', but the evidence gives it "
+                    f"{sorted(supported_units) or 'no unit'}; a figure must keep the unit the "
+                    "evidence states."
+                )
 
         if _NV_MARKER_RE.search(text):
             issues.append(

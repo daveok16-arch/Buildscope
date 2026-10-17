@@ -226,6 +226,87 @@ def test_an_unsupported_date_is_flagged(analyst_db):
     assert any("1999-01-01" in i for i in issues)
 
 
+def test_a_value_is_rendered_with_its_unit(analyst_db):
+    """A figure in the dossier carries its unit, so the model can tell money from area.
+
+    Without this the dossier shows a bare 30,918 and a bare 685, and a model writing about them
+    can attach the wrong unit to the wrong number without inventing either figure.
+    """
+    from oppintel.ai_analyst import _display
+
+    assert _display("estimated_project_value", 2_500_000) == "$2,500,000"
+    assert _display("square_footage", 685) == "685 sq ft"
+    pid = _project_id(analyst_db, name="spec suite")
+    by_field = {f.field_name: f.display for f in collect_facts(analyst_db, pid)}
+    assert by_field["estimated_project_value"] == "$2,500,000"
+
+
+def test_a_unit_is_read_as_labelling_the_figure_beside_it(analyst_db):
+    """Association, not mere presence: "$30,918 for 685 sq ft" marks each figure with its own unit.
+
+    A presence test would let the dollar sign leak onto 685 (and vice versa), which is exactly the
+    false positive that would reject a correct sentence.
+    """
+    from oppintel.ai_analyst import _marked_units_in
+
+    marked = _marked_units_in("The declared value is $30,918 for 685 sq ft.")
+    assert marked["30918"] == {"$"}
+    assert marked["685"] == {"sq ft"}
+
+
+def test_a_date_does_not_shift_the_unit_association(analyst_db):
+    """A date before a figure must not misalign the figure-to-unit pairing.
+
+    Offsets are taken after dates are blanked, so blanking has to preserve length; a date
+    collapsing to one character would move every later figure and pair it with the wrong unit.
+    """
+    from oppintel.ai_analyst import _marked_units_in
+
+    marked = _marked_units_in("Filed 2026-08-12 with a value of $30,918 and 685 sq ft.")
+    assert marked["30918"] == {"$"}
+    assert marked["685"] == {"sq ft"}
+
+
+def test_a_scale_shorthand_is_one_figure_not_two(analyst_db):
+    """'2.5M' is the stored 2,500,000, not a bare 2 beside an unrelated figure."""
+    from oppintel.ai_analyst import _figure_spans
+
+    numbers = [n for n, _start, _end in _figure_spans("The declared value is $2.5M.")]
+    assert numbers == ["2500000"]
+
+
+def test_a_money_figure_marked_as_an_area_is_flagged(analyst_db):
+    """The observed failure: a project value presented as square footage.
+
+    Both figures are stored, so the number check alone passes it; the unit is what makes the
+    sentence wrong.
+    """
+    facts = collect_facts(analyst_db, _project_id(analyst_db, name="spec suite"))
+    brief = _brief_with(facts, summary="The project covers 2,500,000 square feet.")
+    issues = validate_brief(brief, facts)
+    assert any("2500000" in i and "sq ft" in i for i in issues), issues
+
+
+def test_a_figure_marked_with_a_unit_the_evidence_never_states_is_flagged(analyst_db):
+    facts = collect_facts(analyst_db, _project_id(analyst_db, name="spec suite"))
+    brief = _brief_with(facts, summary="The value is 2,500,000% of the budget.")
+    issues = validate_brief(brief, facts)
+    assert any("2500000" in i and "%" in i for i in issues), issues
+
+
+def test_a_correctly_marked_figure_passes(analyst_db):
+    facts = collect_facts(analyst_db, _project_id(analyst_db, name="spec suite"))
+    brief = _brief_with(facts, summary="The declared value is $2.5M.")
+    assert validate_brief(brief, facts) == []
+
+
+def test_a_bare_figure_without_a_unit_claim_passes(analyst_db):
+    """A model that names the number without asserting a unit has not mis-stated anything."""
+    facts = collect_facts(analyst_db, _project_id(analyst_db, name="spec suite"))
+    brief = _brief_with(facts, summary="The declared value figure is 2,500,000.")
+    assert validate_brief(brief, facts) == []
+
+
 def test_restating_the_not_verified_marker_is_flagged(analyst_db):
     facts = collect_facts(analyst_db, _project_id(analyst_db))
     brief = _brief_with(facts, summary="Square footage is not verified.")
