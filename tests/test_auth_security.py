@@ -230,6 +230,8 @@ def test_forgot_password_delivers_through_the_mailer_for_a_real_account(app_db, 
     from oppintel.app import main as app_main
 
     class _RecordingMailer:
+        delivers = True
+
         def __init__(self, **kwargs: object) -> None:
             pass
 
@@ -256,6 +258,8 @@ def test_forgot_password_delivers_nothing_for_an_unknown_account(app_db, monkeyp
     from oppintel.app import main as app_main
 
     class _RecordingMailer:
+        delivers = True
+
         def __init__(self, **kwargs: object) -> None:
             pass
 
@@ -278,3 +282,86 @@ def test_forgot_password_is_rate_limited(secured_client):
         )
         statuses.append(response.status_code)
     assert 429 in statuses
+
+
+# --- L: the page must not promise an email the deployment cannot send ------------
+
+
+def test_mailer_delivers_is_false_for_console_and_null(monkeypatch):
+    """L. `delivers` is the deployment's honest capability, not an assumption."""
+    from oppintel.app.mailer import BACKEND_CONSOLE, BACKEND_NULL, ResetMailer
+
+    monkeypatch.delenv("SMTP_HOST", raising=False)
+    assert ResetMailer(backend=BACKEND_CONSOLE).delivers is False
+    assert ResetMailer(backend=BACKEND_NULL).delivers is False
+
+
+def test_mailer_delivers_is_false_for_smtp_without_a_relay_host(monkeypatch):
+    """L. Selecting smtp is not enough: without SMTP_HOST it cannot deliver."""
+    from oppintel.app.mailer import BACKEND_SMTP, ResetMailer
+
+    monkeypatch.delenv("SMTP_HOST", raising=False)
+    assert ResetMailer(backend=BACKEND_SMTP).delivers is False
+
+
+def test_mailer_delivers_is_true_for_a_configured_smtp_relay(monkeypatch):
+    from oppintel.app.mailer import BACKEND_SMTP, ResetMailer
+
+    monkeypatch.setenv("SMTP_HOST", "smtp.example.com")
+    assert ResetMailer(backend=BACKEND_SMTP).delivers is True
+
+
+def test_forgot_password_does_not_claim_an_email_when_delivery_is_off(app_db):
+    """L. With no delivery channel the page must not say an email was sent.
+
+    The default test configuration uses the `console` backend, which sends nothing, so the
+    success message must not promise instructions "have been sent".
+    """
+    _create_victim(app_db)
+    client = app_db.test_client()
+    body = client.post("/forgot-password", data={"email": VICTIM_EMAIL}).get_data(as_text=True)
+    assert "have been sent" not in body
+    assert "not configured to send email" in body
+
+
+def test_forgot_password_says_sent_only_when_a_relay_is_configured(app_db, monkeypatch):
+    """L. When delivery is configured the message is the normal one."""
+    from oppintel.app.mailer import BACKEND_SMTP, ResetMailer
+
+    _create_victim(app_db)
+    monkeypatch.setenv("SMTP_HOST", "smtp.example.com")
+    monkeypatch.setenv("MAIL_BACKEND", BACKEND_SMTP)
+    # Replace only the transport, keeping the real `delivers` logic under test.
+    monkeypatch.setattr(ResetMailer, "send_reset", lambda self, **kw: None)
+    client = app_db.test_client()
+    body = client.post("/forgot-password", data={"email": VICTIM_EMAIL}).get_data(as_text=True)
+    assert "have been sent" in body
+    assert "not configured to send email" not in body
+
+
+def test_delivery_availability_is_identical_for_known_and_unknown_addresses(app_db, monkeypatch):
+    """L. The delivery notice depends on configuration, never on the address.
+
+    Even with the smtp backend unconfigured (the honest "cannot send" state), the registered and
+    unregistered responses must stay byte-identical apart from the per-request CSP nonce, so the
+    new copy does not reopen the enumeration oracle.
+    """
+    import re
+
+    from oppintel.app.mailer import BACKEND_SMTP
+
+    _create_victim(app_db)
+    monkeypatch.setenv("MAIL_BACKEND", BACKEND_SMTP)
+    monkeypatch.delenv("SMTP_HOST", raising=False)
+    client = app_db.test_client()
+
+    known = client.post("/forgot-password", data={"email": VICTIM_EMAIL}).get_data(as_text=True)
+    unknown = client.post("/forgot-password", data={"email": "nobody@example.com"}).get_data(
+        as_text=True
+    )
+
+    def normalise(body: str) -> str:
+        return re.sub(r'nonce="[^"]*"', 'nonce="X"', body)
+
+    assert normalise(known) == normalise(unknown)
+

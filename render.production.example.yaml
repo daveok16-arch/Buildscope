@@ -62,6 +62,25 @@ services:
         value: /var/data
       - key: OPPINTEL_DB
         value: /var/data/oppintel.db
+      # Password-reset delivery (all optional, opt-in together). Leave these unset and the app
+      # uses the non-sending `console` backend: the /forgot-password page then tells the visitor
+      # honestly that no email can be sent, rather than promising one that never arrives. To turn
+      # delivery on, set MAIL_BACKEND=smtp and all of SMTP_HOST/SMTP_USER/SMTP_PASSWORD/SMTP_FROM
+      # in the dashboard (`sync: false` — SMTP_PASSWORD is a secret and must never be committed).
+      - key: MAIL_BACKEND
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+      - key: SMTP_USE_TLS
+        value: "true"
     disk:
       name: oppintel-data
       mountPath: /var/data

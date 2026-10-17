@@ -1303,11 +1303,27 @@ def create_app(config: AppConfig | None = None) -> Flask:
                         # visitor still sees the same neutral message, so the form reveals
                         # nothing about whether the address is registered.
                         log.exception("Password reset delivery failed")
-                success = "If an active account exists for that email, password reset instructions have been generated."
+                # The message states what this *deployment* can do, never whether the address is
+                # registered: when no delivery channel is configured the visitor is told so
+                # rather than being promised an email that will never arrive. Because the
+                # condition depends only on configuration, the registered and unregistered
+                # responses stay byte-identical and the form remains no enumeration oracle.
+                if g.mailer.delivers:
+                    success = (
+                        "If an active account exists for that email, password reset "
+                        "instructions have been sent."
+                    )
+                else:
+                    success = (
+                        "If an active account exists for that email, a password reset has been "
+                        "requested. This site is not configured to send email, so no message "
+                        "will arrive — ask an administrator to reset your password."
+                    )
         return render_template(
             "account/forgot_password.html",
             error=error,
             success=success,
+            mail_delivers=g.mailer.delivers,
             page_title="Reset Password",
             seo=_private_seo(g, "Reset Password", "Reset your BuildScope account password."),
         )

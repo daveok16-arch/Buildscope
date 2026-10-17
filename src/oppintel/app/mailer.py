@@ -90,6 +90,22 @@ class ResetMailer:
         self.backend = chosen.strip().lower()
         self.base_url = (base_url or "").rstrip("/")
 
+    @property
+    def delivers(self) -> bool:
+        """Whether this deployment can actually put a reset message in an inbox.
+
+        True only for a fully configured `smtp` relay. `console` and `null` deliver nothing, and
+        `smtp` without `SMTP_HOST` fails at send time — so in all those cases the honest answer to
+        "did we send it?" is no. The caller uses this to tell the visitor the truth instead of
+        claiming an email was generated that will never arrive.
+
+        This is a property of the deployment's configuration, not of the address being reset, so
+        it is identical for every request and cannot become an account-enumeration oracle.
+        """
+        if self.backend != BACKEND_SMTP:
+            return False
+        return SmtpSettings.from_env() is not None
+
     def send_reset(self, *, to_email: str, token: str) -> None:
         """Deliver reset instructions, or raise DeliveryError if the channel refuses them."""
         if self.backend == BACKEND_NULL:

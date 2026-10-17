@@ -25,10 +25,29 @@ matter in production are where that file lives and how it is kept fresh.
 | `XAI_API_KEY` | No | empty | Alternative analyst provider: xAI's Grok, via its OpenAI-compatible API. Either provider works and both go through the same grounding and verification. `Grok_API_Token` is also read |
 | `XAI_MODEL` | No | `grok-3-mini` | Model id the Grok provider calls |
 | `AI_ANALYST_PROVIDER` | No | empty | `gemini` or `xai`. Only needed when both keys are set, to pick one deliberately; otherwise Gemini is preferred when its key is present, then xAI |
+| `MAIL_BACKEND` | No | `console` | Password-reset delivery: `console` (sends nothing, the default), `smtp` (needs `SMTP_HOST`), `null` (delivers nothing). See "Password-reset delivery" below |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`, `SMTP_USE_TLS` | No | —, `587`, —, —, —, `true` | The relay used when `MAIL_BACKEND=smtp`. `SMTP_HOST` is required for delivery; the rest are optional depending on the relay |
 
 `CSRF_ENABLED` follows the same convention as the secure-cookie flag: it defaults on, and off only
 when `FLASK_DEBUG` is set, so a real deployment is protected unless someone deliberately disables
 it. See `.env.example`.
+
+### Password-reset delivery
+
+Password reset is delivered out of band by `app/mailer.py`, the single delivery boundary. The
+default backend is `console`, which records that a request happened and sends **nothing** — so a
+deployment that sets no mail variables cannot deliver a reset link.
+
+The app does not pretend otherwise. `ResetMailer.delivers` is true only for a fully configured
+`smtp` relay, and `/forgot-password` reads it: when delivery is off the page shows a notice that
+this site cannot send email and the success message does not claim a message was sent. The notice
+depends only on configuration, never on whether the address is registered, so it does not reopen
+the account-enumeration oracle.
+
+To enable delivery, set `MAIL_BACKEND=smtp` and `SMTP_HOST` (plus `SMTP_USER`/`SMTP_PASSWORD`/
+`SMTP_FROM` as the relay requires). `SMTP_PASSWORD` is a secret: set it in the host's dashboard or
+secret store, never in a committed file. Selecting `smtp` without `SMTP_HOST` fails loudly at send
+time rather than silently falling back to a channel that would expose the token.
 
 ## Deployment model and hosting requirements
 
