@@ -403,7 +403,9 @@ running and cannot give a writable persistent directory) is **usually unsuitable
   Firebase JS SDK in `signin.html` / `signup.html`, `firebase_config` template injection, the
   `google_id` column on `app_user`, `AccountService.authenticate_or_link_google`, and the
   `firebase-applet-config.example.json` file. The CSP no longer allowlists any Google or Firebase
-  origin (`script-src` is `'self'` + nonce; `connect-src` is `'self'`).
+  origin (`script-src` is `'self'` + nonce; `connect-src` is `'self'`), and `CSRF_EXEMPT_PREFIXES`
+  is now empty — `/auth/firebase-verify` was its only entry, so every state-changing request
+  requires a valid CSRF token.
 * `tests/test_firebase_config.py` was deleted with the integration. `tests/test_auth_security.py`
   keeps sections H (logout) and I-L (password reset); its Google/Firebase sections (A-G) went with
   the routes. The `/auth/google` account-takeover bypass cannot recur because the route is not
