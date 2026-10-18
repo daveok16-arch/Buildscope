@@ -10,6 +10,7 @@ The suite covers:
 * J. An expired reset token is rejected.
 * K. A used reset token is rejected.
 * L. Reset delivery is abstracted, and no backend writes the token to a page, response or log.
+* M. The `smtp` transport really sends, verified against a local SMTP server (plain and STARTTLS).
 
 The `/auth/google` bypass these tests were originally written around no longer exists: the
 Google/Firebase sign-in integration was removed, so the route that accepted an email address is
@@ -18,6 +19,12 @@ gone rather than inert. The regression cannot recur through a route that is not 
 
 from __future__ import annotations
 
+import base64
+import shutil
+import socket
+import ssl
+import subprocess
+import threading
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -364,4 +371,228 @@ def test_delivery_availability_is_identical_for_known_and_unknown_addresses(app_
         return re.sub(r'nonce="[^"]*"', 'nonce="X"', body)
 
     assert normalise(known) == normalise(unknown)
+
+
+# --- M: the smtp transport, against a real local SMTP server ---------------------
+#
+# The tests above prove the *choice* of channel and the copy around it. These prove the transport
+# itself: that MAIL_BACKEND=smtp actually opens a connection, negotiates STARTTLS, authenticates
+# and delivers a message whose body carries the reset link. The server is a minimal stdlib
+# implementation of the commands smtplib issues (EHLO/STARTTLS/AUTH/DATA/QUIT), so no dependency
+# is added and nothing leaves the machine. The plain-text path is always run; the STARTTLS path
+# runs when the `openssl` CLI can mint a throwaway certificate for 127.0.0.1, and is skipped
+# otherwise rather than silently passing.
+
+
+class _SmtpStub:
+    """A one-connection-at-a-time SMTP server speaking just enough for smtplib."""
+
+    def __init__(self, *, tls_context: ssl.SSLContext | None = None) -> None:
+        self.tls_context = tls_context
+        self.messages: list[str] = []
+        self.auth_lines: list[str] = []
+        self.used_starttls = False
+        self._sock = socket.socket()
+        self._sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self._sock.bind(("127.0.0.1", 0))
+        self._sock.listen(5)
+        self.port: int = self._sock.getsockname()[1]
+        self._thread = threading.Thread(target=self._accept_loop, daemon=True)
+
+    def start(self) -> "_SmtpStub":
+        self._thread.start()
+        return self
+
+    def stop(self) -> None:
+        try:
+            self._sock.close()
+        except OSError:
+            pass
+
+    def _accept_loop(self) -> None:
+        while True:
+            try:
+                conn, _ = self._sock.accept()
+            except OSError:
+                return
+            threading.Thread(target=self._handle, args=(conn,), daemon=True).start()
+
+    def _handle(self, conn: socket.socket) -> None:
+        conn.settimeout(10)
+        reader = conn.makefile("rb")
+
+        def send(line: str) -> None:
+            conn.sendall((line + "\r\n").encode())
+
+        try:
+            send("220 stub ESMTP ready")
+            in_data = False
+            data: list[str] = []
+            while True:
+                raw = reader.readline()
+                if not raw:
+                    return
+                line = raw.decode("utf-8", "replace").rstrip("\r\n")
+                if in_data:
+                    if line == ".":
+                        in_data = False
+                        self.messages.append("\n".join(data))
+                        data = []
+                        send("250 OK queued")
+                    else:
+                        data.append(line[1:] if line.startswith("..") else line)
+                    continue
+                cmd = line.split(" ", 1)[0].upper()
+                if cmd == "EHLO":
+                    caps = ["250-stub", "250-SIZE 10485760"]
+                    if self.tls_context is not None and not self.used_starttls:
+                        caps.append("250-STARTTLS")
+                    caps.append("250 AUTH PLAIN LOGIN")
+                    for cap in caps:
+                        send(cap)
+                elif cmd == "HELO":
+                    send("250 stub")
+                elif cmd == "STARTTLS":
+                    send("220 Ready to start TLS")
+                    assert self.tls_context is not None
+                    conn = self.tls_context.wrap_socket(conn, server_side=True)
+                    reader = conn.makefile("rb")
+                    self.used_starttls = True
+                elif cmd == "AUTH":
+                    self.auth_lines.append(line)
+                    if len(line.split()) == 2:  # mechanism only; the blob arrives next
+                        send("334 ")
+                        self.auth_lines.append(reader.readline().decode().strip())
+                    send("235 Authentication successful")
+                elif cmd in ("MAIL", "RCPT"):
+                    send("250 OK")
+                elif cmd == "DATA":
+                    send("354 End data with <CR><LF>.<CR><LF>")
+                    in_data = True
+                elif cmd == "QUIT":
+                    send("221 Bye")
+                    return
+                else:
+                    send("250 OK")
+        except Exception:  # noqa: BLE001 - a dropped connection must not fail the test run
+            pass
+        finally:
+            try:
+                conn.close()
+            except OSError:
+                pass
+
+
+@pytest.fixture
+def smtp_stub():
+    """A plain (no TLS) SMTP server on a loopback port."""
+    stub = _SmtpStub().start()
+    try:
+        yield stub
+    finally:
+        stub.stop()
+
+
+def _self_signed_cert(tmp_path) -> tuple[str, str] | None:
+    """Mint a throwaway cert for 127.0.0.1, or None when openssl is unavailable."""
+    if shutil.which("openssl") is None:
+        return None
+    cert = tmp_path / "smtp-cert.pem"
+    key = tmp_path / "smtp-key.pem"
+    result = subprocess.run(
+        [
+            "openssl", "req", "-x509", "-newkey", "rsa:2048", "-keyout", str(key),
+            "-out", str(cert), "-days", "2", "-nodes", "-subj", "/CN=127.0.0.1",
+            "-addext", "subjectAltName=IP:127.0.0.1",
+        ],
+        capture_output=True,
+    )
+    if result.returncode != 0 or not cert.exists():
+        return None
+    return str(cert), str(key)
+
+
+def _configure_smtp(monkeypatch, stub: _SmtpStub, *, cert: tuple[str, str] | None = None) -> None:
+    monkeypatch.setenv("MAIL_BACKEND", "smtp")
+    monkeypatch.setenv("SMTP_HOST", "127.0.0.1")
+    monkeypatch.setenv("SMTP_PORT", str(stub.port))
+    monkeypatch.setenv("SMTP_USER", "apikey")
+    monkeypatch.setenv("SMTP_PASSWORD", "smtp-secret-password")
+    monkeypatch.setenv("SMTP_FROM", "no-reply@example.com")
+    monkeypatch.setenv("SMTP_USE_TLS", "true" if cert else "false")
+    if cert:
+        # Trust exactly the throwaway CA, so verification stays on rather than being disabled.
+        monkeypatch.setenv("SSL_CERT_FILE", cert[0])
+
+
+def test_smtp_backend_delivers_a_message_carrying_the_reset_link(monkeypatch, smtp_stub):
+    """M. The transport really sends: a message arrives whose body holds the reset link."""
+    from oppintel.app.mailer import ResetMailer
+
+    _configure_smtp(monkeypatch, smtp_stub)
+    ResetMailer(backend="smtp", base_url="https://buildscope.example").send_reset(
+        to_email="victim@example.com", token="TOKEN-abc123"
+    )
+
+    assert len(smtp_stub.messages) == 1, "exactly one message must be delivered"
+    body = smtp_stub.messages[0]
+    assert "victim@example.com" in body
+    assert "https://buildscope.example/reset-password/TOKEN-abc123" in body
+    assert "Reset your BuildScope password" in body
+
+
+def test_smtp_backend_authenticates_with_the_configured_credentials(monkeypatch, smtp_stub):
+    """M. The relay credentials reach the server (AUTH), not the URL or a log."""
+    from oppintel.app.mailer import ResetMailer
+
+    _configure_smtp(monkeypatch, smtp_stub)
+    ResetMailer(backend="smtp").send_reset(to_email="victim@example.com", token="t")
+
+    assert smtp_stub.auth_lines, "the client must authenticate when a user is configured"
+    # The client uses AUTH PLAIN, recorded whole: "AUTH PLAIN <base64(user\0user\0pass)>".
+    line = smtp_stub.auth_lines[-1]
+    assert line.upper().startswith("AUTH PLAIN ")
+    decoded = base64.b64decode(line.split(None, 2)[2]).decode("utf-8", "replace")
+    assert "smtp-secret-password" in decoded
+
+
+def test_smtp_backend_negotiates_starttls_when_enabled(monkeypatch, tmp_path):
+    """M. With SMTP_USE_TLS on, the session is upgraded before the credentials are sent."""
+    cert = _self_signed_cert(tmp_path)
+    if cert is None:
+        pytest.skip("openssl CLI unavailable, cannot mint a throwaway TLS certificate")
+
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.load_cert_chain(cert[0], cert[1])
+    stub = _SmtpStub(tls_context=context).start()
+    try:
+        from oppintel.app.mailer import ResetMailer
+
+        _configure_smtp(monkeypatch, stub, cert=cert)
+        ResetMailer(backend="smtp").send_reset(to_email="victim@example.com", token="TLS-TOKEN")
+
+        assert stub.used_starttls is True, "the client must upgrade the connection"
+        assert len(stub.messages) == 1
+        assert "TLS-TOKEN" in stub.messages[0]
+    finally:
+        stub.stop()
+
+
+def test_smtp_backend_raises_when_the_relay_refuses_the_connection(monkeypatch):
+    """M. A dead relay surfaces as DeliveryError, not a silent success."""
+    from oppintel.app.mailer import DeliveryError, ResetMailer
+
+    # Bind then close a socket to obtain a port nothing is listening on.
+    probe = socket.socket()
+    probe.bind(("127.0.0.1", 0))
+    dead_port = probe.getsockname()[1]
+    probe.close()
+
+    monkeypatch.setenv("MAIL_BACKEND", "smtp")
+    monkeypatch.setenv("SMTP_HOST", "127.0.0.1")
+    monkeypatch.setenv("SMTP_PORT", str(dead_port))
+    monkeypatch.setenv("SMTP_USE_TLS", "false")
+
+    with pytest.raises(DeliveryError):
+        ResetMailer(backend="smtp").send_reset(to_email="a@example.com", token="t")
 

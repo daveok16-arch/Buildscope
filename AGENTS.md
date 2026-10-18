@@ -311,7 +311,10 @@ running and cannot give a writable persistent directory) is **usually unsuitable
   (`AppConfig.mail_backend`). A token is generated only for a real account, so delivery cannot
   become an enumeration oracle; the visitor-facing message is identical either way. Tests in
   `tests/test_auth_security.py` (section L) assert the token never reaches a page, response or
-  log.
+  log. Section M exercises the `smtp` transport against a minimal stdlib SMTP server
+  (`_SmtpStub`) — plain and STARTTLS — so delivery is proven end to end with no dependency and no
+  egress; the STARTTLS case mints a throwaway cert with the `openssl` CLI and skips if it is
+  absent.
 * **The page must not promise an email the deployment cannot send.** `ResetMailer.delivers` is
   true only for a fully configured `smtp` relay; `/forgot-password` reads it, so when delivery is
   off the page shows a notice and the success message does not claim a message was sent. The
